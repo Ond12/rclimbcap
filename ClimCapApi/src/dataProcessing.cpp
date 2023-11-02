@@ -19,7 +19,11 @@ DataController::DataController(QObject* parent)
     this->applyOffset = true;
     this->applyWallRotation = true;
 
-    QStringList calibrationFiles = {
+    m_calibrationFilesPath = "../data/calibration_matrices";
+
+    m_configFilePath = "../data/save.json";
+
+    m_sensorCalibrationFiles = {
         "G_202109A1-1_o2.txt",
         "G_202109A1-2_o2.txt",
         "G_202109A1-3_o2.txt",
@@ -33,51 +37,22 @@ DataController::DataController(QObject* parent)
         "G_202109A1-11_o2.txt",
     };
 
-    QStringList plaformCalibrationFiles = {
+    m_plaformCalibrationFiles = {
         "dummy1.txt",
         "dummy2.txt"
     };
 
 }
 
-void DataController::displaySensor()
-{   
-    qDebug() << "N sensors" << this->sensors.count();
-    for (uint i = 0; i < this->sensors.count(); ++i)
-    {
-        this->sensors.at(i).toString(false);
-    }
 
-    qDebug() << "N platform" << this->plaforms.count();
-    for (uint i = 0; i < this->plaforms.count(); ++i)
-    {
-        this->plaforms.at(i).toString(false);
-    }
-}
-
-Sensor& DataController::getSensor(uint id)
-{
-    for (Sensor& s : this->sensors){
-        if (id == s.getSensorId()) {
-            return s;
-        }
-    }
-
-    throw std::runtime_error("Object not found in vector.");
-}
+#pragma region CONFIG LOADING
 
 void DataController::clearSensorConfiguration()
 {
     this->sensors.clear();
-    this->plaforms.clear();
 }
 
-void DataController::connectToUdpSteam(MyUDP* udps)
-{
-    this->udpClient = udps;
-}
-
-QGenericMatrix<3,3,double> calculateWallRotMatrix(double wallAngle)
+QGenericMatrix<3, 3, double> calculateWallRotMatrix(double wallAngle)
 {
     constexpr int N = 3;
     double theta = wallAngle * M_PI / 180.0;
@@ -98,160 +73,32 @@ QGenericMatrix<3,3,double> calculateWallRotMatrix(double wallAngle)
     return tprotationMatrice;
 }
 
-uint DataController::loadSensorToAnalogConfig()
+uint DataController::loadPlatformToAnalogConfig()
 {
-    QFile file("../data/save.json");
-    clearSensorConfiguration();
-
-    if (!file.open(QIODevice::ReadOnly))
-    {
-        qWarning("Impossible d'ouvrir le fichier de configuration save.json");
-        return 0;
-    }
-
-    QTextStream stream(&file);
-    QString content = stream.readAll();
-    file.close();
-
-    QJsonParseError parseError;
-    QJsonDocument doc = QJsonDocument::fromJson(content.toUtf8(), &parseError);
-
-    if (parseError.error != QJsonParseError::NoError) 
-    {
-        qWarning() << "Parse error at " << parseError.offset << ":" << parseError.errorString();
-        return 1;
-    }
-
-    if (!doc.isEmpty())
-    {
-        QJsonObject jsonObj = doc.object();
-        double angle = jsonObj.value("wallangle").toDouble();
-        qDebug() << "Angle du mur : " << angle;
-
-        this->wallRotMatrix = calculateWallRotMatrix(angle);
-
-        QJsonArray array = jsonObj["sensors"].toArray();
-
-        QGenericMatrix<12, 6, double> calibrationMatrixO2container;
-        QGenericMatrix<6, 6,  double> calibrationMatrixO1container;
-
-        for (const auto& item : array) {
-            QJsonObject obj = item.toObject();
-
-            QString sensorname =     obj["name"].toString();
-            uint sensorId      =     obj["id"].toInt();
-            uint sensorChannel =     obj["chan"].toInt();
-            double sensorAngle =     obj["angle"].toDouble();
-            double sensorZRotation = obj["zRotation"].toDouble();
-
-            Sensor tms(sensorId, sensorChannel, sensorAngle);
-            
-            if(sensorZRotation != 0)
-                tms.setRotationAngle(sensorZRotation, 'z');
-
-            if (!this->loadCalibrationMatriceOrdre1(tms.getSensorId(), calibrationMatrixO1container))
-            {
-                qCritical("Matrice de calibration ordre1 non initialisee");
-                return 0;
-            }
-
-            if (!this->loadCalibrationMatriceOrdre2(tms.getSensorId(), calibrationMatrixO2container))
-            {
-                qCritical("Matrice de calibration ordre2 non initialisee");
-                return 0;
-            }
-
-            tms.setCalibrationMatriceO1(calibrationMatrixO1container);
-            tms.setCalibrationMatriceO2(calibrationMatrixO2container);
-            this->sensors.push_back(tms);
-
-            qDebug() << "Chargement du capteur" << tms.getSensorId() << " OK ";
-            //tms.toString(true);
-        }
-    }
-
+    this->plaforms.clear();
 
     Sensor platformL(40, 0, 0);
     Sensor platformR(41, 8, 0);
 
     QGenericMatrix<12, 6, double> calibrationMatrixO2container;
 
-    if (!this->loadCalibrationMatriceOrdre2(platformL.getSensorId(), calibrationMatrixO2container))
-    {
-            qCritical("Matrice de calibration ordre2 non initialisee");
-            return 0;
-    }
-    tms.setCalibrationMatriceO2(calibrationMatrixO2container);
-    this->sensors.push_back(tms);
+    loadCalibrationMatriceOrdre2PLATFORM(platformL.getSensorId(), calibrationMatrixO2container);
+    platformL.setCalibrationMatriceO2PLATFORM(calibrationMatrixO2container);
+    this->plaforms.push_back(platformL);
 
-    this->plaforms
-
-    return this->sensors.count();
+    loadCalibrationMatriceOrdre2PLATFORM(platformR.getSensorId(), calibrationMatrixO2container);
+    platformL.setCalibrationMatriceO2PLATFORM(calibrationMatrixO2container);
+    this->plaforms.push_back(platformR);
 }
 
-bool DataController::loadCalibrationMatriceOrdre1(uint sensorNumber, QGenericMatrix<6, 6, double>& matrice)
+bool DataController::loadCalibrationMatriceOrdre2PLATFORM(uint sensorNumber, QGenericMatrix<12, 6, double>& matrice)
 {
-    if (sensorNumber == 0) sensorNumber = 1; //le capteur id 0 n existe pas
-
-    QStringList calibrationFiles = {
-        "G_202109A1-1_o1.txt",
-        "G_202109A1-2_o1.txt",
-        "G_202109A1-3_o1.txt",
-        "G_202109A1-4_o1.txt",
-        "G_202109A1-5_o1.txt",
-        "G_202109A1-6_o1.txt",
-        "G_202109A1-7_o1.txt",
-        "G_202109A1-8_o1.txt",
-        "G_202109A1-9_o1.txt",
-        "G_202109A1-10_o1.txt",
-        "G_202109A1-11_o1.txt"
-    };
-
+  
     QString path;
-    path.append("../data/calibration_matrices");
-    path.append("/" + calibrationFiles[sensorNumber - 1]);
-
-    //qDebug() << "Ouverture matrice de calibration" << path;
-    QFile inputFile(path);
-
-    QStringList splitList;
-    double matriceData[6 * 6];
-
-    if (inputFile.open(QIODevice::ReadOnly)) {
-        QTextStream in(&inputFile);
-        uint mcpt = 0;
-        while (!in.atEnd())
-        {
-            QString line = in.readLine();
-            splitList = line.split("\t");
-
-            for (uint i = 0; i < splitList.size(); ++i, ++mcpt)
-            {
-                matriceData[mcpt] = splitList.at(i).toDouble();
-            }
-
-        }
-        QGenericMatrix<6, 6, double> calibrationMatrixO1(matriceData);
-        matrice = calibrationMatrixO1;
-        inputFile.close();
-    }
-    else
-    {
-        qCritical("Impossible d'ouvrir le fichier matrice de calibration ordre 1");
-        return false;
-    }
-
-    return true;
-}
-
-bool DataController::loadCalibrationMatriceOrdre2(uint sensorNumber, QGenericMatrix<12, 6, double>& matrice)
-{
-    if (sensorNumber == 0) sensorNumber = 1;
-
-
-    QString path;
-    path.append("../data/calibration_matrices");
-    path.append("/" + calibrationFiles[sensorNumber - 1]);
+    path.append(m_calibrationFilesPath);
+    
+    //NOT IDEAL TO DO 
+    path.append("/" + m_plaformCalibrationFiles[sensorNumber - 40]);
 
     //qDebug() << "Ouverture matrice de calibration" << path;
 
@@ -270,7 +117,7 @@ bool DataController::loadCalibrationMatriceOrdre2(uint sensorNumber, QGenericMat
 
             for (uint i = 0; i < splitList.size(); ++i, ++mcpt)
             {
-                matriceData[ mcpt ] = splitList.at(i).toDouble();
+                matriceData[mcpt] = splitList.at(i).toDouble();
             }
 
         }
@@ -280,13 +127,128 @@ bool DataController::loadCalibrationMatriceOrdre2(uint sensorNumber, QGenericMat
     }
     else
     {
-        qCritical("Impossible d'ouvrir le fichier matrice de calibration ordre 2");
+        qCritical() << "Impossible d'ouvrir le fichier matrice de calibration " << path;
+        return false;
     }
 
     return true;
 }
-//_____________________
-//Worker Thread________
+
+uint DataController::loadSensorToAnalogConfig()
+{
+    QFile file(m_configFilePath);
+    clearSensorConfiguration();
+
+    if (!file.open(QIODevice::ReadOnly))
+    {
+        qWarning() << "Impossible d'ouvrir le fichier de configuration " << m_configFilePath;
+        return 0;
+    }
+
+    QTextStream stream(&file);
+    QString content = stream.readAll();
+    file.close();
+
+    QJsonParseError parseError;
+    QJsonDocument doc = QJsonDocument::fromJson(content.toUtf8(), &parseError);
+
+    if (parseError.error != QJsonParseError::NoError)
+    {
+        qWarning() << "Erreur de parsing " << parseError.offset << ":" << parseError.errorString();
+        return 1;
+    }
+
+    if (!doc.isEmpty())
+    {
+        QJsonObject jsonObj = doc.object();
+        double angle = jsonObj.value("wallangle").toDouble();
+        qDebug() << "Angle du mur : " << angle;
+
+        //TO DO STORE FOR EACH sensor instead
+        this->wallRotMatrix = calculateWallRotMatrix(angle);
+
+        QJsonArray array = jsonObj["sensors"].toArray();
+
+        QGenericMatrix<12, 6, double> calibrationMatrixO2container;
+
+        for (const auto& item : array) {
+            QJsonObject obj = item.toObject();
+
+            QString sensorname = obj["name"].toString();
+            uint sensorId = obj["id"].toInt();
+            uint sensorChannel = obj["chan"].toInt();
+            double sensorAngle = obj["angle"].toDouble();
+            double sensorZRotation = obj["zRotation"].toDouble();
+
+            Sensor tms(sensorId, sensorChannel, sensorAngle);
+
+            if (sensorZRotation != 0)
+                tms.setRotationAngle(sensorZRotation, 'z');
+
+            if (!this->loadCalibrationMatriceOrdre2(tms.getSensorId(), calibrationMatrixO2container))
+            {
+                qCritical("Matrice de calibration ordre2 non initialisee");
+                return 0;
+            }
+
+            tms.setCalibrationMatriceO2(calibrationMatrixO2container);
+            this->sensors.push_back(tms);
+
+            qDebug() << "Chargement du capteur" << tms.getSensorId() << " OK ";
+            //tms.toString(true);
+        }
+    }
+
+    return this->sensors.count();
+}
+
+
+bool DataController::loadCalibrationMatriceOrdre2(uint sensorNumber, QGenericMatrix<12, 6, double>& matrice)
+{
+    if (sensorNumber == 0) sensorNumber = 1;
+
+    QString path;
+    path.append(m_calibrationFilesPath);
+    path.append("/" + m_sensorCalibrationFiles[sensorNumber - 1]);
+
+    //qDebug() << "Ouverture matrice de calibration" << path;
+
+    QFile inputFile(path);
+
+    QStringList splitList;
+    double matriceData[12 * 6];
+
+    if (inputFile.open(QIODevice::ReadOnly)) {
+        QTextStream in(&inputFile);
+        uint mcpt = 0;
+        while (!in.atEnd())
+        {
+            QString line = in.readLine();
+            splitList = line.split("\t");
+
+            for (uint i = 0; i < splitList.size(); ++i, ++mcpt)
+            {
+                matriceData[mcpt] = splitList.at(i).toDouble();
+            }
+
+        }
+        QGenericMatrix<12, 6, double> calibrationMatrixO2(matriceData);
+        matrice = calibrationMatrixO2;
+        inputFile.close();
+    }
+    else
+    {
+        qCritical() << "Impossible d'ouvrir le fichier matrice de calibration " << path;
+        return false;
+    }
+
+    return true;
+}
+
+
+#pragma endregion
+
+#pragma region OFFSET THREAD
 
 void DataController::Calibrate_Sensors(uint nbSamples)
 {
@@ -307,6 +269,7 @@ void DataController::Calibrate_Sensors(uint nbSamples)
     }
 }
 
+// OFFSET THREAD
 void DataController::createThreadAvgZero(uint sensorID, uint sensorStartChannel, uint nbSamples)
 {
     qDebug() << "Creating worker thread for zero correction value of sensors " << sensorID
@@ -362,6 +325,9 @@ void DataController::handleResultsAvgZero(uint sensorid, const DataPacket& analo
     for (uint i = 0; i < 6; ++i) qDebug() << getSensor(sensorid).getChannelCalibrationValuesArr()[i];
 }
 
+#pragma endregion
+
+#pragma region DATA PROCESSING
 //_____________________
 //Data Processing______
 const QGenericMatrix<1, 6, double> DataController::ChannelanalogToForce3axisForce(double rawAnalogChannelValues[6], Sensor& sensor, uint matrixOrder)
@@ -372,12 +338,12 @@ const QGenericMatrix<1, 6, double> DataController::ChannelanalogToForce3axisForc
         QGenericMatrix<1, 6, double> analogValuesMatrix(rawAnalogChannelValues);
         result = sensor.getCalibrationMatriceO1() * analogValuesMatrix;
     }
-    else if (matrixOrder == 2) 
+    else if (matrixOrder == 2)
     {
         double analogDataSquared[12];
         for (uint i = 0; i < 6; i++) analogDataSquared[i] = rawAnalogChannelValues[i];
         for (uint i = 0; i < 6; i++) analogDataSquared[i + 6] = rawAnalogChannelValues[i] * rawAnalogChannelValues[i];
-      
+
         QGenericMatrix<1, 12, double> analogValuesSquare(analogDataSquared);
         result = sensor.getCalibrationMatriceO2() * analogValuesSquare;
     }
@@ -408,18 +374,18 @@ void DataController::processNewDataPacket(const DataPacket& d)
         //nombre de channels par capteurs (6)
         for (uint i = 0; i < 6; ++i)
         {
-            uint idx = ((sensorFirstAnalogChannel) + i);
+            uint idx = ((sensorFirstAnalogChannel)+i);
 
-            if (idx > d.m_channelNumber) 
+            if (idx > d.m_channelNumber)
             {
-               qDebug() << "Erreur pas assez de voies d'acquisition disponibles";
-               qDebug() << "Capteur " << currentSensorID << " est associe a la voie " <<
-                   sensorFirstAnalogChannel << " mais il y a seulement " << d.dataValues.count() << "de data de disponible";
-               break; 
+                qDebug() << "Erreur pas assez de voies d'acquisition disponibles";
+                qDebug() << "Capteur " << currentSensorID << " est associe a la voie " <<
+                    sensorFirstAnalogChannel << " mais il y a seulement " << d.dataValues.count() << "de data de disponible";
+                break;
             }
-            
+
             //apply 0 offset to raw values
-            if (this->applyOffset) 
+            if (this->applyOffset)
             {
                 dataBySensor[i] = d.dataValues[idx] - sensorCalibrationValues[i];
             }
@@ -434,14 +400,14 @@ void DataController::processNewDataPacket(const DataPacket& d)
         if (this->applyRotMatrix)
         {
             double forcet[3] = { result(0,0), result(1,0) , result(2,0) };
-           
+
             QGenericMatrix<1, 3, double> force(forcet);
 
             //apply rotation matrix to force vector
             QGenericMatrix<1, 3, double> forceVecRot = rotationMatrix * force;
 
             //apply wall rotation matrix
-            if(this->applyWallRotation)
+            if (this->applyWallRotation)
                 forceVecRot = this->wallRotMatrix * forceVecRot;
 
             finalForce.dataValues[0] = forceVecRot(0, 0);
@@ -474,7 +440,7 @@ void DataController::processNewDataPacket(const DataPacket& d)
         }
 
         //finalForce.printDebug();
-        
+
         //(*gp).pushDataForceMoment(finalForce);
 
         udpClient->streamData(finalForce, currentSensorID);
@@ -484,11 +450,10 @@ void DataController::processNewDataPacket(const DataPacket& d)
     DataPacket chrono_pulse(1);
     double lastDataCol = d.dataValues[d.m_channelNumber - 1];
     chrono_pulse.dataValues[0] = lastDataCol;
-    
+
     udpClient->streamData(chrono_pulse, 0);
 
 }
-
 
 
 // Data processing platform
@@ -500,13 +465,13 @@ const QGenericMatrix<1, 6, double> DataController::PLATFORMChannelanalogToForce3
 
     double analogDataSquared[12];
 
- 
+
     for (uint i = 0; i < 6; i++) analogDataSquared[i] = rawAnalogChannelValues[i];
     for (uint i = 0; i < 6; i++) analogDataSquared[i + 6] = rawAnalogChannelValues[i] * rawAnalogChannelValues[i];
 
     QGenericMatrix<1, 12, double> analogValuesSquare(analogDataSquared);
     result = sensor.getCalibrationMatriceO2PLATFORM() * analogValuesSquare;
-    
+
     return result;
 }
 
@@ -557,12 +522,49 @@ void DataController::processNewDataPacketPlatformFromNi(const DataPacket& d)
         finalForce.dataValues[4] = result(4, 0);
         finalForce.dataValues[5] = result(5, 0);
 
-  
+
         //finalForce.printDebug();
 
         udpClient->streamData(finalForce, currentSensorID);
     }
 
+}
+
+#pragma endregion
+
+
+////_____ TOOLS
+
+
+void DataController::displaySensor()
+{
+    qDebug() << "N sensors" << this->sensors.count();
+    for (uint i = 0; i < this->sensors.count(); ++i)
+    {
+        this->sensors.at(i).toString(false);
+    }
+
+    qDebug() << "N platform" << this->plaforms.count();
+    for (uint i = 0; i < this->plaforms.count(); ++i)
+    {
+        this->plaforms.at(i).toString(false);
+    }
+}
+
+Sensor& DataController::getSensor(uint id)
+{
+    for (Sensor& s : this->sensors) {
+        if (id == s.getSensorId()) {
+            return s;
+        }
+    }
+
+    throw std::runtime_error("Object not found in vector.");
+}
+
+void DataController::connectToUdpSteam(MyUDP* udps)
+{
+    this->udpClient = udps;
 }
 
 

@@ -121,6 +121,12 @@ private:
 	QVector<Sensor> sensors;
 	QVector<Sensor> plaforms;
 
+	QString m_configFilePath;
+	QString m_calibrationFilesPath;
+
+	QStringList m_sensorCalibrationFiles;
+	QStringList m_plaformCalibrationFiles;
+
 	QThread workerThread;
 
 	QGenericMatrix<3, 3, double> wallRotMatrix;
@@ -143,6 +149,10 @@ public:
 	
 	Sensor& getSensor(uint id);
 	void createThreadAvgZero(uint sensorID, uint stratChannel, uint nbSamples);
+
+	uint loadPlatformToAnalogConfig();
+
+	bool loadCalibrationMatriceOrdre2PLATFORM(uint sensorNumber, QGenericMatrix<12, 6, double>& matrice);
 
 	uint loadSensorToAnalogConfig();
 	void connectToUdpSteam(MyUDP* udps);

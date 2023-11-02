@@ -25,5 +25,7 @@ setup.log
 # Dune generated files
 *.install
 
-# Local OPAM switch
-_opam/
+ClimCapApi/build
+ClimCapApi/forms/images
+*.def
+ClimCapApi/data/log.txt

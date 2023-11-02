@@ -6,17 +6,17 @@
 
 #define DAQmxErrChk(functionCall) if( DAQmxFailed(error=(functionCall)) ) goto Error; else
 
-#define IMPORT_SAMPLE_CLOCK_PIN  "PFI0"
-#define IMPORT_START_TRIGGER_PIN "PFI1"
-#define EXPORT_SAMPLE_CLOCK_PIN  "PFI4"
-#define EXPORT_START_TRIGGER_PIN "PFI5"
-#define CHRONO_PULSE_PIN 80
+constexpr auto IMPORT_SAMPLE_CLOCK_PIN = "PFI0";
+constexpr auto IMPORT_START_TRIGGER_PIN = "PFI1";
+constexpr auto EXPORT_SAMPLE_CLOCK_PIN = "PFI4";
+constexpr auto EXPORT_START_TRIGGER_PIN = "PFI5";
+constexpr auto CHRONO_PULSE_PIN = 80;
 
-#define DEBUG_MOD_PLATFORM true
-#define DEBUG_MOD_SENSOR true
+constexpr auto DEBUG_MOD_PLATFORM = true;
+constexpr auto DEBUG_MOD_SENSOR = true;
 
-#define SENSOR_ACQ_CARD_NAME "Dev1"
-#define PLATFORM_ACQ_CARD_NAME "Dev1"
+constexpr auto SENSOR_ACQ_CARD_NAME = "Dev1";
+constexpr auto PLATFORM_ACQ_CARD_NAME = "Dev1";
 
 float NidaqmxConnectionThread::m_acqRate = 0;
 float NidaqmxConnectionThread::m_callBackRate = 0;
@@ -26,7 +26,6 @@ bool NidaqmxConnectionThread::m_enableStartTrigger = 0;
 uint NidaqmxConnectionThread::m_numberOfSample = 0;
 
 #pragma region CONSTRUCTOR
-
 
 void parseDevices(char* str)
 {
@@ -42,8 +41,6 @@ void parseDevices(char* str)
 		token = strtok_s(NULL, delim, &context);
 	}
 
-
-	//qDebug("\n");
 }
 
 NidaqmxConnectionThread* NidaqmxConnectionThread::GetInstance()
@@ -91,18 +88,27 @@ bool NidaqmxConnectionThread::init(float acquisitionRate, float callBackRate, ui
 
 NidaqmxConnectionThread::NidaqmxConnectionThread(float acquisitionRate, float callBackRate, uint nOfChannels, bool triggerEnable, uint numberOfSample)
 {
+	int32       error = 0;
+	char        errBuff[2048] = { '\0' };
+
 	this->cardName = SENSOR_ACQ_CARD_NAME;
 	this->platformCardName = PLATFORM_ACQ_CARD_NAME;
 
-	DAQmxResetDevice(this->cardName.toStdString().c_str());
-	DAQmxResetDevice(this->platformCardName.toStdString().c_str());
+	DAQmxErrChk(DAQmxResetDevice(this->cardName.toStdString().c_str()));
+	DAQmxErrChk(DAQmxResetDevice(this->platformCardName.toStdString().c_str()));
 
 	//setUPTask(acquisitionRate, callBackRate, nOfChannels, triggerEnable, numberOfSample);
 	//setUpCalibrationTask(acquisitionRate, callBackRate, nOfChannels, triggerEnable, numberOfSample);
+
+Error:
+	if (DAQmxFailed(error)) {
+
+		DAQmxGetExtendedErrorInfo(errBuff, 2048);
+		qDebug("DAQmx Error: %s\n", errBuff);
+	}
 }
 
 #pragma endregion
-
 
 #pragma region SENSOR CARD
 
@@ -112,6 +118,7 @@ int32 CVICALLBACK NidaqmxConnectionThread::EveryNCallback(TaskHandle taskHandle,
 
 	int32       error = 0;
 	char        errBuff[2048] = { '\0' };
+
 	static int  totalRead = 0;
 	static int  frameNumber = 0;
 	int32       read = 0;
@@ -121,17 +128,15 @@ int32 CVICALLBACK NidaqmxConnectionThread::EveryNCallback(TaskHandle taskHandle,
 	// DAQmx Read Code
 	/*********************************************/
 
-	DAQmxReadAnalogF64(taskHandle, NidaqmxConnectionThread::m_callBackRate,
-		10, DAQmx_Val_GroupByScanNumber, data, NidaqmxConnectionThread::m_bufferSize, &read, NULL);
+	DAQmxErrChk(DAQmxReadAnalogF64(taskHandle, NidaqmxConnectionThread::m_callBackRate,
+		10, DAQmx_Val_GroupByScanNumber, data, NidaqmxConnectionThread::m_bufferSize, &read, NULL));
 
 	//qDebug() << "Read " << read << "buff size " << NidaqmxConnectionThread::m_bufferSize;
 	//if (read > 0) {
 		//qDebug("Acquisition de %d echantillons. Total %d\r", (int)read, (int)(totalRead += read));
 	//}
 
-	bool debugMod = false;
-
-	if (debugMod)
+	if (DEBUG_MOD_SENSOR)
 	{
 		double* dummydata = new double[m_numberOfChannels];
 		for (uint i = 0; i < (m_numberOfChannels / 6); i++)
@@ -151,8 +156,6 @@ int32 CVICALLBACK NidaqmxConnectionThread::EveryNCallback(TaskHandle taskHandle,
 	}
 	else
 	{
-		DP.frameNumber = frameNumber;
-		frameNumber++;
 		std::copy(data, data + m_numberOfChannels, std::begin(DP.dataValues));
 		delete[] data;
 
@@ -169,12 +172,15 @@ Error:
 		DAQmxClearTask(taskHandle);
 		qDebug("DAQmx Error: %s\n", errBuff);
 	}
+
 	return 0;
 }
 
-
 void NidaqmxConnectionThread::setUPTask(float acquisitionRate, float callBackRate, uint nOfChannels, bool triggerEnable, uint numberOfSample)
 {
+	int32       error = 0;
+	char        errBuff[2048] = { '\0' };
+
 	NidaqmxConnectionThread::m_acqRate = acquisitionRate;
 	NidaqmxConnectionThread::m_callBackRate = callBackRate;
 	NidaqmxConnectionThread::m_numberOfChannels = nOfChannels + 1; // +1 for chrono pulse channel
@@ -210,8 +216,8 @@ void NidaqmxConnectionThread::setUPTask(float acquisitionRate, float callBackRat
 
 		qDebug("Import Trigger enable");
 
-		DAQmxCfgSampClkTiming(m_acquisitionTask->m_handle, "", acquisitionRate, DAQmx_Val_Rising, DAQmx_Val_FiniteSamps, m_numberOfSample);
-		DAQmxCfgDigEdgeStartTrig(m_acquisitionTask->m_handle, sstrChannelName.c_str(), DAQmx_Val_Rising);
+		DAQmxErrChk(DAQmxCfgSampClkTiming(m_acquisitionTask->m_handle, "", acquisitionRate, DAQmx_Val_Rising, DAQmx_Val_FiniteSamps, m_numberOfSample));
+		DAQmxErrChk(DAQmxCfgDigEdgeStartTrig(m_acquisitionTask->m_handle, sstrChannelName.c_str(), DAQmx_Val_Rising));
 	}
 	else
 	{
@@ -219,8 +225,8 @@ void NidaqmxConnectionThread::setUPTask(float acquisitionRate, float callBackRat
 	}
 
 
-	DAQmxRegisterEveryNSamplesEvent(m_acquisitionTask->m_handle, DAQmx_Val_Acquired_Into_Buffer, callBackRate, 0, &NidaqmxConnectionThread::EveryNCallback, NULL);
-	DAQmxRegisterDoneEvent(m_acquisitionTask->m_handle, 0, DoneCallback, NULL);
+	DAQmxErrChk(DAQmxRegisterEveryNSamplesEvent(m_acquisitionTask->m_handle, DAQmx_Val_Acquired_Into_Buffer, callBackRate, 0, &NidaqmxConnectionThread::EveryNCallback, NULL));
+	DAQmxErrChk(DAQmxRegisterDoneEvent(m_acquisitionTask->m_handle, 0, DoneCallback, NULL));
 
 	qDebug() << "Tache d'acquisition initialisee :"
 		<< " - Frequence: " << acquisitionRate << " hz"
@@ -229,10 +235,20 @@ void NidaqmxConnectionThread::setUPTask(float acquisitionRate, float callBackRat
 		<< " - Taille buffer: " << m_bufferSize
 		<< " - Trigger: " << m_enableStartTrigger;
 
+Error:
+
+	if (DAQmxFailed(error)) {
+		DAQmxGetExtendedErrorInfo(errBuff, 2048);
+		qDebug("DAQmx Error: %s\n", errBuff);
+	}
+
 }
 
 void NidaqmxConnectionThread::setUpCalibrationTask(float acquisitionRate, float callBackRate, uint nOfChannels, bool triggerEnable, uint numberOfSample)
 {
+	int32       error = 0;
+	char        errBuff[2048] = { '\0' };
+
 	std::string taskname = cardName.toStdString() + "calibration";
 	m_calibrationTask = new NIDAQmx::Task(taskname);
 	QString channelNamePrefix = this->cardName + "/ai";
@@ -246,9 +262,16 @@ void NidaqmxConnectionThread::setUpCalibrationTask(float acquisitionRate, float 
 		m_calibrationTask->AddChannel(str, DAQmx_Val_RSE, -10.0, 10.0);
 	}
 
-	DAQmxCfgSampClkTiming(m_calibrationTask->m_handle, "", acquisitionRate, DAQmx_Val_Rising, DAQmx_Val_FiniteSamps, numberOfSample);
-	DAQmxRegisterEveryNSamplesEvent(m_calibrationTask->m_handle, DAQmx_Val_Acquired_Into_Buffer, callBackRate, 0, &NidaqmxConnectionThread::EveryNCallback, NULL);
-	DAQmxRegisterDoneEvent(m_calibrationTask->m_handle, 0, DoneCallback, NULL);
+	DAQmxErrChk(DAQmxCfgSampClkTiming(m_calibrationTask->m_handle, "", acquisitionRate, DAQmx_Val_Rising, DAQmx_Val_FiniteSamps, numberOfSample));
+	DAQmxErrChk(DAQmxRegisterEveryNSamplesEvent(m_calibrationTask->m_handle, DAQmx_Val_Acquired_Into_Buffer, callBackRate, 0, &NidaqmxConnectionThread::EveryNCallback, NULL));
+	DAQmxErrChk(DAQmxRegisterDoneEvent(m_calibrationTask->m_handle, 0, DoneCallback, NULL));
+
+Error:
+
+	if (DAQmxFailed(error)) {
+		DAQmxGetExtendedErrorInfo(errBuff, 2048);
+		qDebug("DAQmx Error: %s\n", errBuff);
+	}
 }
 
 
@@ -257,6 +280,8 @@ void NidaqmxConnectionThread::setUpCalibrationTask(float acquisitionRate, float 
 #pragma region PLATFORM CARD
 void NidaqmxConnectionThread::setUPPlatformTask(float acquisitionRate, float callBackRate, uint nOfChannels, bool triggerEnable, uint numberOfSample)
 {
+	int32	error = 0;
+
 	QString current_card_name = this->platformCardName;
 	auto* current_task = this->m_platformAcquisitionTask;
 
@@ -282,8 +307,8 @@ void NidaqmxConnectionThread::setUPPlatformTask(float acquisitionRate, float cal
 
 		qDebug("Import Trigger enable for platform task");
 
-		DAQmxCfgSampClkTiming(current_task->m_handle, "", acquisitionRate, DAQmx_Val_Rising, DAQmx_Val_FiniteSamps, m_numberOfSample);
-		DAQmxCfgDigEdgeStartTrig(current_task->m_handle, sstrChannelName.c_str(), DAQmx_Val_Rising);
+		DAQmxErrChk(DAQmxCfgSampClkTiming(current_task->m_handle, "", acquisitionRate, DAQmx_Val_Rising, DAQmx_Val_FiniteSamps, m_numberOfSample));
+		DAQmxErrChk(DAQmxCfgDigEdgeStartTrig(current_task->m_handle, sstrChannelName.c_str(), DAQmx_Val_Rising));
 	}
 	else
 	{
@@ -291,8 +316,8 @@ void NidaqmxConnectionThread::setUPPlatformTask(float acquisitionRate, float cal
 	}
 
 
-	DAQmxRegisterEveryNSamplesEvent(current_task->m_handle, DAQmx_Val_Acquired_Into_Buffer, callBackRate, 0, &NidaqmxConnectionThread::EveryNCallbackPlatform, NULL);
-	DAQmxRegisterDoneEvent(current_task->m_handle, 0, DoneCallback, NULL);
+	DAQmxErrChk(DAQmxRegisterEveryNSamplesEvent(current_task->m_handle, DAQmx_Val_Acquired_Into_Buffer, callBackRate, 0, &NidaqmxConnectionThread::EveryNCallbackPlatform, NULL));
+	DAQmxErrChk(DAQmxRegisterDoneEvent(current_task->m_handle, 0, DoneCallback, NULL));
 
 	qDebug() << "Tache d'acquisition PLATFORM initialisee :"
 		<< " - Frequence: " << acquisitionRate << " hz"
@@ -300,10 +325,20 @@ void NidaqmxConnectionThread::setUPPlatformTask(float acquisitionRate, float cal
 		<< " - Nb voies: " << nOfChannels
 		<< " - Taille buffer: " << m_bufferSize
 		<< " - Trigger: " << triggerEnable;
+
+Error:
+	if (DAQmxFailed(error)) {
+
+		char        errBuff[2048] = { '\0' };
+		DAQmxGetExtendedErrorInfo(errBuff, 2048);
+		qDebug("DAQmx Error: %s\n", errBuff);
+	}
 }
 
 void NidaqmxConnectionThread::setUpPlatformCalibrationTask(float acquisitionRate, float callBackRate, uint nOfChannels, bool triggerEnable, uint numberOfSample)
 {
+	int32	error = 0;
+
 	QString current_card_name = this->platformCardName;
 	auto* current_task = this->m_platformCalibrationTask;
 
@@ -320,9 +355,16 @@ void NidaqmxConnectionThread::setUpPlatformCalibrationTask(float acquisitionRate
 		current_task->AddChannel(str, DAQmx_Val_RSE, -10.0, 10.0);
 	}
 
-	DAQmxCfgSampClkTiming(current_task->m_handle, "", acquisitionRate, DAQmx_Val_Rising, DAQmx_Val_FiniteSamps, numberOfSample);
-	DAQmxRegisterEveryNSamplesEvent(current_task->m_handle, DAQmx_Val_Acquired_Into_Buffer, callBackRate, 0, &NidaqmxConnectionThread::EveryNCallbackPlatform, NULL);
-	DAQmxRegisterDoneEvent(current_task->m_handle, 0, DoneCallback, NULL);
+	DAQmxErrChk(DAQmxCfgSampClkTiming(current_task->m_handle, "", acquisitionRate, DAQmx_Val_Rising, DAQmx_Val_FiniteSamps, numberOfSample));
+	DAQmxErrChk(DAQmxRegisterEveryNSamplesEvent(current_task->m_handle, DAQmx_Val_Acquired_Into_Buffer, callBackRate, 0, &NidaqmxConnectionThread::EveryNCallbackPlatform, NULL));
+	DAQmxErrChk(DAQmxRegisterDoneEvent(current_task->m_handle, 0, DoneCallback, NULL));
+
+Error:
+	if (DAQmxFailed(error)) {
+		char        errBuff[2048] = { '\0' };
+		DAQmxGetExtendedErrorInfo(errBuff, 2048);
+		qDebug("DAQmx Error: %s\n", errBuff);
+	}
 }
 
 int32 CVICALLBACK NidaqmxConnectionThread::EveryNCallbackPlatform(TaskHandle taskHandle, int32 everyNsamplesEventType, uInt32 nSamples, void* callbackData)
@@ -343,8 +385,8 @@ int32 CVICALLBACK NidaqmxConnectionThread::EveryNCallbackPlatform(TaskHandle tas
 	// DAQmx Read Code
 	/*********************************************/
 
-	DAQmxReadAnalogF64(taskHandle, NidaqmxConnectionThread::m_callBackRate,
-		10, DAQmx_Val_GroupByScanNumber, data, bufferSize, &read, NULL);
+	DAQmxErrChk(DAQmxReadAnalogF64(taskHandle, NidaqmxConnectionThread::m_callBackRate,
+		10, DAQmx_Val_GroupByScanNumber, data, bufferSize, &read, NULL));
 
 	//qDebug() << "Read " << read << "buff size " << NidaqmxConnectionThread::m_bufferSize;
 	//if (read > 0) {
@@ -374,8 +416,6 @@ int32 CVICALLBACK NidaqmxConnectionThread::EveryNCallbackPlatform(TaskHandle tas
 	}
 	else
 	{
-		DP.frameNumber = frameNumber;
-		frameNumber++;
 		std::copy(data, data + numberOfChannels, std::begin(DP.dataValues));
 		delete[] data;
 
@@ -385,9 +425,7 @@ int32 CVICALLBACK NidaqmxConnectionThread::EveryNCallbackPlatform(TaskHandle tas
 Error:
 	if (DAQmxFailed(error)) {
 		DAQmxGetExtendedErrorInfo(errBuff, 2048);
-		/*********************************************/
-		// DAQmx Stop Code
-		/*********************************************/
+
 		DAQmxStopTask(taskHandle);
 		DAQmxClearTask(taskHandle);
 		qDebug("DAQmx Error: %s\n", errBuff);
@@ -397,8 +435,6 @@ Error:
 
 #pragma endregion
 
-//_____________________________________________________________________________
-
 int32 CVICALLBACK NidaqmxConnectionThread::DoneCallback(TaskHandle taskHandle, int32 status, void* callbackData)
 {
 	int32   error = 0;
@@ -407,18 +443,19 @@ int32 CVICALLBACK NidaqmxConnectionThread::DoneCallback(TaskHandle taskHandle, i
 	// Check to see if an error stopped the task.
 	
 	DAQmxErrChk(status);
-	DAQmxStopTask(taskHandle);
+	DAQmxErrChk(DAQmxStopTask(taskHandle));
 
 Error:
 	if (DAQmxFailed(error)) {
 		DAQmxGetExtendedErrorInfo(errBuff, 2048);
 		DAQmxClearTask(taskHandle);
-		printf("DAQmx Error: %s\n", errBuff);
+		qDebug("DAQmx Error: %s\n", errBuff);
 	}
 	return 0;
 }
 
 //______________________________________________________________________________________________
+#pragma region TOOLS
 
 void NidaqmxConnectionThread::clearTask()
 {
@@ -451,20 +488,11 @@ void NidaqmxConnectionThread::clearTask()
 
 	qDebug() << "Clearing Task";
 }
-void NidaqmxConnectionThread::startCalibration() const
-{
-	this->m_calibrationTask->Start();
-}
-
-void NidaqmxConnectionThread::stopCalibration() const
-{
-	this->m_calibrationTask->Stop();
-}
 
 void NidaqmxConnectionThread::startAcquisition() const
 {
 	{
-		this->m_acquisitionTask->Start();
+		if (m_acquisitionTask != nullptr) m_acquisitionTask->Start();
 		if (this->m_enableStartTrigger)
 		{
 			qDebug("En attente de declenchement");
@@ -478,28 +506,40 @@ void NidaqmxConnectionThread::startAcquisition() const
 
 void NidaqmxConnectionThread::stopAcquisition() const
 {
-	{
-		this->m_acquisitionTask->Stop();
-		qDebug("Fin de l'acquisition");
-	}
+	if (m_acquisitionTask != nullptr) m_acquisitionTask->Stop();
+	qDebug("Fin de l'acquisition");
 };
+
+
+void NidaqmxConnectionThread::startCalibration() const
+{
+	if (m_calibrationTask != nullptr) m_calibrationTask->Start();
+}
+
+void NidaqmxConnectionThread::stopCalibration() const
+{
+	if (m_calibrationTask != nullptr) this->m_calibrationTask->Stop();
+}
 
 void NidaqmxConnectionThread::startPlaformAcquisition() const
 {
-	this->m_platformAcquisitionTask->Start();
+	if (m_platformAcquisitionTask != nullptr) m_platformAcquisitionTask->Start();
 }
 
 void NidaqmxConnectionThread::stopPlaformAcquisition() const
 {
-	this->m_platformAcquisitionTask->Stop();
+	if (m_platformAcquisitionTask != nullptr) m_platformAcquisitionTask->Stop();
 }
 
 void NidaqmxConnectionThread::startPlaformCalibration() const
 {
-	this->m_platformCalibrationTask->Start();
+	if (m_platformAcquisitionTask != nullptr) m_platformAcquisitionTask->Start();
 }
 
 void NidaqmxConnectionThread::stopPlaformCalibration() const
 {
-	this->m_platformCalibrationTask->Stop();
+	if (m_platformCalibrationTask != nullptr) m_platformCalibrationTask->Stop();
 }
+
+#pragma endregion
+

@@ -19,9 +19,9 @@ MainWindow::MainWindow(QWidget *parent) :
     m_udp(new QUdpSocket(this))
 {
     m_console = new Console();
-    QObject:connect(&s_emitter, SIGNAL(append_log(QString)), m_console, SLOT(putData(QString)));
+    connect(&s_emitter, SIGNAL(append_log(QString)), m_console, SLOT(putData(QString)));
 
-    QObject::connect(m_settings, SIGNAL(newConfigFile()), this, SLOT(appSettingsChanged()));
+    connect(m_settings, SIGNAL(newConfigFile()), this, SLOT(appSettingsChanged()));
 
     MyApc = new AppController(); 
     MyApc->startUp();

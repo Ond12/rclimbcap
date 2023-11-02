@@ -494,7 +494,7 @@ void DataController::processNewDataPacketPlatformFromNi(const DataPacket& d)
         auto rotationMatrix = (*gp).getRotationMatrix();
 
         //nombre de channels par capteurs (8) (platforme)
-        for (uint i = 0; i < 8; ++i)
+        for (uint i = 0; i < 6; ++i)
         {
             uint idx = ((sensorFirstAnalogChannel)+i);
 

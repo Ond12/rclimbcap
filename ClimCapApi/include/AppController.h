@@ -1,4 +1,5 @@
-#pragma once
+ï»¿#pragma once
+
 #include "myudp.h"
 #include "dataProcessing.h"
 #include "nidaqmxconnectionthread.h"
@@ -31,15 +32,15 @@ public:
 	uint m_calibrationRate; // in hz
 	uint m_calibrationTime; //in seconds
 	uint m_calibrationNumberSample;
-	
-	AppController() 
+
+	AppController()
 	{
 		this->resetSettings();
 		this->readSettings();
 
-		m_callbackrate = 1; 
-		m_calibrationRate = 1000; 
-		m_calibrationTime = 1; 
+		m_callbackrate = 1;
+		m_calibrationRate = 1000;
+		m_calibrationTime = 1;
 		m_calibrationNumberSample = m_calibrationRate * m_calibrationTime;
 	}
 
@@ -75,7 +76,7 @@ public:
 		}
 		else
 			m_sampleRate = sample_rate.toInt();
-		
+
 		const auto trigger_enable = settings.value("trigger_enable");
 		if (trigger_enable.isNull())
 		{
@@ -121,7 +122,7 @@ public:
 					MyNidaqmxConnectionThread->setUpPlatformCalibrationTask(m_calibrationRate, m_callbackrate, totalNumberOfChannels, m_triggerEnable, m_calibrationNumberSample);
 				}
 				else {
-					qDebug() << "Acquisition Plateformes désactivees";
+					qDebug() << "Acquisition Plateformes dÃ©sactivees";
 					return false;
 				}
 
@@ -139,7 +140,7 @@ public:
 
 				}
 				else {
-					qDebug() << "Acquisition Capteurs désactivees";
+					qDebug() << "Acquisition Capteurs dÃ©sactivees";
 					return false;
 				}
 
@@ -148,7 +149,7 @@ public:
 				qCritical() << "DataController nullptr";
 			}
 		}
-		else 
+		else
 		{
 			qCritical() << "Echec NidaqmxConnectionThread ";
 			return false;
@@ -161,13 +162,13 @@ public:
 	{
 		MyDataController = new DataController();
 		uint NsensorLoaded = MyDataController->loadSensorToAnalogConfig();
-		if ( NsensorLoaded == 0 ) { qCritical() << "Echec dans le chargement de la configuration capteur"; return 0; };
+		if (NsensorLoaded == 0) { qCritical() << "Echec dans le chargement de la configuration capteur"; return 0; };
 
 		int totalNumberOfChannels = NsensorLoaded * NB_CHAN_PER_SENSOR;
 		int numberOfSample = m_totalAcqTimeS * m_sampleRate;
 
 		NidaqmxConnectionThread::init(m_sampleRate, 1, totalNumberOfChannels, m_triggerEnable, numberOfSample);
-	    this->MyNidaqmxConnectionThread = NidaqmxConnectionThread::GetInstance();
+		this->MyNidaqmxConnectionThread = NidaqmxConnectionThread::GetInstance();
 
 		QObject::connect(this->MyNidaqmxConnectionThread, SIGNAL(newDataPacketNi(const DataPacket&)),
 			this->MyDataController, SLOT(processNewDataPacketFromNi(const DataPacket&)));
@@ -183,12 +184,12 @@ public:
 		return true;
 	};
 
-	void startAcquisition() const 
+	void startAcquisition() const
 	{
 		MyNidaqmxConnectionThread->startAcquisition();
 	};
 
-	void stopAcquisition() const 
+	void stopAcquisition() const
 	{
 		MyNidaqmxConnectionThread->stopAcquisition();
 	};

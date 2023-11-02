@@ -271,8 +271,7 @@ signals:
     void newDataPacketPlatform(const DataPacket&);
 
 
-public slots:
-    void setTriggerEnable(bool enable);
+
 
 };
 

@@ -89,6 +89,8 @@ uint DataController::loadPlatformToAnalogConfig()
     loadCalibrationMatriceOrdre2PLATFORM(platformR.getSensorId(), calibrationMatrixO2container);
     platformL.setCalibrationMatriceO2PLATFORM(calibrationMatrixO2container);
     this->plaforms.push_back(platformR);
+
+    return true;
 }
 
 bool DataController::loadCalibrationMatriceOrdre2PLATFORM(uint sensorNumber, QGenericMatrix<12, 6, double>& matrice)

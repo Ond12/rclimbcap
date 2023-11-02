@@ -4,14 +4,14 @@
 #include "nidaqmxconnectionthread.h"
 #include <QSettings>
 
-#define DEFAULT_SAMPLE_RATE 200
-#define DEFAULT_ACQ_TIME 200
-#define NB_CHAN_PER_SENSOR 6
-#define DEFAULT_TRIGGER_SETTING 0
-#define DEFAULT_SAMPLE_CALIBRATION_NUMBER 1000
+constexpr auto DEFAULT_SAMPLE_RATE = 200;
+constexpr auto  DEFAULT_ACQ_TIME = 200;
+constexpr auto  NB_CHAN_PER_SENSOR = 6;
+constexpr auto  DEFAULT_TRIGGER_SETTING = 0;
+constexpr auto  DEFAULT_SAMPLE_CALIBRATION_NUMBER = 1000;
 
-#define ENABLE_PLATFORM true
-#define ENABLE_SENSOR true
+constexpr auto  ENABLE_PLATFORM = true;
+constexpr auto  ENABLE_SENSOR = true;
 
 class AppController
 {
@@ -27,9 +27,9 @@ public:
 	bool m_triggerEnable;
 	uint m_sampleCalibrationNumber;
 
-	uint m_callbackrate = 1;  //callback every one sample
-	uint m_calibrationRate = 1000; // in hz
-	uint m_calibrationTime = 1; //in seconds
+	uint m_callbackrate;  //callback every one sample
+	uint m_calibrationRate; // in hz
+	uint m_calibrationTime; //in seconds
 	uint m_calibrationNumberSample;
 	
 	AppController() 
@@ -108,8 +108,6 @@ public:
 				this->readSettings();
 				MyNidaqmxConnectionThread->clearTask();
 
-
-
 				if (ENABLE_PLATFORM)
 				{
 					uint NplatformLoaded = MyDataController->loadPlatformToAnalogConfig();
@@ -124,6 +122,7 @@ public:
 				}
 				else {
 					qDebug() << "Acquisition Plateformes désactivees";
+					return false;
 				}
 
 
@@ -141,11 +140,12 @@ public:
 				}
 				else {
 					qDebug() << "Acquisition Capteurs désactivees";
+					return false;
 				}
 
 			}
 			else {
-
+				qCritical() << "DataController nullptr";
 			}
 		}
 		else 

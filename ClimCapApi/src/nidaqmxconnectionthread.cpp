@@ -82,7 +82,7 @@ bool NidaqmxConnectionThread::init(float acquisitionRate, float callBackRate, ui
 		free(deviceNames);
 	}
 
-	getInstanceImpl(acquisitionRate, callBackRate, nOfChannels, triggerEnable, numberOfSample);
+	getInstanceImpl(0, 0, 0, 0, 0);
 	return true;
 }
 
@@ -223,7 +223,6 @@ void NidaqmxConnectionThread::setUPTask(float acquisitionRate, float callBackRat
 	{
 		m_acquisitionTask->SetupContinuousAcquisition(acquisitionRate, 1000);
 	}
-
 
 	DAQmxErrChk(DAQmxRegisterEveryNSamplesEvent(m_acquisitionTask->m_handle, DAQmx_Val_Acquired_Into_Buffer, callBackRate, 0, &NidaqmxConnectionThread::EveryNCallback, NULL));
 	DAQmxErrChk(DAQmxRegisterDoneEvent(m_acquisitionTask->m_handle, 0, DoneCallback, NULL));

@@ -47,7 +47,7 @@ public:
 
 		timer = new QTimer(this);
 		//connect(timer, &QTimer::timeout, this, &CalibrationWork::doHeavyCaclulations);
-		timer->start(500);
+		//timer->start(500);
 	};
 
 	virtual ~CalibrationWork() 
@@ -69,11 +69,11 @@ public slots:
 		uint channelIdx = (this->m_sensorStartChannel);
 
 		this->vch1.append(d.dataValues[ channelIdx ] );
-		this->vch2.append(d.dataValues[ channelIdx + 1] );
-		this->vch3.append(d.dataValues[ channelIdx + 2] );
-		this->vch4.append(d.dataValues[ channelIdx + 3] );
-		this->vch5.append(d.dataValues[ channelIdx + 4] );
-		this->vch6.append(d.dataValues[ channelIdx + 5] );
+		this->vch2.append(d.dataValues[ channelIdx + uint(1)] );
+		this->vch3.append(d.dataValues[ channelIdx + uint(2)] );
+		this->vch4.append(d.dataValues[ channelIdx + uint(3)] );
+		this->vch5.append(d.dataValues[ channelIdx + uint(4)] );
+		this->vch6.append(d.dataValues[ channelIdx + uint(5)] );
 
 		steps++;
 		emit progress(steps);
@@ -158,7 +158,6 @@ public:
 	void connectToUdpSteam(MyUDP* udps);
 
 	bool loadCalibrationMatriceOrdre2(uint sensorNumber, QGenericMatrix<12, 6, double>& matrice);
-	bool loadCalibrationMatriceOrdre1(uint sensorNumber, QGenericMatrix<6,  6, double>& matrice);
 
 	const QGenericMatrix<1, 6, double> PLATFORMChannelanalogToForce3axisForce(double rawAnalogChannelValues[6], Sensor& sensor);
 
@@ -166,8 +165,8 @@ public slots:
 
 	void handleResultsAvgZero(uint, const DataPacket& data);
 
-	void processNewDataPacket(const DataPacket& data);
 	void processNewDataPacketFromNi(const DataPacket& data);
+
 	void processNewDataPacketPlatformFromNi(const DataPacket& d);
 
 signals:

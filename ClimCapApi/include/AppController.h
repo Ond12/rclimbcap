@@ -5,13 +5,13 @@
 #include "nidaqmxconnectionthread.h"
 #include <QSettings>
 
-constexpr auto DEFAULT_SAMPLE_RATE = 200;
+constexpr auto  DEFAULT_SAMPLE_RATE = 200;
 constexpr auto  DEFAULT_ACQ_TIME = 200;
-constexpr auto  NB_CHAN_PER_SENSOR = 6;
+
 constexpr auto  DEFAULT_TRIGGER_SETTING = 0;
 constexpr auto  DEFAULT_SAMPLE_CALIBRATION_NUMBER = 1000;
 
-constexpr auto  ENABLE_PLATFORM = true;
+constexpr auto  ENABLE_PLATFORM = false;
 constexpr auto  ENABLE_SENSOR = true;
 
 class AppController
@@ -38,11 +38,15 @@ public:
 		this->resetSettings();
 		this->readSettings();
 
+		//TO DO SETTINGS SEEMS WRONG
+
 		m_callbackrate = 1;
 		m_calibrationRate = 1000;
 		m_calibrationTime = 1;
 		m_calibrationNumberSample = m_calibrationRate * m_calibrationTime;
 	}
+
+#pragma region SETTINGS
 
 	void resetSettings()
 	{
@@ -100,6 +104,11 @@ public:
 
 	}
 
+
+#pragma endregion
+
+#pragma region START UP
+
 	bool reloadSensorConfiguration()
 	{
 		if (MyNidaqmxConnectionThread != nullptr)
@@ -123,16 +132,16 @@ public:
 				}
 				else {
 					qDebug() << "Acquisition Plateformes désactivees";
-					return false;
 				}
 
+				/////////////////////////////////////////////////////////////////
 
 				if (ENABLE_SENSOR)
 				{
 					uint NsensorLoaded = MyDataController->loadSensorToAnalogConfig();
 					if (NsensorLoaded == 0) { qCritical() << "Echec dans le chargement de la configuration capteur, vide"; return 0; };
 
-					int totalNumberOfChannels = NsensorLoaded * NB_CHAN_PER_SENSOR;
+					int totalNumberOfChannels = NsensorLoaded * 6;
 					int numberOfSample = m_totalAcqTimeS * m_sampleRate;
 
 					MyNidaqmxConnectionThread->setUPTask(m_sampleRate, m_callbackrate, totalNumberOfChannels, m_triggerEnable, numberOfSample);
@@ -141,12 +150,12 @@ public:
 				}
 				else {
 					qDebug() << "Acquisition Capteurs désactivees";
-					return false;
 				}
 
 			}
 			else {
 				qCritical() << "DataController nullptr";
+				return false;
 			}
 		}
 		else
@@ -161,29 +170,32 @@ public:
 	bool startUp()
 	{
 		MyDataController = new DataController();
-		uint NsensorLoaded = MyDataController->loadSensorToAnalogConfig();
-		if (NsensorLoaded == 0) { qCritical() << "Echec dans le chargement de la configuration capteur"; return 0; };
-
-		int totalNumberOfChannels = NsensorLoaded * NB_CHAN_PER_SENSOR;
-		int numberOfSample = m_totalAcqTimeS * m_sampleRate;
-
-		NidaqmxConnectionThread::init(m_sampleRate, 1, totalNumberOfChannels, m_triggerEnable, numberOfSample);
-		this->MyNidaqmxConnectionThread = NidaqmxConnectionThread::GetInstance();
-
-		QObject::connect(this->MyNidaqmxConnectionThread, SIGNAL(newDataPacketNi(const DataPacket&)),
-			this->MyDataController, SLOT(processNewDataPacketFromNi(const DataPacket&)));
-
-		QObject::connect(this->MyNidaqmxConnectionThread, SIGNAL(newDataPacketPlatform(const DataPacket&)),
-			this->MyDataController, SLOT(processNewDataPacketPlatformFromNi(const DataPacket&)));
-
-
 		MyUdpClient = new MyUDP();
 
 		MyDataController->connectToUdpSteam(MyUdpClient);
 
+		NidaqmxConnectionThread::init(0, 0, 0, 0, 0);
+		MyNidaqmxConnectionThread = NidaqmxConnectionThread::GetInstance();
+
+		if (MyNidaqmxConnectionThread != nullptr)
+		{
+
+			QObject::connect(MyNidaqmxConnectionThread, SIGNAL(newDataPacketNi(const DataPacket&)),
+				MyDataController, SLOT(processNewDataPacketFromNi(const DataPacket&)));
+
+			QObject::connect(MyNidaqmxConnectionThread, SIGNAL(newDataPacketPlatform(const DataPacket&)),
+				MyDataController, SLOT(processNewDataPacketPlatformFromNi(const DataPacket&)));
+
+		}
+
+		this->reloadSensorConfiguration();
+
 		return true;
 	};
 
+#pragma endregion
+
+#pragma region TOOLS
 	void startAcquisition() const
 	{
 		MyNidaqmxConnectionThread->startAcquisition();
@@ -193,6 +205,8 @@ public:
 	{
 		MyNidaqmxConnectionThread->stopAcquisition();
 	};
+
+#pragma endregion
 
 };
 

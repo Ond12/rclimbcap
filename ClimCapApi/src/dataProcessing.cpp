@@ -44,6 +44,7 @@ DataController::DataController(QObject* parent)
 
 }
 
+////////////////////////////////////////////////////////////////////////////////////////
 
 #pragma region CONFIG LOADING
 
@@ -247,7 +248,6 @@ bool DataController::loadCalibrationMatriceOrdre2(uint sensorNumber, QGenericMat
     return true;
 }
 
-
 #pragma endregion
 
 #pragma region OFFSET THREAD
@@ -354,12 +354,6 @@ const QGenericMatrix<1, 6, double> DataController::ChannelanalogToForce3axisForc
 
 void DataController::processNewDataPacketFromNi(const DataPacket& d)
 {
-    this->processNewDataPacket(d);
-}
-
-
-void DataController::processNewDataPacket(const DataPacket& d)
-{
     double dataBySensor[6] = { 0,0,0,0,0,0 };
     //d.printDebug();
     emit this->gotNewDataPacket(d);
@@ -371,7 +365,7 @@ void DataController::processNewDataPacket(const DataPacket& d)
         const double* sensorCalibrationValues = (*gp).getChannelCalibrationValuesArr();
         uint sensorFirstAnalogChannel = (*gp).getfirstChannel();
 
-        auto rotationMatrix = (*gp).getRotationMatrix();
+        const auto& rotationMatrix = (*gp).getRotationMatrix();
 
         //nombre de channels par capteurs (6)
         for (uint i = 0; i < 6; ++i)
@@ -457,7 +451,6 @@ void DataController::processNewDataPacket(const DataPacket& d)
 
 }
 
-
 // Data processing platform
 const QGenericMatrix<1, 6, double> DataController::PLATFORMChannelanalogToForce3axisForce(double rawAnalogChannelValues[8], Sensor& sensor)
 {
@@ -491,7 +484,7 @@ void DataController::processNewDataPacketPlatformFromNi(const DataPacket& d)
         const double* sensorCalibrationValues = (*gp).getChannelCalibrationValuesArr();
         uint sensorFirstAnalogChannel = (*gp).getfirstChannel();
 
-        auto rotationMatrix = (*gp).getRotationMatrix();
+        const auto& rotationMatrix = (*gp).getRotationMatrix();
 
         //nombre de channels par capteurs (8) (platforme)
         for (uint i = 0; i < 6; ++i)
@@ -534,6 +527,8 @@ void DataController::processNewDataPacketPlatformFromNi(const DataPacket& d)
 
 #pragma endregion
 
+#pragma region TOOLS
+
 
 ////_____ TOOLS
 
@@ -571,5 +566,7 @@ void DataController::connectToUdpSteam(MyUDP* udps)
 
 
 
+
+#pragma endregion
 
 ///////////////////////////////////////////////////////////////////////////////////////

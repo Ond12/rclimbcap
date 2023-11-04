@@ -45,10 +45,14 @@ public:
    
 private slots:
     void openUdpPort();
-    void startCalibration();
+
+
     void closeUdpPort();
     void writeData(const QByteArray &data);
     void readData();
+
+    void startCalibration();
+
 
     void handleError(QSerialPort::SerialPortError error);
 
@@ -56,6 +60,7 @@ private:
     void initActionsConnections();
     void updatePlotSettings() const;
     void showSettingsWindow();
+
 
 private:
     void showStatusMessage(const QString &message);

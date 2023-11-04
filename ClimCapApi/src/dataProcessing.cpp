@@ -197,9 +197,10 @@ uint DataController::loadSensorToAnalogConfig()
             tms.setCalibrationMatriceO2(calibrationMatrixO2container);
             this->sensors.push_back(tms);
 
-            qDebug() << "Chargement du capteur" << tms.getSensorId() << " OK ";
+            qDebug() << "- Capteur" << tms.getSensorId() << " OK -";
             //tms.toString(true);
         }
+        qDebug("______");
     }
 
     return this->sensors.count();

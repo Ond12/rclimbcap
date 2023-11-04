@@ -83,6 +83,7 @@ void MainWindow::startCalibration()
 {
     qDebug("Lancement calibration");
     this->MyApc->MyDataController->Calibrate_Sensors( this->MyApc->m_sampleCalibrationNumber );
+    this->MyApc->startCalibrationTask();
     
    // m_ui->actionConnect->setEnabled(false);
     //m_ui->actionConfigure->setEnabled(false);

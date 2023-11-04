@@ -10,7 +10,7 @@ constexpr auto IMPORT_SAMPLE_CLOCK_PIN = "PFI0";
 constexpr auto IMPORT_START_TRIGGER_PIN = "PFI1";
 constexpr auto EXPORT_SAMPLE_CLOCK_PIN = "PFI4";
 constexpr auto EXPORT_START_TRIGGER_PIN = "PFI5";
-constexpr auto CHRONO_PULSE_PIN = 80;
+constexpr auto CHRONO_PULSE_PIN = 7;
 
 constexpr auto DEBUG_MOD_PLATFORM = true;
 constexpr auto DEBUG_MOD_SENSOR = true;
@@ -194,7 +194,7 @@ void NidaqmxConnectionThread::setUPTask(float acquisitionRate, float callBackRat
 	QString channelNamePrefix = this->cardName + "/ai";
 
 	QDebug chd = qDebug();
-	chd << "Initialisation des voies d'acquisition ";
+	chd << "- Initialisation des voies d'acquisition  ";
 	for (uint i = 0; i < nOfChannels; ++i)
 	{
 		QString channelName = channelNamePrefix + QString::number(i);
@@ -228,6 +228,7 @@ void NidaqmxConnectionThread::setUPTask(float acquisitionRate, float callBackRat
 	DAQmxErrChk(DAQmxRegisterDoneEvent(m_acquisitionTask->m_handle, 0, DoneCallback, NULL));
 
 	qDebug() << "Tache d'acquisition initialisee :"
+		<< taskname.c_str()
 		<< " - Frequence: " << acquisitionRate << " hz"
 		<< " - Taille de trame " << callBackRate << " ech "
 		<< " - Nb voies: " << nOfChannels
@@ -484,38 +485,35 @@ void NidaqmxConnectionThread::clearTask()
 
 	delete m_platformAcquisitionTask;
 	delete m_platformCalibrationTask;
-
-	qDebug() << "Clearing Task";
 }
 
-void NidaqmxConnectionThread::startAcquisition() const
+void NidaqmxConnectionThread::startSensorAcquisition() const
 {
 	{
 		if (m_acquisitionTask != nullptr) m_acquisitionTask->Start();
 		if (this->m_enableStartTrigger)
 		{
-			qDebug("En attente de declenchement");
+			qDebug("En attente de declenchement capteur");
 		}
 		else
 		{
-			qDebug("Debut de l'acquisition");
+			qDebug("Debut de l'acquisition capteur");
 		}
 	}
 };
 
-void NidaqmxConnectionThread::stopAcquisition() const
+void NidaqmxConnectionThread::stopSensorAcquisition() const
 {
 	if (m_acquisitionTask != nullptr) m_acquisitionTask->Stop();
 	qDebug("Fin de l'acquisition");
 };
 
-
-void NidaqmxConnectionThread::startCalibration() const
+void NidaqmxConnectionThread::startSensorCalibration() const
 {
 	if (m_calibrationTask != nullptr) m_calibrationTask->Start();
 }
 
-void NidaqmxConnectionThread::stopCalibration() const
+void NidaqmxConnectionThread::stopSensorCalibration() const
 {
 	if (m_calibrationTask != nullptr) this->m_calibrationTask->Stop();
 }
@@ -523,6 +521,14 @@ void NidaqmxConnectionThread::stopCalibration() const
 void NidaqmxConnectionThread::startPlaformAcquisition() const
 {
 	if (m_platformAcquisitionTask != nullptr) m_platformAcquisitionTask->Start();
+	if (this->m_enableStartTrigger)
+	{
+		qDebug("En attente de declenchement platformes");
+	}
+	else
+	{
+		qDebug("Debut de l'acquisition capteur platformes");
+	}
 }
 
 void NidaqmxConnectionThread::stopPlaformAcquisition() const

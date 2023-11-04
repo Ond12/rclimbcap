@@ -231,11 +231,11 @@ public:
     static NidaqmxConnectionThread* GetInstance();
     static bool init(float acquisitionRate, float callBackRate, uint nOfChannels, bool triggerEnable, uint numberOfSample);
 
-    void startAcquisition() const;
-    void stopAcquisition() const;
+    void startSensorAcquisition() const;
+    void stopSensorAcquisition() const;
 
-    void startCalibration() const;
-    void stopCalibration() const;
+    void startSensorCalibration() const;
+    void stopSensorCalibration() const;
 
     void setUPTask(float acquisitionRate, float callBackRate, uint nOfChannels, bool triggerEnable, uint numberOfSample);
     void setUpCalibrationTask(float acquisitionRate, float callBackRate, uint nOfChannels, bool triggerEnable, uint numberOfSample);

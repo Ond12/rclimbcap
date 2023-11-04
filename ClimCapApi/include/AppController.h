@@ -198,14 +198,22 @@ public:
 #pragma region TOOLS
 	void startAcquisition() const
 	{
-		MyNidaqmxConnectionThread->startAcquisition();
+		if(ENABLE_SENSOR) MyNidaqmxConnectionThread->startSensorAcquisition();
+		if(ENABLE_PLATFORM) MyNidaqmxConnectionThread->
+
 	};
 
 	void stopAcquisition() const
 	{
-		MyNidaqmxConnectionThread->stopAcquisition();
+		MyNidaqmxConnectionThread->stopSensorAcquisition();
 	};
 
+	void startCalibrationTask() const
+	{
+		MyNidaqmxConnectionThread->startSensorCalibration();
+		MyNidaqmxConnectionThread->startPlaformCalibration();
+
+	}
 #pragma endregion
 
 };

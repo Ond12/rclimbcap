@@ -259,7 +259,7 @@ void DataController::Calibrate_Sensors(uint nbSamples)
     {
         auto curSensor = this->sensors.at(i);
 
-        //createThreadAvgZero(curSensor.getSensorId(), curSensor.getfirstChannel(), nbSamples);
+        createThreadAvgZero(curSensor.getSensorId(), curSensor.getfirstChannel(), nbSamples);
     }
 
     //to do 
@@ -470,7 +470,6 @@ const QGenericMatrix<1, 6, double> DataController::PLATFORMChannelanalogToForce3
 
     return result;
 }
-
 
 void DataController::processNewDataPacketPlatformFromNi(const DataPacket& d)
 {

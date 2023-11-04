@@ -53,6 +53,7 @@ public:
 	virtual ~CalibrationWork() 
 	{
 		qDebug("deleting calibration work");
+		delete timer;
 	};
 
 public slots:
@@ -130,7 +131,6 @@ private:
 	QThread workerThread;
 
 	QGenericMatrix<3, 3, double> wallRotMatrix;
-
 
 	bool applyRotMatrix;
 	bool applyOffset;

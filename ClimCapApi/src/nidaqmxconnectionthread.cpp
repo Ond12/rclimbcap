@@ -6,18 +6,6 @@
 
 #define DAQmxErrChk(functionCall) if( DAQmxFailed(error=(functionCall)) ) goto Error; else
 
-constexpr auto IMPORT_SAMPLE_CLOCK_PIN = "PFI0";
-constexpr auto IMPORT_START_TRIGGER_PIN = "PFI1";
-constexpr auto EXPORT_SAMPLE_CLOCK_PIN = "PFI4";
-constexpr auto EXPORT_START_TRIGGER_PIN = "PFI5";
-constexpr auto CHRONO_PULSE_PIN = 7;
-
-constexpr auto DEBUG_MOD_PLATFORM = true;
-constexpr auto DEBUG_MOD_SENSOR = true;
-
-constexpr auto SENSOR_ACQ_CARD_NAME = "Dev1";
-constexpr auto PLATFORM_ACQ_CARD_NAME = "Dev1";
-
 float NidaqmxConnectionThread::m_acqRate = 0;
 float NidaqmxConnectionThread::m_callBackRate = 0;
 uint NidaqmxConnectionThread::m_numberOfChannels = 0;
@@ -86,25 +74,31 @@ bool NidaqmxConnectionThread::init(float acquisitionRate, float callBackRate, ui
 	return true;
 }
 
+NidaqmxConnectionThread::~NidaqmxConnectionThread()
+{
+	delete m_acquisitionTask;
+	delete m_calibrationTask;
+	delete m_platformAcquisitionTask;
+	delete m_platformCalibrationTask;
+}
+
 NidaqmxConnectionThread::NidaqmxConnectionThread(float acquisitionRate, float callBackRate, uint nOfChannels, bool triggerEnable, uint numberOfSample)
 {
 	int32       error = 0;
 	char        errBuff[2048] = { '\0' };
 
-	this->cardName = SENSOR_ACQ_CARD_NAME;
-	this->platformCardName = PLATFORM_ACQ_CARD_NAME;
+	this->cardName = globals::SENSOR_ACQ_CARD_NAME;
+	this->platformCardName = globals::PLATFORM_ACQ_CARD_NAME;
 
 	DAQmxErrChk(DAQmxResetDevice(this->cardName.toStdString().c_str()));
 	DAQmxErrChk(DAQmxResetDevice(this->platformCardName.toStdString().c_str()));
-
-	//setUPTask(acquisitionRate, callBackRate, nOfChannels, triggerEnable, numberOfSample);
-	//setUpCalibrationTask(acquisitionRate, callBackRate, nOfChannels, triggerEnable, numberOfSample);
 
 Error:
 	if (DAQmxFailed(error)) {
 
 		DAQmxGetExtendedErrorInfo(errBuff, 2048);
 		qDebug("DAQmx Error: %s\n", errBuff);
+		this->errorFlag = true;
 	}
 }
 
@@ -136,7 +130,7 @@ int32 CVICALLBACK NidaqmxConnectionThread::EveryNCallback(TaskHandle taskHandle,
 		//qDebug("Acquisition de %d echantillons. Total %d\r", (int)read, (int)(totalRead += read));
 	//}
 
-	if (DEBUG_MOD_SENSOR)
+	if (globals::DEBUG_MOD_SENSOR)
 	{
 		double* dummydata = new double[m_numberOfChannels];
 		for (uint i = 0; i < (m_numberOfChannels / 6); i++)
@@ -204,14 +198,14 @@ void NidaqmxConnectionThread::setUPTask(float acquisitionRate, float callBackRat
 	}
 
 	//Ajout voie chrono
-	QString channelName = channelNamePrefix + QString::number(CHRONO_PULSE_PIN);
+	QString channelName = channelNamePrefix + QString::number(globals::CHRONO_PULSE_PIN);
 	std::string str = channelName.toStdString();
 	m_acquisitionTask->AddChannel(str, DAQmx_Val_RSE, -10.0, 10.0);
 	chd << "|chrono: " << channelName << " | ";
 
 	if (m_enableStartTrigger)
 	{
-		QString str = '/' + this->cardName + '/' + IMPORT_START_TRIGGER_PIN;
+		QString str = '/' + this->cardName + '/' + globals::IMPORT_START_TRIGGER_PIN;
 		std::string sstrChannelName = str.toStdString();
 
 		qDebug("Import Trigger enable");
@@ -302,7 +296,7 @@ void NidaqmxConnectionThread::setUPPlatformTask(float acquisitionRate, float cal
 
 	if (m_enableStartTrigger)
 	{
-		QString str = '/' + current_card_name + '/' + IMPORT_START_TRIGGER_PIN;
+		QString str = '/' + current_card_name + '/' + globals::IMPORT_START_TRIGGER_PIN;
 		std::string sstrChannelName = str.toStdString();
 
 		qDebug("Import Trigger enable for platform task");
@@ -394,7 +388,7 @@ int32 CVICALLBACK NidaqmxConnectionThread::EveryNCallbackPlatform(TaskHandle tas
 	//}
 
 
-	if (DEBUG_MOD_PLATFORM)
+	if (globals::DEBUG_MOD_PLATFORM)
 	{
 		double* dummydata = new double[numberOfChannels];
 		for (uint i = 0; i < (numberOfChannels / 8); i++)
@@ -457,6 +451,10 @@ Error:
 //______________________________________________________________________________________________
 #pragma region TOOLS
 
+bool NidaqmxConnectionThread::HasError() const {
+	return this->errorFlag;
+}
+
 void NidaqmxConnectionThread::clearTask()
 {
 	if (m_acquisitionTask != nullptr)
@@ -478,7 +476,6 @@ void NidaqmxConnectionThread::clearTask()
 	{
 		m_platformCalibrationTask->Stop();
 	}
-
 
 	delete m_acquisitionTask;
 	delete m_calibrationTask;
@@ -512,6 +509,8 @@ void NidaqmxConnectionThread::startSensorCalibration() const
 {
 	if (m_calibrationTask != nullptr) m_calibrationTask->Start();
 }
+
+//__PLATFORM___________________________________________________________________________
 
 void NidaqmxConnectionThread::stopSensorCalibration() const
 {

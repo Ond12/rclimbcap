@@ -3,16 +3,9 @@
 #include "myudp.h"
 #include "dataProcessing.h"
 #include "nidaqmxconnectionthread.h"
+#include "globals.h"
 #include <QSettings>
 
-constexpr auto  DEFAULT_SAMPLE_RATE = 200;
-constexpr auto  DEFAULT_ACQ_TIME = 200;
-
-constexpr auto  DEFAULT_TRIGGER_SETTING = 0;
-constexpr auto  DEFAULT_SAMPLE_CALIBRATION_NUMBER = 1000;
-
-constexpr auto  ENABLE_PLATFORM = false;
-constexpr auto  ENABLE_SENSOR = true;
 
 class AppController
 {
@@ -46,15 +39,21 @@ public:
 		m_calibrationNumberSample = m_calibrationRate * m_calibrationTime;
 	}
 
+	~AppController()
+	{
+		delete MyUdpClient;
+		delete MyDataController;
+	}
+
 #pragma region SETTINGS
 
 	void resetSettings()
 	{
 		QSettings settings(QSettings::IniFormat, QSettings::UserScope, "GIPSA-LAB", "ClimbCap");
-		settings.setValue("acquisition_time", DEFAULT_ACQ_TIME);
-		settings.setValue("sample_rate", DEFAULT_SAMPLE_RATE);
-		settings.setValue("trigger_enable", DEFAULT_TRIGGER_SETTING);
-		settings.setValue("sample_calibration_number", DEFAULT_SAMPLE_CALIBRATION_NUMBER);
+		settings.setValue("acquisition_time", globals::DEFAULT_ACQ_TIME);
+		settings.setValue("sample_rate", globals::DEFAULT_SAMPLE_RATE);
+		settings.setValue("trigger_enable", globals::DEFAULT_TRIGGER_SETTING);
+		settings.setValue("sample_calibration_number", globals::DEFAULT_SAMPLE_CALIBRATION_NUMBER);
 	}
 
 	void readSettings()
@@ -65,8 +64,8 @@ public:
 
 		if (acquisition_time.isNull())
 		{
-			settings.setValue("acquisition_time", DEFAULT_ACQ_TIME);
-			m_totalAcqTimeS = DEFAULT_ACQ_TIME;
+			settings.setValue("acquisition_time", globals::DEFAULT_ACQ_TIME);
+			m_totalAcqTimeS = globals::DEFAULT_ACQ_TIME;
 		}
 		else
 			m_totalAcqTimeS = acquisition_time.toInt();
@@ -75,8 +74,8 @@ public:
 
 		if (sample_rate.isNull())
 		{
-			settings.setValue("sample_rate", DEFAULT_SAMPLE_RATE);
-			m_sampleRate = DEFAULT_SAMPLE_RATE;
+			settings.setValue("sample_rate", globals::DEFAULT_SAMPLE_RATE);
+			m_sampleRate = globals::DEFAULT_SAMPLE_RATE;
 		}
 		else
 			m_sampleRate = sample_rate.toInt();
@@ -84,8 +83,8 @@ public:
 		const auto trigger_enable = settings.value("trigger_enable");
 		if (trigger_enable.isNull())
 		{
-			settings.setValue("trigger_enable", DEFAULT_TRIGGER_SETTING);
-			m_triggerEnable = DEFAULT_TRIGGER_SETTING;
+			settings.setValue("trigger_enable", globals::DEFAULT_TRIGGER_SETTING);
+			m_triggerEnable = globals::DEFAULT_TRIGGER_SETTING;
 		}
 		else
 			m_triggerEnable = trigger_enable.toBool();
@@ -94,8 +93,8 @@ public:
 		const auto sample_Calibration_Number = settings.value("sample_calibration_number");
 		if (sample_Calibration_Number.isNull())
 		{
-			settings.setValue("sample_calibration_number", DEFAULT_SAMPLE_CALIBRATION_NUMBER);
-			m_sampleCalibrationNumber = DEFAULT_SAMPLE_CALIBRATION_NUMBER;
+			settings.setValue("sample_calibration_number", globals::DEFAULT_SAMPLE_CALIBRATION_NUMBER);
+			m_sampleCalibrationNumber = globals::DEFAULT_SAMPLE_CALIBRATION_NUMBER;
 		}
 		else
 			m_sampleCalibrationNumber = sample_Calibration_Number.toDouble();
@@ -118,7 +117,7 @@ public:
 				this->readSettings();
 				MyNidaqmxConnectionThread->clearTask();
 
-				if (ENABLE_PLATFORM)
+				if (globals::ENABLE_PLATFORM)
 				{
 					uint NplatformLoaded = MyDataController->loadPlatformToAnalogConfig();
 					if (NplatformLoaded == 0) { qCritical() << "Echec dans le chargement de la configuration platformes, vide"; return 0; };
@@ -136,7 +135,7 @@ public:
 
 				/////////////////////////////////////////////////////////////////
 
-				if (ENABLE_SENSOR)
+				if (globals::ENABLE_SENSOR)
 				{
 					uint NsensorLoaded = MyDataController->loadSensorToAnalogConfig();
 					if (NsensorLoaded == 0) { qCritical() << "Echec dans le chargement de la configuration capteur, vide"; return 0; };
@@ -169,6 +168,8 @@ public:
 
 	bool startUp()
 	{
+		bool errorFlag = false;
+
 		MyDataController = new DataController();
 		MyUdpClient = new MyUDP();
 
@@ -176,6 +177,14 @@ public:
 
 		NidaqmxConnectionThread::init(0, 0, 0, 0, 0);
 		MyNidaqmxConnectionThread = NidaqmxConnectionThread::GetInstance();
+
+		if (!MyNidaqmxConnectionThread->HasError()) {
+			errorFlag = this->reloadSensorConfiguration();
+		}
+		else {
+			qDebug() << "Erreur programme en pause";
+			return false;
+		}
 
 		if (MyNidaqmxConnectionThread != nullptr)
 		{
@@ -188,9 +197,7 @@ public:
 
 		}
 
-		this->reloadSensorConfiguration();
-
-		return true;
+		return errorFlag;
 	};
 
 #pragma endregion
@@ -198,21 +205,28 @@ public:
 #pragma region TOOLS
 	void startAcquisition() const
 	{
-		if(ENABLE_SENSOR) MyNidaqmxConnectionThread->startSensorAcquisition();
-		if(ENABLE_PLATFORM) MyNidaqmxConnectionThread->
-
+		if(globals::ENABLE_SENSOR) MyNidaqmxConnectionThread->startSensorAcquisition();
+		if(globals::ENABLE_PLATFORM) MyNidaqmxConnectionThread->startPlaformAcquisition();
 	};
 
 	void stopAcquisition() const
 	{
-		MyNidaqmxConnectionThread->stopSensorAcquisition();
+		if(globals::ENABLE_SENSOR) MyNidaqmxConnectionThread->stopSensorAcquisition();
+		if(globals::ENABLE_PLATFORM) MyNidaqmxConnectionThread->stopPlaformAcquisition();
 	};
 
 	void startCalibrationTask() const
 	{
-		MyNidaqmxConnectionThread->startSensorCalibration();
-		MyNidaqmxConnectionThread->startPlaformCalibration();
+		if (globals::ENABLE_SENSOR)
+		{
+			MyNidaqmxConnectionThread->startSensorCalibration();
+			MyDataController->Calibrate_Sensors(globals::DEFAULT_SAMPLE_CALIBRATION_NUMBER);
+		}
 
+		if (globals::ENABLE_PLATFORM)
+		{
+			MyNidaqmxConnectionThread->startPlaformCalibration();
+		}
 	}
 #pragma endregion
 

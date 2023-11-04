@@ -19,27 +19,31 @@ MainWindow::MainWindow(QWidget *parent) :
     m_udp(new QUdpSocket(this))
 {
     m_console = new Console();
+    m_ui->setupUi(this);
+
     connect(&s_emitter, SIGNAL(append_log(QString)), m_console, SLOT(putData(QString)));
 
     connect(m_settings, SIGNAL(newConfigFile()), this, SLOT(appSettingsChanged()));
 
-    MyApc = new AppController(); 
-    MyApc->startUp();
+    connect(m_console, &Console::getData, this, &MainWindow::writeData);
 
-    m_ui->setupUi(this);
-    m_console->setEnabled(false);
-    setCentralWidget(m_console);
-
-    m_ui->actionConnect->setEnabled(true);
+    m_ui->actionConfigure->setEnabled(true);
+    m_ui->actionConnect->setEnabled(false);
     m_ui->actionDisconnect->setEnabled(false);
     m_ui->actionQuit->setEnabled(true);
-    m_ui->actionConfigure->setEnabled(true);
+
+    MyApc = new AppController(); 
+    if (MyApc->startUp())
+    {
+        m_ui->actionConnect->setEnabled(true);
+    };
+
+    m_console->setEnabled(false);
+    setCentralWidget(m_console);
 
     m_ui->statusBar->addWidget(m_status);
 
     initActionsConnections();
-
-    connect(m_console, &Console::getData, this, &MainWindow::writeData);
 
 }
 
@@ -47,6 +51,7 @@ MainWindow::~MainWindow()
 {
     delete m_settings;
     delete m_ui;
+    delete MyApc;
 }
 
 void MainWindow::openUdpPort()
@@ -60,7 +65,8 @@ void MainWindow::openUdpPort()
         m_ui->actionConnect->setEnabled(false);
         m_ui->actionDisconnect->setEnabled(true);
         m_ui->actionConfigure->setEnabled(false);
-        //m_ui->actionCalibration->setEnabled(false);
+        m_ui->actionCalibration->setEnabled(false);
+
         showStatusMessage(tr("Debut acquisition"));
     } 
     else
@@ -74,20 +80,19 @@ void MainWindow::appSettingsChanged()
 {
     if (MyApc != nullptr)
     {
-        qDebug("app settgings change");
         MyApc->reloadSensorConfiguration();
     }
 }
 
 void MainWindow::startCalibration()
 {
-    qDebug("Lancement calibration");
-    this->MyApc->MyDataController->Calibrate_Sensors( this->MyApc->m_sampleCalibrationNumber );
+    m_ui->actionConnect->setEnabled(false);
+    m_ui->actionDisconnect->setEnabled(true);
+    m_ui->actionCalibration->setEnabled(false);
+
     this->MyApc->startCalibrationTask();
-    
-   // m_ui->actionConnect->setEnabled(false);
-    //m_ui->actionConfigure->setEnabled(false);
-    //m_ui->actionCalibration->setEnabled(false);
+
+    showStatusMessage(tr("Lancement Calibration"));
 }
 
 void MainWindow::closeUdpPort()
@@ -98,9 +103,9 @@ void MainWindow::closeUdpPort()
     this->MyApc->stopAcquisition();
 
     m_console->setEnabled(false);
+
     m_ui->actionConnect->setEnabled(true);
     m_ui->actionDisconnect->setEnabled(false);
-    m_ui->actionConfigure->setEnabled(true);
     m_ui->actionCalibration->setEnabled(true);
 
     showStatusMessage(tr("Stop de l'acquisition"));
@@ -127,10 +132,12 @@ void MainWindow::handleError(QSerialPort::SerialPortError error)
 
 void MainWindow::initActionsConnections()
 {
+    connect(m_ui->actionConfigure, &QAction::triggered, this, &MainWindow::showSettingsWindow);
+
     connect(m_ui->actionConnect, &QAction::triggered, this, &MainWindow::openUdpPort);
     connect(m_ui->actionDisconnect, &QAction::triggered, this, &MainWindow::closeUdpPort);
     connect(m_ui->actionQuit, &QAction::triggered, this, &MainWindow::close);
-    connect(m_ui->actionConfigure, &QAction::triggered, this, &MainWindow::showSettingsWindow);
+   
     connect(m_ui->actionClear, &QAction::triggered, m_console, &Console::clear);
     connect(m_ui->actionCalibration, &QAction::triggered, this, &MainWindow::startCalibration);
 }
@@ -143,9 +150,4 @@ void MainWindow::showStatusMessage(const QString &message)
 void MainWindow::showSettingsWindow()
 {
     m_settings->exec();
-}
-
-void MainWindow::updatePlotSettings() const
-{
-    //this->GraphPlotWidgetList.at(i)->setAvailableSensorList(this->dataController->getLoadedSensorID());
 }

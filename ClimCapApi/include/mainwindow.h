@@ -58,9 +58,7 @@ private slots:
 
 private:
     void initActionsConnections();
-    void updatePlotSettings() const;
     void showSettingsWindow();
-
 
 private:
     void showStatusMessage(const QString &message);

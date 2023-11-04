@@ -5,6 +5,7 @@
 #include <QObject>
 
 #include <NIDAQmx.h>
+#include "globals.h"
 #include "dataPacket.h"
 
 
@@ -213,10 +214,14 @@ class NidaqmxConnectionThread : public QThread
 
 public:
 
+    bool HasError() const;
+
     static int32 CVICALLBACK EveryNCallback(TaskHandle taskHandle, int32 everyNsamplesEventType, uInt32 nSamples, void* callbackData);
-    static int32 CVICALLBACK DoneCallback(TaskHandle taskHandle, int32 status, void* callbackData);
 
     static int32 CVICALLBACK EveryNCallbackPlatform(TaskHandle taskHandle, int32 everyNsamplesEventType, uInt32 nSamples, void* callbackData);
+
+    static int32 CVICALLBACK DoneCallback(TaskHandle taskHandle, int32 status, void* callbackData);
+
 
     QString cardName;
     QString platformCardName;
@@ -250,21 +255,29 @@ public:
     void setUPPlatformTask(float acquisitionRate, float callBackRate, uint nOfChannels, bool triggerEnable, uint numberOfSample);
     void setUpPlatformCalibrationTask(float acquisitionRate, float callBackRate, uint nOfChannels, bool triggerEnable, uint numberOfSample);
 
+
+
     void clearTask();
 
     NidaqmxConnectionThread(NidaqmxConnectionThread const&) = delete;
     void operator=(NidaqmxConnectionThread const&) = delete;
+
+    ~NidaqmxConnectionThread();
 
 private:
 
     NidaqmxConnectionThread(float acquisitionRate, float callBackRate, uint nOfChannels, bool triggerEnable, uint numberOfSample);
     static NidaqmxConnectionThread* getInstanceImpl(float acquisitionRate, float callBackRate, uint nOfChannels, bool triggerEnable, uint numberOfSample);
 
+
+
     NIDAQmx::Task* m_acquisitionTask;
     NIDAQmx::Task* m_calibrationTask;
 
     NIDAQmx::Task* m_platformAcquisitionTask;
     NIDAQmx::Task* m_platformCalibrationTask;
+
+    bool errorFlag;
 
 signals:
     void newDataPacketNi(const DataPacket&);

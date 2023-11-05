@@ -1,6 +1,9 @@
 #pragma once
 namespace globals
 {
+	constexpr auto  MATRICES_FILES_PATH = "../data/calibration_matrices";
+	constexpr auto  CONFIG_FILE_PATH = "../data/save.json";
+
 	constexpr auto  DEFAULT_SAMPLE_RATE = 200;
 
 	constexpr auto  DEFAULT_ACQ_TIME = 200;

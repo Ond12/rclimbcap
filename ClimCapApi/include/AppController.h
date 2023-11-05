@@ -220,12 +220,13 @@ public:
 		if (globals::ENABLE_SENSOR)
 		{
 			MyNidaqmxConnectionThread->startSensorCalibration();
-			MyDataController->Calibrate_Sensors(globals::DEFAULT_SAMPLE_CALIBRATION_NUMBER);
+			MyDataController->calibrate_sensors(m_sampleCalibrationNumber, 1);
 		}
 
 		if (globals::ENABLE_PLATFORM)
 		{
 			MyNidaqmxConnectionThread->startPlaformCalibration();
+			MyDataController->calibrate_sensors(m_sampleCalibrationNumber, 2);
 		}
 	}
 #pragma endregion

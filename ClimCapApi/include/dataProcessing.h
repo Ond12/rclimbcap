@@ -20,23 +20,21 @@ class CalibrationWork : public QObject
 {
 	Q_OBJECT
 	QTimer* timer;
+
 	uint steps;
 	bool m_hasEmitResult;
 
-	QVector<double> vch1;
-	QVector<double> vch2;
-	QVector<double> vch3;
-	QVector<double> vch4;
-	QVector<double> vch5;
-	QVector<double> vch6;
+	QVector<QVector<double>* > m_data;
 
 	uint m_currentSampleNumber;
 	uint m_maxSampleNumber;
 	uint m_sensorID;
 	uint m_sensorStartChannel;
 
+	uint m_channelsNumbers;
+
 public:
-	CalibrationWork(uint sensorID, uint sensorStartChannel, uint maxSampleNumber)
+	CalibrationWork(uint sensorID, uint sensorStartChannel, uint maxSampleNumber, uint channelsNumbers)
 	{
 		this->steps = 0;
 		this->m_hasEmitResult = false;
@@ -44,15 +42,24 @@ public:
 		this->m_sensorID = sensorID;
 		this->m_sensorStartChannel = sensorStartChannel;
 		this->m_maxSampleNumber = maxSampleNumber;
+		this->m_channelsNumbers = channelsNumbers;
 
 		timer = new QTimer(this);
 		//connect(timer, &QTimer::timeout, this, &CalibrationWork::doHeavyCaclulations);
 		//timer->start(500);
+
+		for (int i = 0; i < m_channelsNumbers; ++i) {
+			QVector<double>* row = new QVector<double>;
+			m_data.push_back(row);
+		}
 	};
 
 	virtual ~CalibrationWork() 
 	{
 		qDebug("deleting calibration work");
+		for (QVector<double>* row : m_data) {
+			delete row;
+		}
 		delete timer;
 	};
 
@@ -69,36 +76,34 @@ public slots:
 
 		uint channelIdx = (this->m_sensorStartChannel);
 
-		this->vch1.append(d.dataValues[ channelIdx ] );
-		this->vch2.append(d.dataValues[ channelIdx + uint(1)] );
-		this->vch3.append(d.dataValues[ channelIdx + uint(2)] );
-		this->vch4.append(d.dataValues[ channelIdx + uint(3)] );
-		this->vch5.append(d.dataValues[ channelIdx + uint(4)] );
-		this->vch6.append(d.dataValues[ channelIdx + uint(5)] );
+		for (int i = 0; i < m_channelsNumbers; ++i) {
+			m_data[i]->append(d.dataValues[channelIdx + i]);
+		}
 
 		steps++;
 		emit progress(steps);
 		
 		if (steps == this->m_maxSampleNumber)
 		{
-			DataPacket dataPacket(6);
+			DataPacket dataPacket(m_channelsNumbers);
 
-			float analogZeroCorrection[6] = { 0, 0, 0, 0, 0, 0 };
+			double* analogZeroCorrection = new double[m_channelsNumbers];
 
-			analogZeroCorrection[0] = std::accumulate(vch1.begin(), vch1.end(), .0) / vch1.size();
-			analogZeroCorrection[1] = std::accumulate(vch2.begin(), vch2.end(), .0) / vch2.size();
-			analogZeroCorrection[2] = std::accumulate(vch3.begin(), vch3.end(), .0) / vch3.size();
-			analogZeroCorrection[3] = std::accumulate(vch4.begin(), vch4.end(), .0) / vch4.size();
-			analogZeroCorrection[4] = std::accumulate(vch5.begin(), vch5.end(), .0) / vch5.size();
-			analogZeroCorrection[5] = std::accumulate(vch6.begin(), vch6.end(), .0) / vch6.size();
+			for (int i = 0; i < m_channelsNumbers; ++i) {
+				auto curcol = m_data[i];
+				analogZeroCorrection[i] = std::accumulate(curcol->begin(), curcol->end(), .0) / curcol->size();
+			}
 
-			std::copy(analogZeroCorrection, analogZeroCorrection + 6, std::begin(dataPacket.dataValues));
+			std::copy(analogZeroCorrection, analogZeroCorrection + m_channelsNumbers, std::begin(dataPacket.dataValues));
 
-			emit resultReady(this->m_sensorID, dataPacket);
+			delete[] analogZeroCorrection;
+
+			emit resultReady(m_sensorID, dataPacket);
 			m_hasEmitResult = true;
 		}
 		
 		if (m_hasEmitResult) {
+
 			emit finished();
 		}
 
@@ -119,8 +124,8 @@ class DataController : public QObject
 private:
 
 	MyUDP* udpClient;
-	QVector<Sensor> sensors;
-	QVector<Sensor> plaforms;
+	QVector<Sensor> m_sensorsList;
+	QVector<Sensor> m_plaformsList;
 
 	QString m_configFilePath;
 	QString m_calibrationFilesPath;
@@ -136,6 +141,8 @@ private:
 	bool applyOffset;
 	bool applyWallRotation;
 
+	void handleResultsAvgZeroPlatform(uint sensorid, const DataPacket& analogZeroCorrection);
+
 	const QGenericMatrix<1, 6, double> ChannelanalogToForce3axisForce(double rawAnalogChannelValues[6], Sensor& sensor, uint matrixOrder);
 	
 	void clearSensorConfiguration();
@@ -144,10 +151,13 @@ public:
 
 	explicit DataController(QObject* parent = nullptr);
 
-	void displaySensor();
-	void Calibrate_Sensors(uint nbSamples);
+	void displaySensor() const;
+
+	Sensor& getPlatform(uint id);
 	
 	Sensor& getSensor(uint id);
+
+	void calibrate_sensors(uint nbSamples, int mode);
 	void createThreadAvgZero(uint sensorID, uint stratChannel, uint nbSamples);
 
 	uint loadPlatformToAnalogConfig();

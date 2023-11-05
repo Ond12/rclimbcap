@@ -1,5 +1,6 @@
 #include "dataProcessing.h"
 #include "dataPacket.h"
+#include "globals.h"
 
 #include <QApplication>
 #include <QDebug>
@@ -19,9 +20,9 @@ DataController::DataController(QObject* parent)
     this->applyOffset = true;
     this->applyWallRotation = true;
 
-    m_calibrationFilesPath = "../data/calibration_matrices";
+    m_calibrationFilesPath = globals::MATRICES_FILES_PATH;
 
-    m_configFilePath = "../data/save.json";
+    m_configFilePath = globals::CONFIG_FILE_PATH;
 
     m_sensorCalibrationFiles = {
         "G_202109A1-1_o2.txt",
@@ -50,7 +51,7 @@ DataController::DataController(QObject* parent)
 
 void DataController::clearSensorConfiguration()
 {
-    this->sensors.clear();
+    this->m_sensorsList.clear();
 }
 
 QGenericMatrix<3, 3, double> calculateWallRotMatrix(double wallAngle)
@@ -76,7 +77,7 @@ QGenericMatrix<3, 3, double> calculateWallRotMatrix(double wallAngle)
 
 uint DataController::loadPlatformToAnalogConfig()
 {
-    this->plaforms.clear();
+    this->m_plaformsList.clear();
 
     Sensor platformL(40, 0, 0);
     Sensor platformR(41, 8, 0);
@@ -85,11 +86,11 @@ uint DataController::loadPlatformToAnalogConfig()
 
     loadCalibrationMatriceOrdre2PLATFORM(platformL.getSensorId(), calibrationMatrixO2container);
     platformL.setCalibrationMatriceO2PLATFORM(calibrationMatrixO2container);
-    this->plaforms.push_back(platformL);
+    this->m_plaformsList.push_back(platformL);
 
     loadCalibrationMatriceOrdre2PLATFORM(platformR.getSensorId(), calibrationMatrixO2container);
     platformL.setCalibrationMatriceO2PLATFORM(calibrationMatrixO2container);
-    this->plaforms.push_back(platformR);
+    this->m_plaformsList.push_back(platformR);
 
     return true;
 }
@@ -165,7 +166,6 @@ uint DataController::loadSensorToAnalogConfig()
     {
         QJsonObject jsonObj = doc.object();
         double angle = jsonObj.value("wallangle").toDouble();
-        qDebug() << "Angle du mur : " << angle;
 
         //TO DO STORE FOR EACH sensor instead
         this->wallRotMatrix = calculateWallRotMatrix(angle);
@@ -195,7 +195,7 @@ uint DataController::loadSensorToAnalogConfig()
             }
 
             tms.setCalibrationMatriceO2(calibrationMatrixO2container);
-            this->sensors.push_back(tms);
+            this->m_sensorsList.push_back(tms);
 
             qDebug() << "- Capteur" << tms.getSensorId() << " OK -";
             //tms.toString(true);
@@ -203,9 +203,8 @@ uint DataController::loadSensorToAnalogConfig()
         qDebug("______");
     }
 
-    return this->sensors.count();
+    return this->m_sensorsList.count();
 }
-
 
 bool DataController::loadCalibrationMatriceOrdre2(uint sensorNumber, QGenericMatrix<12, 6, double>& matrice)
 {
@@ -253,23 +252,27 @@ bool DataController::loadCalibrationMatriceOrdre2(uint sensorNumber, QGenericMat
 
 #pragma region OFFSET THREAD
 
-void DataController::Calibrate_Sensors(uint nbSamples)
+void DataController::calibrate_sensors(uint nbSamples, int mode)
 {
-    for (uint i = 0; i < this->sensors.count(); ++i)
+    switch (mode)
     {
-        auto curSensor = this->sensors.at(i);
+    case 1:
+        for (uint i = 0; i < this->m_sensorsList.count(); ++i)
+        {
+            auto curSensor = this->m_sensorsList.at(i);
 
-        createThreadAvgZero(curSensor.getSensorId(), curSensor.getfirstChannel(), nbSamples);
-    }
+            createThreadAvgZero(curSensor.getSensorId(), curSensor.getfirstChannel(), nbSamples);
+        }
+    case 2:
+        for (uint i = 0; i < this->m_plaformsList.count(); ++i)
+        {
+            auto curSensor = this->m_plaformsList.at(i);
 
-    //to do 
-
-    for (uint i = 0; i < this->plaforms.count(); ++i)
-    {
-        auto curSensor = this->sensors.at(i);
-
-        //createThreadAvgZero(curSensor.getSensorId(), curSensor.getfirstChannel(), nbSamples);
-    }
+            createThreadAvgZero(curSensor.getSensorId(), curSensor.getfirstChannel(), nbSamples);
+        }
+    default:
+        break;
+    }   
 }
 
 // OFFSET THREAD
@@ -315,17 +318,29 @@ void DataController::handleResultsAvgZero(uint sensorid, const DataPacket& analo
     double darr[6];
 
     getSensor(sensorid).toString(false);
-
-    //why don't work
-    //std::copy(std::begin(analogZeroCorrection.dataValues),
-    //          std::end(analogZeroCorrection.dataValues), darr);
-
     for (uint i = 0; i < 6; ++i) {
         darr[i] = analogZeroCorrection.dataValues[i];
         qDebug() << "dari : " << darr[i] << " ::" << analogZeroCorrection.dataValues[i];
     }
     getSensor(sensorid).setChannelCalibrationValues(darr);
     for (uint i = 0; i < 6; ++i) qDebug() << getSensor(sensorid).getChannelCalibrationValuesArr()[i];
+}
+
+void DataController::handleResultsAvgZeroPlatform(uint sensorid, const DataPacket& analogZeroCorrection)
+{
+    qDebug() << "Handle new calibration avg result for platforme" << sensorid << "array " << getPlatform(sensorid).getSensorId();
+
+    double darr[6];
+
+    getPlatform(sensorid).toString(false);
+
+    //change this nb of channels
+    for (uint i = 0; i < 6; ++i) {
+        darr[i] = analogZeroCorrection.dataValues[i];
+        qDebug() << "dari : " << darr[i] << " ::" << analogZeroCorrection.dataValues[i];
+    }
+    getPlatform(sensorid).setChannelCalibrationValues(darr);
+    for (uint i = 0; i < 6; ++i) qDebug() << getPlatform(sensorid).getChannelCalibrationValuesArr()[i];
 }
 
 #pragma endregion
@@ -359,7 +374,7 @@ void DataController::processNewDataPacketFromNi(const DataPacket& d)
     //d.printDebug();
     emit this->gotNewDataPacket(d);
 
-    for (auto gp = sensors.begin(); gp != sensors.end(); gp++)
+    for (auto gp = m_sensorsList.begin(); gp != m_sensorsList.end(); gp++)
     {
         uint currentSensorID = (*gp).getSensorId();
 
@@ -477,7 +492,7 @@ void DataController::processNewDataPacketPlatformFromNi(const DataPacket& d)
     //d.printDebug();
     //emit this->gotNewDataPacket(d);
 
-    for (auto gp = plaforms.begin(); gp != sensors.end(); gp++)
+    for (auto gp = m_plaformsList.begin(); gp != m_sensorsList.end(); gp++)
     {
         uint currentSensorID = (*gp).getSensorId();
 
@@ -529,28 +544,37 @@ void DataController::processNewDataPacketPlatformFromNi(const DataPacket& d)
 
 #pragma region TOOLS
 
-
 ////_____ TOOLS
 
-
-void DataController::displaySensor()
+void DataController::displaySensor() const
 {
-    qDebug() << "N sensors" << this->sensors.count();
-    for (uint i = 0; i < this->sensors.count(); ++i)
+    qDebug() << "N sensors" << this->m_sensorsList.count();
+    for (uint i = 0; i < this->m_sensorsList.count(); ++i)
     {
-        this->sensors.at(i).toString(false);
+        this->m_sensorsList.at(i).toString(false);
     }
 
-    qDebug() << "N platform" << this->plaforms.count();
-    for (uint i = 0; i < this->plaforms.count(); ++i)
+    qDebug() << "N platform" << this->m_plaformsList.count();
+    for (uint i = 0; i < this->m_plaformsList.count(); ++i)
     {
-        this->plaforms.at(i).toString(false);
+        this->m_plaformsList.at(i).toString(false);
     }
+}
+
+Sensor& DataController::getPlatform(uint id)
+{
+    for (Sensor& s : this->m_sensorsList) {
+        if (id == s.getSensorId()) {
+            return s;
+        }
+    }
+
+    throw std::runtime_error("Object not found in vector.");
 }
 
 Sensor& DataController::getSensor(uint id)
 {
-    for (Sensor& s : this->sensors) {
+    for (Sensor& s : this->m_sensorsList) {
         if (id == s.getSensorId()) {
             return s;
         }

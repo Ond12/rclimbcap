@@ -15,14 +15,16 @@ Sensor::Sensor(uint id, uint firstChannelId, double angle)
     this->resetCalibrationValues();
 }
 
-void Sensor::setRotationAngle(double angle, char axis) 
+#pragma region matrice
+
+void Sensor::setRotationAngle(double angle, char axis)
 {
     constexpr int N = 3;
 
-    this->channelNumber = 6;
+    this->m_channelNumber = 6;
 
     double theta = (180 - angle) * M_PI / 180.0;
-    
+
     // Calcul de la matrice de rotation
     double cos_theta = cos(theta);
     double sin_theta = sin(theta);
@@ -43,8 +45,8 @@ void Sensor::setRotationAngle(double angle, char axis)
 
     QGenericMatrix<3, 3, double> tprotationMatrice;
 
-    if (axis == 'z') 
-    { 
+    if (axis == 'z')
+    {
         // rotation autour du vecteur unitaire (z)
         QGenericMatrix<3, 3, double> tprotationMatrice(rot_matrix_z);
         this->Zangle = angle;
@@ -59,46 +61,24 @@ void Sensor::setRotationAngle(double angle, char axis)
     }
 }
 
-void Sensor::setCalibrationMatriceO1(QGenericMatrix<6, 6, double>& calibrationMatriceOrdre1)
+
+#pragma endregion
+
+#pragma region getter
+
+uint Sensor::getSensorId() const
 {
-    this->calibrationMatriceOrdre1 = calibrationMatriceOrdre1;
+    return this->sensorId;
 }
 
-void Sensor::setCalibrationMatriceO2(QGenericMatrix<12, 6, double>& calibrationMatriceOrdre2)
+uint Sensor::getNumberOfChan() const
 {
-    this->calibrationMatriceOrdre2 = calibrationMatriceOrdre2;
+    return m_channelNumber;
 }
 
-void Sensor::pushDataForceMoment(const DataPacket& forceMomentData)
+const QGenericMatrix<12, 6, double>& Sensor::getCalibrationMatriceO2PLATFORM() const
 {
-    double key = forceMomentData.timeKey;
-    
-    m_datax.push_back(DataPoint{ key, forceMomentData.dataValues.at(0) });
-    m_datay.push_back(DataPoint{ key, forceMomentData.dataValues.at(1) });
-    m_dataz.push_back(DataPoint{ key, forceMomentData.dataValues.at(2) });
-}
-
-void Sensor::addData(double key, double val, char axis)
-{
-    switch (axis)
-    {
-        case 'x':
-            this->m_datax.push_back(DataPoint{ key, val });
-            break;
-        case 'y':
-            this->m_datay.push_back(DataPoint{ key, val });
-            break;
-        case 'z':
-            this->m_dataz.push_back(DataPoint{ key, val });
-            break;
-        default:
-            break;
-    }
-}
-
-QGenericMatrix<6, 6, double> Sensor::getCalibrationMatriceO1() const
-{
-    return this->calibrationMatriceOrdre1;
+    return platformCalibrationMatriceOrdre2;
 }
 
 const QGenericMatrix<12, 6, double>& Sensor::getCalibrationMatriceO2() const
@@ -106,7 +86,7 @@ const QGenericMatrix<12, 6, double>& Sensor::getCalibrationMatriceO2() const
     return this->calibrationMatriceOrdre2;
 }
 
-const QGenericMatrix<3, 3, double>& Sensor::getRotationMatrix() const 
+const QGenericMatrix<3, 3, double>& Sensor::getRotationMatrix() const
 {
     return this->rotationMatrice;
 }
@@ -116,31 +96,87 @@ uint Sensor::getfirstChannel() const
     return this->firstChannelId;
 }
 
-void Sensor::setChannelCalibrationValues(double* calibrationValues)
-{
-    for (uint i = 0; i < this->channelNumber; ++i)
-    {
-        this->channelCalibrationValues[i] = calibrationValues[i];
-    }
-}
 
 const double* Sensor::getChannelCalibrationValuesArr() const
 {
-    return this->channelCalibrationValues;
+    return this->m_channelCalibrationValues;
+}
+
+
+#pragma endregion
+
+#pragma region data
+
+void Sensor::pushDataForceMoment(const DataPacket& forceMomentData)
+{
+    double key = forceMomentData.timeKey;
+
+    m_datax.push_back(DataPoint{ key, forceMomentData.dataValues.at(0) });
+    m_datay.push_back(DataPoint{ key, forceMomentData.dataValues.at(1) });
+    m_dataz.push_back(DataPoint{ key, forceMomentData.dataValues.at(2) });
+}
+
+void Sensor::addData(double key, double val, char axis)
+{
+    switch (axis)
+    {
+    case 'x':
+        this->m_datax.push_back(DataPoint{ key, val });
+        break;
+    case 'y':
+        this->m_datay.push_back(DataPoint{ key, val });
+        break;
+    case 'z':
+        this->m_dataz.push_back(DataPoint{ key, val });
+        break;
+    default:
+        break;
+    }
+}
+
+#pragma endregion
+
+
+const QGenericMatrix<1, 6, double> Sensor::ChannelanalogToForce3axisForce(double rawAnalogChannelValues[6])
+{
+    QGenericMatrix<1, 6, double> result;
+
+    double analogDataSquared[12];
+    for (uint i = 0; i < m_channelNumber; i++) analogDataSquared[i] = rawAnalogChannelValues[i];
+    for (uint i = 0; i < m_channelNumber; i++) analogDataSquared[i + 6] = rawAnalogChannelValues[i] * rawAnalogChannelValues[i];
+
+    QGenericMatrix<1, 12, double> analogValuesSquare(analogDataSquared);
+    result = this->getCalibrationMatriceO2() * analogValuesSquare;
+
+    return result;
 }
 
 void Sensor::resetCalibrationValues()
 {
-    for (uint i = 0; i < this->channelNumber; ++i)
+    for (uint i = 0; i < this->m_channelNumber; ++i)
     {
-        this->channelCalibrationValues[i] = .0f;
+        this->m_channelCalibrationValues[i] = .0f;
     }
 }
 
-uint Sensor::getSensorId() const
+void Sensor::setChannelCalibrationValues(double* calibrationValues)
 {
-    return this->sensorId;
+    for (uint i = 0; i < this->m_channelNumber; ++i)
+    {
+        this->m_channelCalibrationValues[i] = calibrationValues[i];
+    }
 }
+
+void Sensor::setCalibrationMatriceO2(QGenericMatrix<12, 6, double>& calibrationMatriceOrdre2)
+{
+    this->calibrationMatriceOrdre2 = calibrationMatriceOrdre2;
+}
+
+void Sensor::setCalibrationMatriceO2PLATFORM(QGenericMatrix<12, 6, double>& calibrationMatriceOrdre2)
+{
+    this->platformCalibrationMatriceOrdre2 = calibrationMatriceOrdre2;
+}
+
 
 void Sensor::toString(bool showCalMat) const
 {
@@ -154,17 +190,6 @@ void Sensor::toString(bool showCalMat) const
         qDebug() << "Zrotation: " << this->Zangle << " deg";
         qDebug() << this->rotationMatrice;
     }
-    
+
     qDebug() << "___";
-}
-
-
-const QGenericMatrix<12, 6, double>& Sensor::getCalibrationMatriceO2PLATFORM() const
-{
-    return platformCalibrationMatriceOrdre2;
-}
-
-void Sensor::setCalibrationMatriceO2PLATFORM(QGenericMatrix<12, 6, double>& calibrationMatriceOrdre2)
-{
-    this->platformCalibrationMatriceOrdre2 = calibrationMatriceOrdre2;
 }

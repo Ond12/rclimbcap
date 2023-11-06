@@ -16,7 +16,7 @@ private:
 	uint sensorId;
 	uint firstChannelId;
 
-	uint channelNumber;
+	uint m_channelNumber;
 
 	double angle;
 	double wallAngle;
@@ -28,9 +28,10 @@ private:
 	QGenericMatrix<12, 6, double> platformCalibrationMatriceOrdre2;
 
 	QGenericMatrix<3, 3, double> rotationMatrice;
+	QGenericMatrix<3, 3, double> wallRotMatrix;
 
 	//to do convert this
-	double channelCalibrationValues[6];
+	double m_channelCalibrationValues[6];
 
 	std::vector<DataPoint> m_datax;
 	std::vector<DataPoint> m_datay;
@@ -39,28 +40,25 @@ private:
 public:
 	Sensor(uint id, uint firstChannelId, double angle);
 
-	void setCalibrationMatriceO1(QGenericMatrix<6, 6, double>& calibrationMatriceOrdre1);
 	void setCalibrationMatriceO2(QGenericMatrix<12, 6, double>& calibrationMatriceOrdre2);
 
 	void addData(double key, double val, char axis);
 	void pushDataForceMoment(const DataPacket& forceMomentData);
 
-	QGenericMatrix<6, 6,  double> getCalibrationMatriceO1() const;
 	const QGenericMatrix<12, 6, double>& getCalibrationMatriceO2() const;
 	const QGenericMatrix<3, 3, double>& getRotationMatrix() const;
 	
 	uint getfirstChannel() const;
+	void setChannelCalibrationValues(double* calibrationValues);
 	void setRotationAngle(double angle, char axis);
 
-	void setChannelCalibrationValues(double calibrationValues[6]);
-
 	const double* getChannelCalibrationValuesArr() const;
+	const QGenericMatrix<1, 6, double> ChannelanalogToForce3axisForce(double rawAnalogChannelValues[6]);
 	void resetCalibrationValues();
 
-
 	uint getSensorId() const;
+	uint getNumberOfChan() const;
 	void toString(bool showCalMat) const;
-
 
 	const QGenericMatrix<12, 6, double>& getCalibrationMatriceO2PLATFORM() const;
 	void setCalibrationMatriceO2PLATFORM(QGenericMatrix<12, 6, double>& calibrationMatriceOrdre2);

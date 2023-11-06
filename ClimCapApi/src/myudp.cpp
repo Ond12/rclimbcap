@@ -36,7 +36,7 @@ MyUDP::MyUDP(QObject *parent) :
     //connect(socket, SIGNAL(readyRead()), this, SLOT(readyRead()));
 }
 
-void MyUDP::streamData(const DataPacket& data, uint sensorId)
+void MyUDP::streamData(const DataPacket& data, uint sensorId) const
 {
     int sid = sensorId;
     QJsonObject jsdata;

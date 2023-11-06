@@ -261,14 +261,14 @@ void DataController::calibrate_sensors(uint nbSamples, int mode)
         {
             auto curSensor = this->m_sensorsList.at(i);
 
-            createThreadAvgZero(curSensor.getSensorId(), curSensor.getfirstChannel(), nbSamples);
+            createThreadAvgZero(curSensor.getSensorId(), curSensor.getfirstChannel(), nbSamples, curSensor.getNumberOfChan());
         }
     case 2:
         for (uint i = 0; i < this->m_plaformsList.count(); ++i)
         {
             auto curSensor = this->m_plaformsList.at(i);
 
-            createThreadAvgZero(curSensor.getSensorId(), curSensor.getfirstChannel(), nbSamples);
+            createThreadAvgZero(curSensor.getSensorId(), curSensor.getfirstChannel(), nbSamples, curSensor.getNumberOfChan());
         }
     default:
         break;
@@ -276,22 +276,20 @@ void DataController::calibrate_sensors(uint nbSamples, int mode)
 }
 
 // OFFSET THREAD
-void DataController::createThreadAvgZero(uint sensorID, uint sensorStartChannel, uint nbSamples)
+void DataController::createThreadAvgZero(uint sensorID, uint sensorStartChannel, uint nbSamples, uint channelsNumber)
 {
     qDebug() << "Creating worker thread for zero correction value of sensors " << sensorID
         << "start channel: " << sensorStartChannel;
 
-    //uint sensorFirstAnalogChannel = this->sensorIDtoAnalogEntry.value(sensorID);
-
-    QProgressDialog* progressDialog = new QProgressDialog("Calibration du capteur", "Stop", 0, nbSamples);
+    QString name = "Calibration du capteur :" + sensorID;
+    QProgressDialog* progressDialog = new QProgressDialog(name, "Stop", 0, nbSamples);
     progressDialog->setWindowModality(Qt::WindowModal);
     progressDialog->setMinimumDuration(0);
     progressDialog->setValue(0);
     progressDialog->show();
 
     QThread* thread = new QThread();
-    //redoot stch var
-    CalibrationWork* worker = new CalibrationWork(sensorID, sensorStartChannel, nbSamples);
+    CalibrationWork* worker = new CalibrationWork(sensorID, sensorStartChannel, nbSamples, channelsNumber);
     worker->moveToThread(thread);
 
     //connect(worker, &CalibrationWork::error, this, &MyClass::errorString);
@@ -348,23 +346,17 @@ void DataController::handleResultsAvgZeroPlatform(uint sensorid, const DataPacke
 #pragma region DATA PROCESSING
 //_____________________
 //Data Processing______
-const QGenericMatrix<1, 6, double> DataController::ChannelanalogToForce3axisForce(double rawAnalogChannelValues[6], Sensor& sensor, uint matrixOrder)
+const QGenericMatrix<1, 6, double> DataController::ChannelanalogToForce3axisForce(double rawAnalogChannelValues[6], Sensor& sensor)
 {
     QGenericMatrix<1, 6, double> result;
-    if (matrixOrder == 1)
-    {
-        QGenericMatrix<1, 6, double> analogValuesMatrix(rawAnalogChannelValues);
-        result = sensor.getCalibrationMatriceO1() * analogValuesMatrix;
-    }
-    else if (matrixOrder == 2)
-    {
-        double analogDataSquared[12];
-        for (uint i = 0; i < 6; i++) analogDataSquared[i] = rawAnalogChannelValues[i];
-        for (uint i = 0; i < 6; i++) analogDataSquared[i + 6] = rawAnalogChannelValues[i] * rawAnalogChannelValues[i];
 
-        QGenericMatrix<1, 12, double> analogValuesSquare(analogDataSquared);
-        result = sensor.getCalibrationMatriceO2() * analogValuesSquare;
-    }
+    double analogDataSquared[12];
+    for (uint i = 0; i < 6; i++) analogDataSquared[i] = rawAnalogChannelValues[i];
+    for (uint i = 0; i < 6; i++) analogDataSquared[i + 6] = rawAnalogChannelValues[i] * rawAnalogChannelValues[i];
+
+    QGenericMatrix<1, 12, double> analogValuesSquare(analogDataSquared);
+    result = sensor.getCalibrationMatriceO2() * analogValuesSquare;
+    
     return result;
 }
 
@@ -405,7 +397,7 @@ void DataController::processNewDataPacketFromNi(const DataPacket& d)
         }
 
         //calculate forces
-        QGenericMatrix<1, 6, double> result = this->ChannelanalogToForce3axisForce(dataBySensor, (*gp), 2);
+        QGenericMatrix<1, 6, double> result = this->ChannelanalogToForce3axisForce(dataBySensor, (*gp));
 
         DataPacket finalForce(6);
 
@@ -523,7 +515,7 @@ void DataController::processNewDataPacketPlatformFromNi(const DataPacket& d)
         }
 
         //calculate forces
-        QGenericMatrix<1, 6, double> result = this->ChannelanalogToForce3axisForce(dataBySensor, (*gp), 2);
+        QGenericMatrix<1, 6, double> result = this->ChannelanalogToForce3axisForce(dataBySensor, (*gp));
 
         DataPacket finalForce(6);
 
@@ -583,7 +575,7 @@ Sensor& DataController::getSensor(uint id)
     throw std::runtime_error("Object not found in vector.");
 }
 
-void DataController::connectToUdpSteam(MyUDP* udps)
+void DataController::connectToUdpSteam(const MyUDP* udps)
 {
     this->udpClient = udps;
 }

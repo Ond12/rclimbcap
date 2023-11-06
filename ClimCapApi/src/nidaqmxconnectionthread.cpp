@@ -375,9 +375,6 @@ int32 CVICALLBACK NidaqmxConnectionThread::EveryNCallbackPlatform(TaskHandle tas
 	int32       read = 0;
 	double* data = new double[numberOfChannels];
 
-	/*********************************************/
-	// DAQmx Read Code
-	/*********************************************/
 
 	DAQmxErrChk(DAQmxReadAnalogF64(taskHandle, NidaqmxConnectionThread::m_callBackRate,
 		10, DAQmx_Val_GroupByScanNumber, data, bufferSize, &read, NULL));
@@ -433,8 +430,6 @@ int32 CVICALLBACK NidaqmxConnectionThread::DoneCallback(TaskHandle taskHandle, i
 {
 	int32   error = 0;
 	char    errBuff[2048] = { '\0' };
-
-	// Check to see if an error stopped the task.
 	
 	DAQmxErrChk(status);
 	DAQmxErrChk(DAQmxStopTask(taskHandle));
@@ -488,7 +483,7 @@ void NidaqmxConnectionThread::startSensorAcquisition() const
 {
 	{
 		if (m_acquisitionTask != nullptr) m_acquisitionTask->Start();
-		if (this->m_enableStartTrigger)
+		if (m_enableStartTrigger)
 		{
 			qDebug("En attente de declenchement capteur");
 		}
@@ -514,13 +509,13 @@ void NidaqmxConnectionThread::startSensorCalibration() const
 
 void NidaqmxConnectionThread::stopSensorCalibration() const
 {
-	if (m_calibrationTask != nullptr) this->m_calibrationTask->Stop();
+	if (m_calibrationTask != nullptr) m_calibrationTask->Stop();
 }
 
 void NidaqmxConnectionThread::startPlaformAcquisition() const
 {
 	if (m_platformAcquisitionTask != nullptr) m_platformAcquisitionTask->Start();
-	if (this->m_enableStartTrigger)
+	if (m_enableStartTrigger)
 	{
 		qDebug("En attente de declenchement platformes");
 	}

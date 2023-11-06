@@ -10,7 +10,7 @@ class MyUDP : public QObject
     Q_OBJECT
 public:
     explicit MyUDP(QObject *parent = nullptr);
-    void streamData(const DataPacket& data, uint sensorId);
+    void streamData(const DataPacket& data, uint sensorId) const;
 
 public slots:
     void readyRead();

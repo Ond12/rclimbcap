@@ -19,9 +19,9 @@
 class CalibrationWork : public QObject
 {
 	Q_OBJECT
-	QTimer* timer;
+	QTimer* m_timer;
 
-	uint steps;
+	uint m_steps;
 	bool m_hasEmitResult;
 
 	QVector<QVector<double>* > m_data;
@@ -36,7 +36,7 @@ class CalibrationWork : public QObject
 public:
 	CalibrationWork(uint sensorID, uint sensorStartChannel, uint maxSampleNumber, uint channelsNumbers)
 	{
-		this->steps = 0;
+		this->m_steps = 0;
 		this->m_hasEmitResult = false;
 		this->m_currentSampleNumber = 0;
 		this->m_sensorID = sensorID;
@@ -44,11 +44,11 @@ public:
 		this->m_maxSampleNumber = maxSampleNumber;
 		this->m_channelsNumbers = channelsNumbers;
 
-		timer = new QTimer(this);
-		//connect(timer, &QTimer::timeout, this, &CalibrationWork::doHeavyCaclulations);
-		//timer->start(500);
+		m_timer = new QTimer(this);
+		//connect(m_timer, &QTimer::timeout, this, &CalibrationWork::doHeavyCaclulations);
+		//m_timer->start(500);
 
-		for (int i = 0; i < m_channelsNumbers; ++i) {
+		for (uint i = 0; i < m_channelsNumbers; ++i) {
 			QVector<double>* row = new QVector<double>;
 			m_data.push_back(row);
 		}
@@ -60,7 +60,7 @@ public:
 		for (QVector<double>* row : m_data) {
 			delete row;
 		}
-		delete timer;
+		delete m_timer;
 	};
 
 public slots:
@@ -68,28 +68,29 @@ public slots:
 	void starting()
 	{
 		qDebug() << "Start Calibration";
+		qDebug() << "work s:" << m_sensorID << " / nbchannel " << m_channelsNumbers;
 	}
 
 	void getNewAnalogData(const DataPacket& d)
 	{ 
-		qDebug() << "work s:"<< m_sensorID << " at " << this->steps << "/" << this->m_maxSampleNumber;
+		qDebug() << "work s:"<< m_sensorID << " at " << this->m_steps << "/" << this->m_maxSampleNumber << " / nbchannel " << m_channelsNumbers;
 
 		uint channelIdx = (this->m_sensorStartChannel);
 
-		for (int i = 0; i < m_channelsNumbers; ++i) {
+		for (uint i = 0; i < m_channelsNumbers; ++i) {
 			m_data[i]->append(d.dataValues[channelIdx + i]);
 		}
 
-		steps++;
-		emit progress(steps);
+		m_steps++;
+		emit progress(m_steps);
 		
-		if (steps == this->m_maxSampleNumber)
+		if (m_steps == this->m_maxSampleNumber)
 		{
 			DataPacket dataPacket(m_channelsNumbers);
 
 			double* analogZeroCorrection = new double[m_channelsNumbers];
 
-			for (int i = 0; i < m_channelsNumbers; ++i) {
+			for (uint i = 0; i < m_channelsNumbers; ++i) {
 				auto curcol = m_data[i];
 				analogZeroCorrection[i] = std::accumulate(curcol->begin(), curcol->end(), .0) / curcol->size();
 			}
@@ -123,7 +124,8 @@ class DataController : public QObject
 
 private:
 
-	MyUDP* udpClient;
+	const MyUDP* udpClient;
+
 	QVector<Sensor> m_sensorsList;
 	QVector<Sensor> m_plaformsList;
 
@@ -133,17 +135,14 @@ private:
 	QStringList m_sensorCalibrationFiles;
 	QStringList m_plaformCalibrationFiles;
 
-	QThread workerThread;
-
 	QGenericMatrix<3, 3, double> wallRotMatrix;
 
 	bool applyRotMatrix;
 	bool applyOffset;
 	bool applyWallRotation;
 
-	void handleResultsAvgZeroPlatform(uint sensorid, const DataPacket& analogZeroCorrection);
-
-	const QGenericMatrix<1, 6, double> ChannelanalogToForce3axisForce(double rawAnalogChannelValues[6], Sensor& sensor, uint matrixOrder);
+	const QGenericMatrix<1, 6, double> PLATFORMChannelanalogToForce3axisForce(double rawAnalogChannelValues[6], Sensor& sensor);
+	const QGenericMatrix<1, 6, double> ChannelanalogToForce3axisForce(double rawAnalogChannelValues[6], Sensor& sensor);
 	
 	void clearSensorConfiguration();
 
@@ -154,29 +153,26 @@ public:
 	void displaySensor() const;
 
 	Sensor& getPlatform(uint id);
-	
 	Sensor& getSensor(uint id);
 
 	void calibrate_sensors(uint nbSamples, int mode);
-	void createThreadAvgZero(uint sensorID, uint stratChannel, uint nbSamples);
+	void createThreadAvgZero(uint sensorID, uint sensorStartChannel, uint nbSamples, uint channelsNumber);
 
 	uint loadPlatformToAnalogConfig();
-
-	bool loadCalibrationMatriceOrdre2PLATFORM(uint sensorNumber, QGenericMatrix<12, 6, double>& matrice);
-
 	uint loadSensorToAnalogConfig();
-	void connectToUdpSteam(MyUDP* udps);
 
 	bool loadCalibrationMatriceOrdre2(uint sensorNumber, QGenericMatrix<12, 6, double>& matrice);
 
-	const QGenericMatrix<1, 6, double> PLATFORMChannelanalogToForce3axisForce(double rawAnalogChannelValues[6], Sensor& sensor);
+	bool loadCalibrationMatriceOrdre2PLATFORM(uint sensorNumber, QGenericMatrix<12, 6, double>& matrice);
+
+	void connectToUdpSteam(const MyUDP* udps);
 
 public slots:
 
 	void handleResultsAvgZero(uint, const DataPacket& data);
+	void handleResultsAvgZeroPlatform(uint sensorid, const DataPacket& analogZeroCorrection);
 
 	void processNewDataPacketFromNi(const DataPacket& data);
-
 	void processNewDataPacketPlatformFromNi(const DataPacket& d);
 
 signals:

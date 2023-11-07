@@ -139,14 +139,19 @@ void Sensor::addData(double key, double val, char axis)
 
 const QGenericMatrix<1, 6, double> Sensor::ChannelanalogToForce3axisForce(double rawAnalogChannelValues[6])
 {
-    QGenericMatrix<1, 6, double> result;
+    double*  analogDataSquared = new double [m_channelNumber * 2];
 
-    double analogDataSquared[12];
+    //array is first all analog data then following all analog data squared
+    // ex nchan = 3   rawdata = [1,2,3]   analogDataSquare = [1,2,3,1,4,9]
+
     for (uint i = 0; i < m_channelNumber; i++) analogDataSquared[i] = rawAnalogChannelValues[i];
-    for (uint i = 0; i < m_channelNumber; i++) analogDataSquared[i + 6] = rawAnalogChannelValues[i] * rawAnalogChannelValues[i];
+    for (uint i = 0; i < m_channelNumber; i++) analogDataSquared[i + m_channelNumber] = rawAnalogChannelValues[i] * rawAnalogChannelValues[i];
 
     QGenericMatrix<1, 12, double> analogValuesSquare(analogDataSquared);
-    result = this->getCalibrationMatriceO2() * analogValuesSquare;
+    QGenericMatrix<1, 6, double> result = this->getCalibrationMatriceO2() * analogValuesSquare;
+
+
+    delete[] analogDataSquared;
 
     return result;
 }

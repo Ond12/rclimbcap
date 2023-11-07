@@ -178,7 +178,7 @@ void NidaqmxConnectionThread::setUPTask(float acquisitionRate, float callBackRat
 	NidaqmxConnectionThread::m_acqRate = acquisitionRate;
 	NidaqmxConnectionThread::m_callBackRate = callBackRate;
 	NidaqmxConnectionThread::m_numberOfChannels = nOfChannels + 1; // +1 for chrono pulse channel
-	NidaqmxConnectionThread::m_bufferSize = callBackRate * nOfChannels;
+	NidaqmxConnectionThread::m_bufferSize = callBackRate * m_numberOfChannels;
 	NidaqmxConnectionThread::m_enableStartTrigger = triggerEnable;
 	NidaqmxConnectionThread::m_numberOfSample = numberOfSample;
 

@@ -79,6 +79,8 @@ class Worker(QObject):
 
             self.newData.emit(tram)
 
+class DataContainer
+
 class SensorGraph(QtWidgets.QWidget):
 
     def __init__(self,id,title) -> None:
@@ -130,13 +132,6 @@ class SensorGraph(QtWidgets.QWidget):
         vbox.addWidget(self.graphWidget,stretch=2)
         #vbox.addWidget(self.graphWidget2,stretch=1)
 
-        self.bar = PowerBar(100)
-        self.bar.setMaximumWidth(50)
-        self.bar.setBarPadding(2)
-        self.bar.setBarSolidPercent(0.9)
-
-        #vboxri.addWidget(self.bar,stretch=1)
-
         self.graphWidget.setTitle(title, color="b", size="20pt")
         self.id = id
 
@@ -169,6 +164,14 @@ class SensorGraph(QtWidgets.QWidget):
         self.timer.timeout.connect(self.update_plot_gui)
         self.timer.start()
 
+    def initPowerBar(self):
+        self.bar = PowerBar(100)
+        self.bar.setMaximumWidth(50)
+        self.bar.setBarPadding(2)
+        self.bar.setBarSolidPercent(0.9)
+
+        #vboxri.addWidget(self.bar,stretch=1)
+
     def calculateBodyWeightPercent(self, force):
         self.counter += 1
         if self.ClimberBodyWeight == 0:
@@ -183,7 +186,7 @@ class SensorGraph(QtWidgets.QWidget):
             total_AVG_bwP = sum(self.ClimberBodyWeightBuffer) / 50
             #self.legend_labelitem.setText('{total_AVG_bwP} BW%')  
             self.ClimberBodyWeightBuffer.clear()
-            self.bar._dial.setValue(int(total_AVG_bwP))
+            #self.bar._dial.setValue(int(total_AVG_bwP))
             self.counter = 0
 
     def setClimberBodyWeight(self,value):
@@ -265,18 +268,43 @@ class Wid(QMainWindow):
         fullpath = os.path.join(os.path.dirname(os.path.abspath(__file__)),'ClimbCap.png')
         self.setWindowIcon(QtGui.QIcon(fullpath))
 
-    def initUI(self):
-        self.title = "ClimbCap Sensor data"
-       
-
-        self.sensorGraph_by_id = {}
-        
+    def initAction(self):
         open_action = QAction('Open', self)
-
-        
         # Create the Copy action and add it to the Edit menu
         copy_action = QAction('Copy', self)
         #edit_menu.addAction(copy_action)
+
+        clearDataAct = QAction('Clear Data', self)
+        clearDataAct.setShortcut('Ctrl+Q')
+        clearDataAct.setStatusTip('Clear Data')
+        clearDataAct.triggered.connect(self.onResetData)
+
+        saveFile = QAction("&Save File", self)
+        saveFile.setShortcut("Ctrl+S")
+        saveFile.setStatusTip('Save File')
+        saveFile.triggered.connect(self.file_save)
+
+        comFreq = QAction("&Frequency", self)
+        comFreq.setShortcut("Ctrl+F")
+        comFreq.setStatusTip('Frequency')
+        comFreq.triggered.connect(self.onGetFrequency)
+
+        #fileMenu = menubar.addMenu('&File')
+        #fileMenu.addAction(clearDataAct)
+        #fileMenu.addAction(saveFile)
+        #fileMenu.addAction(comFreq)
+
+        toolbar = self.addToolBar('Exit')
+        toolbar.addAction(clearDataAct)
+        toolbar.addAction(saveFile)
+        toolbar.addAction(comFreq)
+
+    def initUI(self):
+        self.title = "ClimbCap Sensor data"
+    
+        self.sensorGraph_by_id = {}
+
+        self.initAction()
         
         # Create the vertical layout for the label
         hbox = QHBoxLayout()
@@ -316,70 +344,48 @@ class Wid(QMainWindow):
         
         # Set the size and title of the window
         self.setGeometry(0, 0, 1500, 1000)
-        self.setWindowTitle('ClimBCAP')
+        self.setWindowTitle('ClimbCap')
     
-        sg = SensorGraph(10,"Main1")
+        sg = SensorGraph(1,"Capteur 1")
         self.sensorGraph_by_id[sg.id] = sg
         sg.setshowXYZ(True);
         
-        sg2 = SensorGraph(11,"Main2")
-        self.sensorGraph_by_id[sg2.id] = sg2
-        sg2.setshowXYZ(True);
+        # sg2 = SensorGraph(11,"Main2")
+        # self.sensorGraph_by_id[sg2.id] = sg2
+        # sg2.setshowXYZ(True);
 
-        sg3 = SensorGraph(3,"Pied2")
-        self.sensorGraph_by_id[sg3.id] = sg3
-        sg3.setshowXYZ(True);
+        # sg3 = SensorGraph(3,"Pied2")
+        # self.sensorGraph_by_id[sg3.id] = sg3
+        # sg3.setshowXYZ(True);
 
-        sg4 = SensorGraph(4,"Pied1")
-        self.sensorGraph_by_id[sg4.id] = sg4
-        sg4.setshowXYZ(True);
+        # sg4 = SensorGraph(4,"Pied1")
+        # self.sensorGraph_by_id[sg4.id] = sg4
+        # sg4.setshowXYZ(True);
 
-        sg5 = SensorGraph(8,"Main noir")
-        self.sensorGraph_by_id[sg5.id] = sg5
-        sg5.setshowXYZ(True);
+        # sg5 = SensorGraph(8,"Main noir")
+        # self.sensorGraph_by_id[sg5.id] = sg5
+        # sg5.setshowXYZ(True);
 
-        sg6 = SensorGraph(6,"traction_Droit")
-        self.sensorGraph_by_id[sg6.id] = sg6
-        sg6.setshowXYZ(True);
+        # sg6 = SensorGraph(6,"traction_Droit")
+        # self.sensorGraph_by_id[sg6.id] = sg6
+        # sg6.setshowXYZ(True);
 
-        grid.addWidget(sg2, 0, 0)
+        # grid.addWidget(sg2, 0, 0)
         grid.addWidget(sg,  0, 1)
-        grid.addWidget(sg3, 1, 0)
-        grid.addWidget(sg4, 1, 1)
-        grid.addWidget(sg5, 2, 0)
+        # grid.addWidget(sg3, 1, 0)
+        # grid.addWidget(sg4, 1, 1)
+        # grid.addWidget(sg5, 2, 0)
         #grid_layout.addWidget(sg6.graphWidget, 2, 1)
-
-        clearDataAct = QAction('Clear Data', self)
-        clearDataAct.setShortcut('Ctrl+Q')
-        clearDataAct.setStatusTip('Clear Data')
-        clearDataAct.triggered.connect(self.onResetData)
-
-        saveFile = QAction("&Save File", self)
-        saveFile.setShortcut("Ctrl+S")
-        saveFile.setStatusTip('Save File')
-        saveFile.triggered.connect(self.file_save)
-
-        comFreq = QAction("&Frequency", self)
-        comFreq.setShortcut("Ctrl+F")
-        comFreq.setStatusTip('Frequency')
-        comFreq.triggered.connect(self.onGetFrequency)
-
-        #fileMenu = menubar.addMenu('&File')
-        #fileMenu.addAction(clearDataAct)
-        #fileMenu.addAction(saveFile)
-        #fileMenu.addAction(comFreq)
-
-        toolbar = self.addToolBar('Exit')
-        toolbar.addAction(clearDataAct)
-        toolbar.addAction(saveFile)
-        toolbar.addAction(comFreq)
 
         self.propagatesetClimberBodyWeight()
 
-        self.timerD = QtCore.QTimer()
-        self.timerD.setInterval(30000)
-        self.timerD.timeout.connect(self.onResetData)
-        self.timerD.start()
+        self.autoClearTimer = False
+
+        if(self.autoClearTimer):
+            self.timerD = QtCore.QTimer()
+            self.timerD.setInterval(30000)
+            self.timerD.timeout.connect(self.onResetData)
+            self.timerD.start()
 
         self.show()
 
@@ -575,233 +581,6 @@ class Wid(QMainWindow):
         ax1.legend(handles=[lines1,lines2,lines3,lines4,lines5,lines6])
         ax3.legend(handles=[line1,line2,line3,line4,line5,line6,line7,line8])
         sc.show()
-
-
-class _Bar(QtWidgets.QWidget):
-
-    clickedValue = QtCore.pyqtSignal(int)
-
-    def __init__(self, steps, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        self.pos = QPoint(0, 50)
-
-        self.setSizePolicy(
-            QtWidgets.QSizePolicy.MinimumExpanding,
-            QtWidgets.QSizePolicy.MinimumExpanding
-        )
-
-        if isinstance(steps, list):
-            # list of colors.
-            self.n_steps = len(steps)
-            self.steps = steps
-
-        elif isinstance(steps, int):
-            # int number of bars, defaults to red.
-            self.n_steps = steps
-            self.steps = ['red'] * steps
-        else:
-            raise TypeError('steps must be a list or int')
-
-        self._bar_solid_percent = 0.8
-        self._background_color = QtGui.QColor('black')
-        self._padding = 4.0  # n-pixel gap around edge.
-
-    def paintEvent(self, e):
-        painter = QtGui.QPainter(self)
-
-        brush = QtGui.QBrush()
-        brush.setColor(self._background_color)
-        brush.setStyle(Qt.SolidPattern)
-        rect = QtCore.QRect(0, 0, painter.device().width(), painter.device().height())
-        painter.fillRect(rect, brush)
-
-        # Get current state.
-        parent = self.parent()
-        vmin, vmax = parent.minimum(), parent.maximum()
-        value = parent.value()
-
-        # Define our canvas.
-        d_height = painter.device().height() - (self._padding * 2)
-        d_width = painter.device().width() - (self._padding * 2)
-
-        # Draw the bars.
-        step_size = d_height / self.n_steps
-        bar_height = step_size * self._bar_solid_percent
-        bar_spacer = step_size * (1 - self._bar_solid_percent) / 2
-
-        # Calculate the y-stop position, from the value in range.
-        pc = (value - vmin) / (vmax - vmin)
-        n_steps_to_draw = int(pc * self.n_steps)
-
-        for n in range(n_steps_to_draw):
-            brush.setColor(QtGui.QColor(self.steps[n]))
-            rect = QtCore.QRect(
-                int(self._padding),
-                int(self._padding + d_height - ((1 + n) * step_size) + bar_spacer),
-                int(d_width),
-                int(bar_height)
-            )
-            painter.fillRect(rect, brush)
-
-        pen = QtGui.QPen(QtGui.QColor(255,0,255))
-        pen.setWidth(5)
-
-        painter.setPen(pen)
-        painter.drawLine(0, self.pos.y(), self.width(), self.pos.y())
-        font = QtGui.QFont('Arial', 10)
-        
-        painter.setFont(font)
-
-        text = f'{self.parent().thresholdValue:.0f}'
-        text_rect = QRect(0, self.pos.y() - 30, self.width(), 30)
-        
-        painter.drawText(text_rect, Qt.AlignCenter, text)
-
-        pen = QtGui.QPen(QtGui.QColor(255,0,0))
-        pen.setWidth(5)
-
-        text = f'{value:.0f}'
-        text_rect = QRect(
-                        0,
-                        int(d_height - ((1 + n_steps_to_draw ) * step_size) + bar_spacer) - 20,
-                        int(d_width),
-                        30 )
-        
-        pen = QtGui.QPen(QtGui.QColor(255,0,0))
-        painter.setPen(pen)
-        painter.drawText(text_rect, Qt.AlignCenter, text)
-
-        painter.end()
-
-    def sizeHint(self):
-        return QtCore.QSize(40, 120)
-
-    def _trigger_refresh(self):
-        self.update()
-
-    def _calculate_clicked_value(self, e):
-        parent = self.parent()
-        vmin, vmax = parent.minimum(), parent.maximum()
-        d_height = self.size().height() + (self._padding * 2)
-        step_size = d_height / self.n_steps
-        click_y = e.y() - self._padding - step_size / 2
-
-        pc = (d_height - click_y) / d_height
-        value = vmin + pc * (vmax - vmin)
-
-        self.clickedValue.emit(int(value))
-        return value
-
-
-    def mouseMoveEvent(self, e):
-        self.pos = e.pos()
-        
-        parent = self.parent()
-        parent.thresholdValue = self._calculate_clicked_value(e)
-
-        self.update()
-
-    #def mousePressEvent(self, e):
-        #self._calculate_clicked_value(e)
-
-
-class PowerBar(QtWidgets.QWidget):
-    """
-    Custom Qt Widget to show a power bar and dial.
-    Demonstrating compound and custom-drawn widget.
-
-    Left-clicking the button shows the color-chooser, while
-    right-clicking resets the color to None (no-color).
-    """
-
-    colorChanged = QtCore.pyqtSignal()
-
-    def __init__(self, steps=5, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        self.thresholdValue = 80
-
-        self.player = QMediaPlayer()
-        self.setAudioFile()
-
-        layout = QtWidgets.QVBoxLayout()
-        layout.setSpacing(0)
-        layout.setContentsMargins(0, 0, 0, 0)
-        self._bar = _Bar(steps)
-        layout.addWidget(self._bar)
-
-        # Create the QDial widget and set up defaults.
-        # - we provide accessors on this class to override.
-        self._dial = QtWidgets.QDial()
-        self._dial.setNotchesVisible(True)
-        self._dial.setWrapping(False)
-        self._dial.valueChanged.connect(self._bar._trigger_refresh)
-        self._dial.valueChanged.connect(self.on_value_changed)
-
-        # Take feedback from click events on the meter.
-        self._bar.clickedValue.connect(self._dial.setValue)
-
-        #layout.addWidget(self._dial)
-        self.setLayout(layout)
-
-        self.timer = QTimer(self)
-        self.timer.timeout.connect(self.on_timer_timeout)
-
-    def setAudioFile(self):
-        
-        fullpath = os.path.join(os.path.dirname(os.path.abspath(__file__)),'error.mp3')
-        url = QUrl.fromLocalFile(fullpath)
-        content = QMediaContent(url)
-        
-        self.player.setMedia(content)
-
-    def __getattr__(self, name):
-        if name in self.__dict__:
-            return self[name]
-
-        return getattr(self._dial, name)
-
-    def setColor(self, color):
-        self._bar.steps = [color] * self._bar.n_steps
-        self._bar.update()
-
-    def setColors(self, colors):
-        self._bar.n_steps = len(colors)
-        self._bar.steps = colors
-        self._bar.update()
-
-    def setBarPadding(self, i):
-        self._bar._padding = int(i)
-        self._bar.update()
-
-    def setBarSolidPercent(self, f):
-        self._bar._bar_solid_percent = float(f)
-        self._bar.update()
-
-    def setBackgroundColor(self, color):
-        self._bar._background_color = QtGui.QColor(color)
-        self._bar.update()
-
-    def on_timer_timeout(self):
-        # This function will be called every time the timer times out
-        current_color = self._bar._background_color
-        if current_color == QtGui.QColor('black'):
-            self.setBackgroundColor(QtGui.QColor('green'))
-        else:
-            self.setBackgroundColor(QtGui.QColor('black'))
-        
-        # Stop the timer after 1 second
-        
-    def on_value_changed(self, value):
-
-        # Check if the value is greater than or equal to the threshold
-        if value > self.thresholdValue:
-            self.timer.start(50)
-            self.player.play()
-        else:
-            self.setBackgroundColor(QtGui.QColor('black'))
-            self.timer.stop()
 
 #_______________________________________________________________________
 #Main Loop

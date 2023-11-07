@@ -21,13 +21,15 @@ namespace globals
 	constexpr auto EXPORT_START_TRIGGER_PIN = "PFI5";
 	constexpr auto CHRONO_PULSE_PIN = 7;
 
+	constexpr auto SENSOR_ACQ_CARD_NAME = "Dev1";
+	constexpr auto PLATFORM_ACQ_CARD_NAME = "Dev1";
 
 
+
+	//Debug globals
 
 	constexpr auto DEBUG_MOD_PLATFORM = true;
 	constexpr auto DEBUG_MOD_SENSOR = true;
 
-	constexpr auto SENSOR_ACQ_CARD_NAME = "Dev1";
-	constexpr auto PLATFORM_ACQ_CARD_NAME = "Dev1";
-	
+
 }

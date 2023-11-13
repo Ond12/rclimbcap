@@ -11,6 +11,7 @@ from PyQt5.QtGui import QIcon
 color_x = (255, 0, 0)  # Red
 color_y = (0, 255, 0)  # Green
 color_z = (0, 0, 255)  # Blue
+color_chrono = (255, 255, 0) # Yellow
 
 class ForcesData:
     def __init__(self, frequency, num_data_points=0):
@@ -229,6 +230,20 @@ class DataContainer:
         for sensor in self.sensors:
             self.create_debug_data(sensor)
 
+    def generate_debug_chrono_data(self, duration=10, sample_rate=200, rising_edge_interval=1):
+        total_samples = duration * sample_rate
+        time = np.arange(0, duration, 1 / sample_rate)
+        signal = np.zeros(total_samples)
+
+        # Create rising edges
+        for i in range(1, 4):
+            edge_sample = int(i * rising_edge_interval * sample_rate) + sample_rate
+            signal[edge_sample] = 5
+
+        self.chrono_data = signal
+
+        return time, signal
+
     def create_debug_data(self, sensor=None):
         if sensor==None:
             sensor = self.sensors[0]
@@ -254,13 +269,16 @@ class DataContainer:
         for i in range(len(t)):
             # Combine signals with white noise
             sensor.add_data_point([signals[0][i] + white_noise[i],
-                                signals[1][i] + white_noise[i],
-                                signals[2][i] + white_noise[i],
-                                0, 0, 0])
+                                   signals[1][i] + white_noise[i],
+                                   signals[2][i] + white_noise[i],
+                                   0, 0, 0])
+
+        self.generate_debug_chrono_data()
 
     def clear_all_sensor_data(self):
         for sensor in self.sensors:
             sensor.clear_data()
+        self.chrono_data = np.empty(0)
 
 class Plotter(pg.PlotWidget):
     def __init__(self, data_container, parent=None):
@@ -283,6 +301,7 @@ class Plotter(pg.PlotWidget):
 
             for i, sensor in enumerate(self.data_container.sensors):
                 if sensor.get_forces_data().num_data_points > 0:
+
                     color = colors[i % len(colors)]
                     force_data = sensor.get_forces_data()
                     time_increments = force_data.get_time_increments()
@@ -305,7 +324,13 @@ class Plotter(pg.PlotWidget):
                     sensor_plot_items = [plot_item_force_x, plot_item_force_y, plot_item_force_z]
 
                     self.sensor_plot_map[sensor.sensor_id] = sensor_plot_items
-            
+
+            if self.data_container:
+                cr_time_increments = self.data_container.get_time_increments()
+                cr_data = self.data_container.chrono_data
+                plot_item_chrono_data = self.plot(cr_time_increments, cr_data, pen=pg.mkPen(color_chrono, width=2, alpha=200), name=f"Chrono signal")
+                self.plot_items.append(plot_item_chrono_data)
+
             self.update()
 
     def plot_sum_force(self):
@@ -464,7 +489,6 @@ class Wid(QMainWindow):
         self.show()
         
     def file_save_action(self):
-
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
         folder_dialog = QFileDialog()
@@ -517,6 +541,8 @@ class Wid(QMainWindow):
         self.plotter.plot_sum_force()
 
     def debug_action(self):
+        current_sensor = Sensor(4, 6, 200)
+        self.data_container.add_sensor(current_sensor)
         self.data_container.fill_debug_data()
         self.plotter.plot_data()
 

@@ -253,6 +253,83 @@ class SensorGraph(QtWidgets.QWidget):
         
         #self.resultant_forces_line.setPos(ptr1,0) 
 
+class Sensor:
+
+    class AnalogData:
+        def __init__(self, num_channels):
+            self.num_channels = num_channels
+            self.data = [[] for _ in range(num_channels)]
+
+        def add_data_point(self, channel, value):
+            if 0 <= channel < self.num_channels:
+                self.data[channel].append(value)
+            else:
+                raise ValueError("Invalid channel index")
+
+        def get_channel_data(self, channel):
+            if 0 <= channel < self.num_channels:
+                return self.data[channel]
+            else:
+                raise ValueError("Invalid channel index")
+
+        def get_num_channels(self):
+            return self.num_channels
+    
+    class ForceData:
+        def __init__(self, force_x, force_y, force_z, moment_x, moment_y, moment_z):
+            self.force_x = force_x
+            self.force_y = force_y
+            self.force_z = force_z
+            self.moment_x = moment_x
+            self.moment_y = moment_y
+            self.moment_z = moment_z
+
+        def to_list(self):
+            return [self.force_x, self.force_y, self.force_z, self.moment_x, self.moment_y, self.moment_z]
+
+    def __init__(self, sensor_id):
+        self.sensor_id = sensor_id
+        self.data = []
+
+    def add_data_point(self, x, y, z):
+        self.data.append([x, y, z])
+
+    def get_data(self):
+        return self.data
+
+class DataContainer:
+    def __init__(self):
+        self.sensors = []
+
+    def add_sensor(self, sensor):
+        self.sensors.append(sensor)
+
+    def sum_x_data(self):
+        x_sum = 0
+        for sensor in self.sensors:
+            for data_point in sensor.data:
+                x_sum += data_point[0]
+        return x_sum
+
+class Plotter(pg.PlotWidget):
+    def __init__(self, data_container, parent=None):
+        super(Plotter, self).__init__(parent=parent)
+        self.data_container = data_container
+        self.plot_items = []
+
+    def plot_data(self, colors=None):
+        if self.data_container.sensors:
+            self.clear()
+
+            if colors is None:
+                colors = ['b'] * len(self.data_container.sensors)
+
+            for i, sensor in enumerate(self.data_container.sensors):
+                color = colors[i % len(colors)]
+                x_data, y_data, z_data = zip(*sensor.data)
+                plot_item = self.plot(x_data, y_data, pen=pg.mkPen(color), name=f"Sensor {sensor.sensor_id}")
+                self.plot_items.append(plot_item)
+
 class Wid(QMainWindow):
 
     def __init__(self):
@@ -285,7 +362,7 @@ class Wid(QMainWindow):
         comFreq = QAction("&Frequency", self)
         comFreq.setShortcut("Ctrl+F")
         comFreq.setStatusTip('Frequency')
-        comFreq.triggered.connect(self.onGetFrequency)
+        #comFreq.triggered.connect(self.onGetFrequency)
 
         #fileMenu = menubar.addMenu('&File')
         #fileMenu.addAction(clearDataAct)
@@ -297,14 +374,12 @@ class Wid(QMainWindow):
         toolbar.addAction(saveFile)
         toolbar.addAction(comFreq)
 
-    def initUI(self):
-        self.title = "ClimbCap Sensor data"
-    
-        self.sensorGraph_by_id = {}
+        # Create the status bar
+        #self.statusbar = QStatusBar()
+        #self.setStatusBar(self.statusbar)
+        #self.statusbar.showMessage('Ready')
 
-        self.initAction()
-        
-        # Create the vertical layout for the label
+    def spinbox(self):
         hbox = QHBoxLayout()
         
         # Create the label and add it to the vertical layout
@@ -316,31 +391,21 @@ class Wid(QMainWindow):
         self.doubleSpinBox.setMinimum(0)
         self.doubleSpinBox.setMaximum(200)
 
-        hbox.addWidget(self.doubleSpinBox)
+        #hbox.addWidget(self.doubleSpinBox)
         self.doubleSpinBox.valueChanged.connect(self.propagatesetClimberBodyWeight)
         self.doubleSpinBox.setValue(100)
-        
-        # Create the grid layout for the buttons
-        grid = QGridLayout()
-                
-        # Create the main grid layout and add the h layout and the grid layout
+
+    def initUI(self):
+        self.title = "ClimbCap Sensor data"
+    
+        self.sensorGraph_by_id = {}
+
+        self.initAction()
+                        
         main_grid = QGridLayout()
         main_grid.setSpacing(1)
         main_grid.setContentsMargins(0, 0, 0, 0)
-        main_grid.addLayout(hbox, 0, 0)
-        main_grid.addLayout(grid, 1, 0)
-        
-        # Create the status bar
-        #self.statusbar = QStatusBar()
-        #self.setStatusBar(self.statusbar)
-        #self.statusbar.showMessage('Ready')
-        
-        # Set the main layout of the window to be the main grid layout
-        widget = QWidget()
-        widget.setLayout(main_grid)
-        self.setCentralWidget(widget)
-        
-        # Set the size and title of the window
+    
         self.setGeometry(0, 0, 1500, 1000)
         self.setWindowTitle('ClimbCap')
     
@@ -348,34 +413,13 @@ class Wid(QMainWindow):
         self.sensorGraph_by_id[sg.id] = sg
         sg.setshowXYZ(True);
         
-        # sg2 = SensorGraph(11,"Main2")
-        # self.sensorGraph_by_id[sg2.id] = sg2
-        # sg2.setshowXYZ(True);
+        #main_grid.addWidget(sg, 0, 0)
 
-        # sg3 = SensorGraph(3,"Pied2")
-        # self.sensorGraph_by_id[sg3.id] = sg3
-        # sg3.setshowXYZ(True);
+        main_widget = QWidget()
+        main_widget.setLayout(main_grid)
+        main_widget.show()
 
-        # sg4 = SensorGraph(4,"Pied1")
-        # self.sensorGraph_by_id[sg4.id] = sg4
-        # sg4.setshowXYZ(True);
-
-        # sg5 = SensorGraph(8,"Main noir")
-        # self.sensorGraph_by_id[sg5.id] = sg5
-        # sg5.setshowXYZ(True);
-
-        # sg6 = SensorGraph(6,"traction_Droit")
-        # self.sensorGraph_by_id[sg6.id] = sg6
-        # sg6.setshowXYZ(True);
-
-        # grid.addWidget(sg2, 0, 0)
-        grid.addWidget(sg,  0, 1)
-        # grid.addWidget(sg3, 1, 0)
-        # grid.addWidget(sg4, 1, 1)
-        # grid.addWidget(sg5, 2, 0)
-        #grid_layout.addWidget(sg6.graphWidget, 2, 1)
-
-        self.propagatesetClimberBodyWeight()
+        self.setCentralWidget(main_widget)
 
         self.autoClearTimer = False
 
@@ -434,8 +478,6 @@ class Wid(QMainWindow):
             data = self.sensorGraph_by_id[1].dataToJson();
             #json.dump(data, f)
             self.write_data_to_csv(data["x"], data["y"], data["z"], fileName)
-
-
 
 #_______________________________________________________________________
 #Main Loop

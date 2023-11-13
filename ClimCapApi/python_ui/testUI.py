@@ -230,7 +230,7 @@ class DataContainer:
         for sensor in self.sensors:
             self.create_debug_data(sensor)
 
-    def generate_debug_chrono_data(self, duration=10, sample_rate=200, rising_edge_interval=1):
+    def generate_debug_chrono_data(self, duration=20, sample_rate=200, rising_edge_interval=1):
         total_samples = duration * sample_rate
         time = np.arange(0, duration, 1 / sample_rate)
         signal = np.zeros(total_samples)
@@ -256,7 +256,7 @@ class DataContainer:
 
         duration = 20
         sampling_rate = 200
-        t = np.linspace(0, duration, int(sampling_rate * duration), endpoint=False)
+        t = np.arange(0, duration, 1 / sampling_rate)
 
         signals = []
         for params in signal_parameters:

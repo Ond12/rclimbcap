@@ -13,6 +13,20 @@ color_y = (0, 255, 0)  # Green
 color_z = (0, 0, 255)  # Blue
 color_chrono = (255, 255, 0) # Yellow
 
+colors_dict = {
+    0: (255, 255, 255),   # White
+    1: (255, 0, 0),       # Red
+    2: (0, 255, 0),       # Green
+    3: (0, 0, 255),       # Blue
+    4: (255, 255, 0),     # Yellow
+    5: (255, 0, 255),     # Magenta
+    6: (0, 255, 255),     # Cyan
+    7: (128, 0, 0),       # Maroon
+    8: (0, 128, 0),       # Green (dark)
+    9: (0, 0, 128),       # Navy
+    10: (128, 128, 128)   # Gray
+}
+
 class ForcesData:
     def __init__(self, frequency, num_data_points=0):
         self.frequency = frequency
@@ -59,6 +73,8 @@ class ForcesData:
 
 class Sensor:
     def __init__(self, sensor_id, num_channels, frequency):
+        self.sensor_name = f"Force sensor {sensor_id}"
+        self.color  = colors_dict[sensor_id % 11]
         self.sensor_id = sensor_id
         self.num_channels = num_channels
         self.frequency = frequency
@@ -278,6 +294,7 @@ class DataContainer:
     def clear_all_sensor_data(self):
         for sensor in self.sensors:
             sensor.clear_data()
+        self.sensors = []
         self.chrono_data = np.empty(0)
 
 class Plotter(pg.PlotWidget):
@@ -498,27 +515,29 @@ class Wid(QMainWindow):
             print(f"Selected Folder: {folder_path}")
 
             try:
-
                 sensors = self.data_container.sensors
                 freq_value = sensors[0].frequency
 
-                path = folder_path +"/filename"
+                path = folder_path + "/filename.xlsx"
 
                 with pd.ExcelWriter(path, engine='xlsxwriter') as writer:
-                    num_sheets = len(sensors)
-                    for sheet_number, curr_sensor in enumerate(sensors):
+                    df = pd.DataFrame({
+                        "date":"ajd",
+                        "freq": freq_value,
+                        "chrono_data": self.data_container.chrono_data
+                    })
+                    sheet_name = "data_infos"
+                
+                    df.to_excel(writer, sheet_name=sheet_name, index=False)
+
+                    for curr_sensor in sensors:
+
                         sheet_name = f"Capteur {curr_sensor.sensor_id}"
-
                         data = curr_sensor.get_forces_data().to_dataframe()
-                        df = pd.DataFrame(data, columns=['fx', 'fy', 'fz', 'mx', 'my', 'mz'])
-
-                        # Set the specific value in the first sheet
-                        if sheet_number == 0:
-                            df.loc[0, 'FREQ'] = freq_value
-
+                        df = data
                         df.to_excel(writer, sheet_name=sheet_name, index=False)
 
-                print(f"{num_sheets} sheets created and saved to {folder_path}")
+                print(f"sheets created and saved to {folder_path}")
             except Exception as e:
                 err_msg = f"Error creating and saving Excel file: {e}"
                 print(err_msg)
@@ -573,6 +592,9 @@ class Wid(QMainWindow):
 
                 if sheet_name.startswith("Infos"):
                         frequency = df["FREQ"].iloc[0]
+                        if "chrono_time" in df.columns:
+                            chrono_data = np.array(df["chrono_time"])
+                            self.data_container.chrono_data = chrono_data
 
                 if sheet_name.startswith("Capteur"):
                     sensor_number = self.extract_sensor_id(sheet_name)
@@ -597,7 +619,9 @@ class Wid(QMainWindow):
 
             return sheets_dict
         except Exception as e:
-            print(f"Error reading Excel file: {e}")
+            err_msg = f"Error opening Excel file: {e}"
+            print(err_msg)
+            self.statusbar.showMessage(err_msg)
             return None
         
 def main():

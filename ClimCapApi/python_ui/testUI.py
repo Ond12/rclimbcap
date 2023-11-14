@@ -1,4 +1,5 @@
 import sys
+from datetime import datetime
 import os
 import numpy as np
 import pandas as pd
@@ -55,12 +56,12 @@ class ForcesData:
     
     def to_dataframe(self):
         data_dict = {
-            'forces_x': self.forces_x,
-            'forces_y': self.forces_y,
-            'forces_z': self.forces_z,
-            'moments_x': self.moments_x,
-            'moments_y': self.moments_y,
-            'moments_z': self.moments_z
+            'fx': self.forces_x,
+            'fy': self.forces_y,
+            'fz': self.forces_z,
+            'm_x': self.moments_x,
+            'm_y': self.moments_y,
+            'm_z': self.moments_z
         }
         df = pd.DataFrame(data_dict)
         return df
@@ -517,21 +518,28 @@ class Wid(QMainWindow):
             try:
                 sensors = self.data_container.sensors
                 freq_value = sensors[0].frequency
-
+                
                 path = folder_path + "/filename.xlsx"
 
                 with pd.ExcelWriter(path, engine='xlsxwriter') as writer:
+                    sheet_name = "Infos"
+
                     df = pd.DataFrame({
-                        "date":"ajd",
-                        "freq": freq_value,
+                        "DATE": datetime.now().date(),
+                        "FREQ": freq_value,
+                        "SESSION": "NONE",
+                        "SUJET": "NONE"
+                    }, index=[0])
+
+                    df.to_excel(writer, sheet_name=sheet_name, index=True)
+
+                    df = pd.DataFrame({
                         "chrono_data": self.data_container.chrono_data
                     })
-                    sheet_name = "data_infos"
-                
+
                     df.to_excel(writer, sheet_name=sheet_name, index=False)
 
                     for curr_sensor in sensors:
-
                         sheet_name = f"Capteur {curr_sensor.sensor_id}"
                         data = curr_sensor.get_forces_data().to_dataframe()
                         df = data
@@ -592,8 +600,8 @@ class Wid(QMainWindow):
 
                 if sheet_name.startswith("Infos"):
                         frequency = df["FREQ"].iloc[0]
-                        if "chrono_time" in df.columns:
-                            chrono_data = np.array(df["chrono_time"])
+                        if "chrono_data" in df.columns:
+                            chrono_data = np.array(df["chrono_data"])
                             self.data_container.chrono_data = chrono_data
 
                 if sheet_name.startswith("Capteur"):
@@ -606,9 +614,9 @@ class Wid(QMainWindow):
                         column_data_x = np.array(df["fx"])
                         column_data_y = np.array(df["fy"])
                         column_data_z = np.array(df["fz"])
-
-                        # moments = np.zeros((len(column_data_x), 3))
-                        # current_sensor.add_data_points(np.column_stack((column_data_x, column_data_y, column_data_z, moments)))
+                        column_moment_x = np.array(df["m_x"])
+                        column_moment_y = np.array(df["m_y"])
+                        column_moment_z = np.array(df["m_z"])
 
                         for i in range(len(column_data_x)):
                             c_x = column_data_x[i]

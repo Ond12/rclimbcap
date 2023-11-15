@@ -302,6 +302,7 @@ class Plotter(pg.PlotWidget):
     def __init__(self, data_container, parent=None):
         super(Plotter, self).__init__(parent=parent)
         self.data_container = data_container
+        
         self.plot_items = []
 
         self.contact_list = []
@@ -383,6 +384,7 @@ class Plotter(pg.PlotWidget):
         if sensor_id in self.sensor_plot_map:
             for plot_item in self.sensor_plot_map[sensor_id]:
                 plot_item.setVisible(not plot_item.isVisible())
+                self.legend
                 pastel_color = "background-color: #C1E1C1" if plot_item.isVisible() else "background-color: #FAA0A0"
                 button.setStyleSheet(pastel_color)
             
@@ -405,20 +407,37 @@ class PlotterController(QWidget):
         self.initUI()
 
     def initUI(self):
-        button_layout = QHBoxLayout()
-        toggle_buttons = []
+        self.button_layout = QHBoxLayout()
+        self.toggle_buttons = []
 
-        for i, item in enumerate(self.plotter.data_container.sensors):
-            button = QPushButton(f"Sensor {i}")
-            pastel_color = "background-color: #FAA0A0"  # Pastel color for not visible
-            button.setStyleSheet(pastel_color)
-            button.clicked.connect(lambda checked, button=button, sensor_id=i + 1: self.plotter.show_hide_lines(button, sensor_id))
-            toggle_buttons.append(button)
+            # button = QPushButton(f"Sensor {i}")
+            # pastel_color = "background-color: #FAA0A0"  
+            # button.setStyleSheet(pastel_color)
+            # button.clicked.connect(lambda checked, button=button, sensor_id=i + 1: self.plotter.show_hide_lines(button, sensor_id))
+            # self.toggle_buttons.append(button)
 
-        for button in toggle_buttons:
-            button_layout.addWidget(button)
+        # for button in self.toggle_buttons:
+        #     self.button_layout.addWidget(button)
 
-        self.setLayout(button_layout)
+        self.setLayout(self.button_layout)
+        self.show()
+
+    def set_up_widget(self):
+        for i, sensor in enumerate(self.plotter.data_container.sensors):
+            self.add_button(sensor.sensor_id)
+
+    def add_button(self, sensor_id):
+        button = QPushButton(f"Sensor {sensor_id }", self)
+        pastel_color = "background-color: #FAA0A0"  
+        button.setStyleSheet(pastel_color)
+        button.clicked.connect(lambda checked, button=button, sensor_id=sensor_id: self.plotter.show_hide_lines(button, sensor_id))
+        self.toggle_buttons.append(button)
+        self.button_layout.addWidget(button)
+
+    def clean_widget(self):
+        for button in self.toggle_buttons:
+            button.setParent(None) 
+        self.toggle_buttons = [] 
 
 #_________________________________________________________________________________________
 class Wid(QMainWindow):
@@ -501,8 +520,12 @@ class Wid(QMainWindow):
 
         self.plot_controller = PlotterController(self.plotter)
         
+
+
         main_grid.addWidget(self.plot_controller, 1, 0)
         main_grid.addWidget(self.plotter)
+
+
 
         self.show()
         
@@ -570,8 +593,16 @@ class Wid(QMainWindow):
     def debug_action(self):
         current_sensor = Sensor(4, 6, 200)
         self.data_container.add_sensor(current_sensor)
+
+        current_sensor = Sensor(11, 6, 200)
+        self.data_container.add_sensor(current_sensor)
+
+        current_sensor = Sensor(2, 6, 200)
+        self.data_container.add_sensor(current_sensor)
+
         self.data_container.fill_debug_data()
         self.plotter.plot_data()
+        self.plot_controller.set_up_widget()
 
     def open_file_action(self):
         options = QFileDialog.Options()
@@ -581,9 +612,9 @@ class Wid(QMainWindow):
         if file_path:
             sheets_data = self.read_excel_file(file_path)
             if sheets_data:
-                print("Excel file read successfully.")
-                # You can now work with each sheet's data.
+                
                 self.plotter.plot_data()
+                self.plot_controller.set_up_widget()
 
     def extract_sensor_id(self, sheet_name):
         match = re.search(r'\bCapteur (\d+)\b', sheet_name)

@@ -151,7 +151,6 @@ class DataContainer:
         self.sensors.append(sensor)
 
     def sum_force_data(self):
-
         force_data = self.sensors[0].get_forces_data()
         time_increments = force_data .get_time_increments()
         num_points = force_data.num_data_points
@@ -520,20 +519,27 @@ class Wid(QMainWindow):
 
         self.plot_controller = PlotterController(self.plotter)
         
-
-
         main_grid.addWidget(self.plot_controller, 1, 0)
         main_grid.addWidget(self.plotter)
-
-
 
         self.show()
         
     def file_save_action(self):
+
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
-        folder_dialog = QFileDialog()
-        folder_path = folder_dialog.getExistingDirectory(self, "Open Folder", options=options)
+        file_dialog = QFileDialog()
+        file_dialog.setOptions(options)
+        file_dialog.setAcceptMode(QFileDialog.AcceptSave)
+        file_dialog.setNameFilter('Excel Files (*.xlsx)')
+
+        # Display the dialog and get the selected file name and filter
+        file_name, _ = file_dialog.getSaveFileName(self, 'Save Excel File', '', 'Excel Files (*.xlsx);;All Files (*)')
+
+        if file_name:
+            # Save the file or perform desired actions
+            print(f'Selected file: {file_name}')
+        folder_path= file_name
 
         if folder_path:
             print(f"Selected Folder: {folder_path}")

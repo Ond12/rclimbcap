@@ -3,11 +3,15 @@ from datetime import datetime
 import os
 import numpy as np
 import pandas as pd
+from scipy.integrate import quad
 import re
 from scipy.signal import butter, sosfilt
 import pyqtgraph as pg
 from PyQt6.QtWidgets import *
 from PyQt6.QtGui import *
+
+from plotterWidget import *
+from contact import *
 
 color_x = (255, 0, 0)  # Red
 color_y = (0, 255, 0)  # Green
@@ -97,44 +101,6 @@ class Sensor:
     
     def clear_data(self):
         self.force_data = ForcesData(self.frequency)  
-
-class ContactInfo:
-    class ContactDisplay:
-        def __init__(self, start_time=0, end_time=0):
-            self.start_vertical_line = pg.InfiniteLine(start_time, angle=90, movable=False)
-            self.end_vertical_line = pg.InfiniteLine(end_time, angle=90, movable=False)
-
-        def set_visible(self, visible):
-            self.start_vertical_line.setVisible(visible)
-            self.end_vertical_line.setVisible(visible)
-
-        def add_into_graphplot(self, plot):
-            if plot != None:
-                plot.addItem(self.start_vertical_line)
-                plot.addItem(self.end_vertical_line)
-        
-        def remove_from_graphplot(self, plot):
-            if plot != None:
-                plot.removeItem(self.start_vertical_line)
-                plot.removeItem(self.end_vertical_line)
-
-    def __init__(self, start_time=0, end_time=0):
-        self.axis_name = "unknown"
-        self.max_value = 0
-        self.start_time = start_time
-        self.end_time = end_time
-        self.period = end_time - start_time
-        self.area = 0
-        self.contact_display = None
-    
-    def add_into_plot(self, plot):
-        if plot != None:
-            self.contact_display = self.ContactDisplay(self.start_time, self.end_time)
-            self.contact_display.add_into_graphplot(plot)
-    
-    def remove_from_plot(self, plot):
-        if plot != None and self.contact_display != None:
-            self.contact_display.remove_from_graphplot(plot)
 
 class DataContainer:
     def __init__(self):
@@ -246,6 +212,12 @@ class DataContainer:
         for sensor in self.sensors:
             self.create_debug_data(sensor)
 
+    def calculate_area_under_signal(signal,time , star_time_idx, end_time_idx):
+        signal_function = np.poly1d(signal)
+        area, _ = quad(signal_function, time[star_time_idx], time[end_time_idx])
+
+        return area
+
     def generate_debug_chrono_data(self, duration=20, sample_rate=200, rising_edge_interval=1):
         total_samples = duration * sample_rate
         time = np.arange(0, duration, 1 / sample_rate)
@@ -263,6 +235,9 @@ class DataContainer:
     def create_debug_data(self, sensor=None):
         if sensor==None:
             sensor = self.sensors[0]
+            if sensor == None:
+                print("No sensor to fill up debug data")
+                return None
 
         signal_parameters = [
             {"amplitude": 10, "frequency": 10, "phase": 0.0},
@@ -297,146 +272,6 @@ class DataContainer:
         self.sensors = []
         self.chrono_data = np.empty(0)
 
-class Plotter(pg.PlotWidget):
-    def __init__(self, data_container, parent=None):
-        super(Plotter, self).__init__(parent=parent)
-        self.data_container = data_container
-        
-        self.plot_items = []
-
-        self.contact_list = []
-
-        self.sensor_plot_map = {}
-        self.showGrid(x=False, y=True)
-        self.addLegend()
-
-    def plot_data(self, colors=None):
-        if self.data_container.sensors:
-            self.clear()
-
-            if colors is None:
-                colors = ['b'] * len(self.data_container.sensors)
-
-            for i, sensor in enumerate(self.data_container.sensors):
-                if sensor.get_forces_data().num_data_points > 0:
-
-                    color = colors[i % len(colors)]
-                    force_data = sensor.get_forces_data()
-                    time_increments = force_data.get_time_increments()
-
-                    force_x = force_data.forces_x
-                    plot_item_force_x = self.plot(time_increments, force_x, pen=pg.mkPen(color_x, width=2, alpha=200), name=f"Sensor {sensor.sensor_id} - Force X")
-                    plot_item_force_x.setVisible(False)
-                    self.plot_items.append(plot_item_force_x)
-
-                    force_y = force_data.forces_y
-                    plot_item_force_y = self.plot(time_increments, force_y, pen=pg.mkPen(color_y, width=2, alpha=200), name=f"Sensor {sensor.sensor_id} - Force Y")
-                    plot_item_force_y.setVisible(False)
-                    self.plot_items.append(plot_item_force_y)
-
-                    force_z = force_data.forces_z
-                    plot_item_force_z = self.plot(time_increments, force_z, pen=pg.mkPen(color_z, width=2, alpha=200), name=f"Sensor {sensor.sensor_id} - Force Z")
-                    plot_item_force_z.setVisible(False)
-                    self.plot_items.append(plot_item_force_z)
-
-                    sensor_plot_items = [plot_item_force_x, plot_item_force_y, plot_item_force_z]
-
-                    self.sensor_plot_map[sensor.sensor_id] = sensor_plot_items
-
-            if self.data_container:
-                cr_time_increments = self.data_container.get_time_increments()
-                cr_data = self.data_container.chrono_data
-                plot_item_chrono_data = self.plot(cr_time_increments, cr_data, pen=pg.mkPen(color_chrono, width=2, alpha=200), name=f"Chrono signal")
-                self.plot_items.append(plot_item_chrono_data)
-
-            self.update()
-
-    def plot_sum_force(self):
-        force_result = self.data_container.sum_force_data()
-
-        time_increments = force_result["time"]
-
-        force_x = force_result["sum_x"]
-        plot_item_force_x = self.plot(time_increments, force_x, pen=pg.mkPen(color_x, width=2, alpha=200), name=f"Sum Force X")
-        plot_item_force_x.setVisible(False)
-        self.plot_items.append(plot_item_force_x)
-
-        force_y = force_result["sum_y"]
-        plot_item_force_y = self.plot(time_increments, force_y, pen=pg.mkPen(color_y, width=2, alpha=200), name=f"Sum Force Y")
-        plot_item_force_y.setVisible(False)
-        self.plot_items.append(plot_item_force_y)
-
-        force_z = force_result["sum_z"]
-        plot_item_force_z = self.plot(time_increments, force_z, pen=pg.mkPen(color_z, width=2, alpha=200), name=f"Sum Force Z")
-        plot_item_force_z.setVisible(False)
-        self.plot_items.append(plot_item_force_z)
-
-        sensor_plot_items = [plot_item_force_x, plot_item_force_y, plot_item_force_z]
-
-    def clear_plot(self):
-        self.sensor_plot_map = {}
-        self.plot_items.clear()
-        self.clear_contacts()
-        self.clear()
-
-    def show_hide_lines(self, button, sensor_id):
-        if sensor_id in self.sensor_plot_map:
-            for plot_item in self.sensor_plot_map[sensor_id]:
-                plot_item.setVisible(not plot_item.isVisible())
-                pastel_color = "background-color: #C1E1C1" if plot_item.isVisible() else "background-color: #FAA0A0"
-                button.setStyleSheet(pastel_color)
-            
-            self.update()
-
-    def clear_contacts(self):
-        for contact in self.contact_list:
-            contact.remove_from_plot(self)
-        self.contact_list = []
-
-    def plot_contacts(self, contact_info_list):
-        for contact in contact_info_list:
-            contact.add_into_plot(self)
-            contact.contact_display.set_visible(True)
-
-class PlotterController(QWidget):
-    def __init__(self, plotter):
-        super().__init__()
-        self.plotter = plotter
-        self.initUI()
-
-    def initUI(self):
-        self.button_layout = QHBoxLayout()
-        self.toggle_buttons = []
-
-            # button = QPushButton(f"Sensor {i}")
-            # pastel_color = "background-color: #FAA0A0"  
-            # button.setStyleSheet(pastel_color)
-            # button.clicked.connect(lambda checked, button=button, sensor_id=i + 1: self.plotter.show_hide_lines(button, sensor_id))
-            # self.toggle_buttons.append(button)
-
-        # for button in self.toggle_buttons:
-        #     self.button_layout.addWidget(button)
-
-        self.setLayout(self.button_layout)
-        self.show()
-
-    def set_up_widget(self):
-        for i, sensor in enumerate(self.plotter.data_container.sensors):
-            self.add_button(sensor.sensor_id)
-
-    def add_button(self, sensor_id):
-        button = QPushButton(f"Sensor {sensor_id }", self)
-        pastel_color = "background-color: #FAA0A0"  
-        button.setStyleSheet(pastel_color)
-        button.clicked.connect(lambda checked, button=button, sensor_id=sensor_id: self.plotter.show_hide_lines(button, sensor_id))
-        self.toggle_buttons.append(button)
-        self.button_layout.addWidget(button)
-
-    def clean_widget(self):
-        for button in self.toggle_buttons:
-            button.setParent(None) 
-        self.toggle_buttons = [] 
-
 #_________________________________________________________________________________________
 class Wid(QMainWindow):
     def __init__(self):
@@ -450,7 +285,6 @@ class Wid(QMainWindow):
         self.setWindowIcon(QIcon(ic_path))
 
     def init_actions(self):
-
         open_file_action = QAction("&Open File", self)
         open_file_action.setStatusTip("&Save File")
         open_file_action.triggered.connect(self.open_file_action)
@@ -525,14 +359,12 @@ class Wid(QMainWindow):
         
     def file_save_action(self):
         file_dialog = QFileDialog()
-        file_dialog.setAcceptMode(QFileDialog.AcceptSave)
+        file_dialog.setAcceptMode(QFileDialog.AcceptMode.AcceptSave)
         file_dialog.setNameFilter('Excel Files (*.xlsx)')
 
-        # Display the dialog and get the selected file name and filter
         file_name, _ = file_dialog.getSaveFileName(self, 'Save Excel File', '', 'Excel Files (*.xlsx);;All Files (*)')
 
         if file_name:
-            # Save the file or perform desired actions
             print(f'Selected file: {file_name}')
         folder_path= file_name
 
@@ -543,7 +375,7 @@ class Wid(QMainWindow):
                 sensors = self.data_container.sensors
                 freq_value = sensors[0].frequency
                 
-                path = folder_path + "/filename.xlsx"
+                path = folder_path
 
                 with pd.ExcelWriter(path, engine='xlsxwriter') as writer:
                     sheet_name = "Infos"
@@ -553,7 +385,7 @@ class Wid(QMainWindow):
                         "FREQ": freq_value,
                         "SESSION": "NONE",
                         "SUJET": "NONE"
-                    }, index=[0])
+                    }, index=[0] )
 
                     df.to_excel(writer, sheet_name=sheet_name, index=True)
 
@@ -570,6 +402,7 @@ class Wid(QMainWindow):
                         df.to_excel(writer, sheet_name=sheet_name, index=False)
 
                 print(f"sheets created and saved to {folder_path}")
+                
             except Exception as e:
                 err_msg = f"Error creating and saving Excel file: {e}"
                 print(err_msg)

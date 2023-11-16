@@ -13,3 +13,7 @@ pip install pandas
 pip install numpy
 pip instal scipy
 pip install pyqt6
+pip install pyqtgraph
+pip install xlsxreader
+pip install xlsxwriter
+pip install openpyxl

@@ -6,8 +6,8 @@ import pandas as pd
 import re
 from scipy.signal import butter, sosfilt
 import pyqtgraph as pg
-from PyQt5.QtWidgets import *
-from PyQt5.QtGui import QIcon
+from PyQt6.QtWidgets import *
+from PyQt6.QtGui import *
 
 color_x = (255, 0, 0)  # Red
 color_y = (0, 255, 0)  # Green
@@ -383,7 +383,6 @@ class Plotter(pg.PlotWidget):
         if sensor_id in self.sensor_plot_map:
             for plot_item in self.sensor_plot_map[sensor_id]:
                 plot_item.setVisible(not plot_item.isVisible())
-                self.legend
                 pastel_color = "background-color: #C1E1C1" if plot_item.isVisible() else "background-color: #FAA0A0"
                 button.setStyleSheet(pastel_color)
             
@@ -525,11 +524,7 @@ class Wid(QMainWindow):
         self.show()
         
     def file_save_action(self):
-
-        options = QFileDialog.Options()
-        options |= QFileDialog.DontUseNativeDialog
         file_dialog = QFileDialog()
-        file_dialog.setOptions(options)
         file_dialog.setAcceptMode(QFileDialog.AcceptSave)
         file_dialog.setNameFilter('Excel Files (*.xlsx)')
 
@@ -611,9 +606,7 @@ class Wid(QMainWindow):
         self.plot_controller.set_up_widget()
 
     def open_file_action(self):
-        options = QFileDialog.Options()
-        options |= QFileDialog.ReadOnly
-        file_path, _ = QFileDialog.getOpenFileName(self, "Open Excel File", "", "Excel Files (*.xlsx);;All Files (*)", options=options)
+        file_path, _ = QFileDialog.getOpenFileName(self, "Open Excel File", "", "Excel Files (*.xlsx);;All Files (*)")
 
         if file_path:
             sheets_data = self.read_excel_file(file_path)
@@ -673,7 +666,7 @@ def main():
     app =  QApplication(sys.argv)
     widm = Wid()
 
-    sys.exit(app.exec_())
+    sys.exit(app.exec())
     
 if __name__ == '__main__':
     main()

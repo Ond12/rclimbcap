@@ -116,6 +116,21 @@ class DataContainer:
     def add_sensor(self, sensor):
         self.sensors.append(sensor)
 
+    def cal_resultant_force(self, sensor):
+        
+        force_data = self.sensors.get_forces_data()
+        time_increments = force_data.get_time_increments()
+        
+        forces = np.array([force_data.forces_x, force_data.forces_y, force_data.forces_z])
+        resultant_force = np.linalg.norm(forces, axis=0)
+        
+        result = {}
+        result["sensor_id"] = sensor.sensor_id
+        result["times"] = time_increments
+        result["data"] = resultant_force
+
+        return result
+
     def sum_force_data(self):
         force_data = self.sensors[0].get_forces_data()
         time_increments = force_data .get_time_increments()
@@ -179,6 +194,11 @@ class DataContainer:
 
         return contacts
     
+    def detect_contacts_on_sensors(self):
+        for sensor in self.sensors:
+            resultant_force = self.cal_resultant_force(sensor.get_forces_data().forces_x,sensor.get_forces_data().forces_x,sensor.get_forces_data().forces_x)
+            self.detect_contact(resultant_force)
+            
     def butter_bandstop_filter(self, stop_band, sampling_rate):
  
         nyquist_freq = 0.5 * sampling_rate
@@ -192,8 +212,9 @@ class DataContainer:
         return sos
 
     def apply_filter_hcutoff_to_sensors(self):
+        stop_band_frequency = 10    
         sampling_rate = self.sensors[0].frequency
-        stop_band = (0, 10)
+        stop_band = (0, stop_band_frequency)
 
         sos_butter = self.butter_bandstop_filter(stop_band, sampling_rate)
         for sensor in self.sensors:
@@ -240,9 +261,9 @@ class DataContainer:
                 return None
 
         signal_parameters = [
-            {"amplitude": 10, "frequency": 10, "phase": 0.0},
-            {"amplitude": 20, "frequency": 10, "phase": np.pi / 4.0},
-            {"amplitude": 30, "frequency": 10, "phase": np.pi / 2.0},
+            {"amplitude": 100, "frequency": 2, "phase": 0.0},
+            {"amplitude": 400, "frequency": 0.5, "phase": np.pi / 4.0},
+            {"amplitude": 800, "frequency": 0.2, "phase": np.pi / 2.0},
         ]
 
         duration = 20
@@ -254,7 +275,7 @@ class DataContainer:
             signal = params["amplitude"] * np.sin(2 * np.pi * params["frequency"] * t + params["phase"])
             signals.append(signal)
         
-        noise_amplitude = 2
+        noise_amplitude = 10
         white_noise = np.random.normal(0, noise_amplitude, len(t))
 
         for i in range(len(t)):
@@ -366,6 +387,7 @@ class Wid(QMainWindow):
 
         if file_name:
             print(f'Selected file: {file_name}')
+        
         folder_path= file_name
 
         if folder_path:
@@ -428,11 +450,11 @@ class Wid(QMainWindow):
         current_sensor = Sensor(4, 6, 200)
         self.data_container.add_sensor(current_sensor)
 
-        current_sensor = Sensor(11, 6, 200)
-        self.data_container.add_sensor(current_sensor)
+        # current_sensor = Sensor(11, 6, 200)
+        # self.data_container.add_sensor(current_sensor)
 
-        current_sensor = Sensor(2, 6, 200)
-        self.data_container.add_sensor(current_sensor)
+        # current_sensor = Sensor(2, 6, 200)
+        # self.data_container.add_sensor(current_sensor)
 
         self.data_container.fill_debug_data()
         self.plotter.plot_data()

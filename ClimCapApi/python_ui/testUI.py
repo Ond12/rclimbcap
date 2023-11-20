@@ -120,7 +120,6 @@ class DataContainer:
         self.sensors.append(sensor)
 
     def cal_resultant_force(self, sensor):
-        
         force_data = self.sensors.get_forces_data()
         time_increments = force_data.get_time_increments()
         
@@ -136,7 +135,7 @@ class DataContainer:
     
     def cal_resultant_force_all_sensors(self):
         for sensor in self.sensors:
-            resultant_force = self.cal_resultant_force(sensor.get_forces_data().forces_x,sensor.get_forces_data().forces_x,sensor.get_forces_data().forces_x)
+            resultant_force = self.cal_resultant_force(sensor.get_forces_data().forces_x, sensor.get_forces_data().forces_x, sensor.get_forces_data().forces_x)
         
     def sum_force_data(self):
         force_data = self.sensors[0].get_forces_data()
@@ -358,37 +357,41 @@ class Wid(QMainWindow):
 
     def init_actions(self):
         open_file_action = QAction("&Open File", self)
-        open_file_action.setStatusTip("&Save File")
+        open_file_action.setStatusTip("Open File")
         open_file_action.triggered.connect(self.open_file_action)
 
         save_file_action = QAction("&Save File", self)
-        save_file_action.setStatusTip("&Save File")
+        save_file_action.setStatusTip("Save File")
         save_file_action.triggered.connect(self.file_save_action)
         save_file_action.setShortcut("Ctrl+S")
 
         clear_data_action = QAction("&Clear Data", self)
-        clear_data_action.setStatusTip("&Clear Data")
+        clear_data_action.setStatusTip("Clear Data")
         clear_data_action.triggered.connect(self.clear_data_action)
 
         apply_filter_action = QAction("&Apply filter", self)
-        apply_filter_action.setStatusTip("&Apply filter")
+        apply_filter_action.setStatusTip("Apply filter")
         apply_filter_action.triggered.connect(self.apply_filter_action)
 
         find_contacts_action = QAction("&Find contacts", self)
-        find_contacts_action.setStatusTip("&Find contacts")
+        find_contacts_action.setStatusTip("Find contacts")
         find_contacts_action.triggered.connect(self.find_contacts_action)
 
         sum_force_action = QAction("&Sum forces", self)
-        sum_force_action.setStatusTip("&Sum forces")
+        sum_force_action.setStatusTip("Sum forces")
         sum_force_action.triggered.connect(self.sum_force_action)
 
         clear_data_action = QAction("&Clear Data", self)
-        clear_data_action.setStatusTip("&Clear Data")
+        clear_data_action.setStatusTip("Clear Data")
         clear_data_action.triggered.connect(self.clear_data_action)
 
         debug_data_action = QAction("&Debug", self)
-        debug_data_action.setStatusTip("&Debug")
+        debug_data_action.setStatusTip("Debug")
         debug_data_action.triggered.connect(self.debug_action)
+        
+        calculate_resultant_action = QAction("&Cal Resultant", self)
+        calculate_resultant_action.setStatusTip("Cal Resultant")
+        calculate_resultant_action.triggered.connect(self.calculate_resultant_force_action)
 
         toolbar = self.addToolBar("Tools")
         toolbar.addAction(open_file_action)
@@ -396,6 +399,7 @@ class Wid(QMainWindow):
         toolbar.addAction(clear_data_action)
         toolbar.addAction(apply_filter_action)
         toolbar.addAction(find_contacts_action)
+        toolbar.addAction(calculate_resultant_action)
 
         toolbar.addAction(debug_data_action)
 
@@ -495,6 +499,12 @@ class Wid(QMainWindow):
         data = self.data_container.sensors[0].get_forces_data().forces_x
         contact_info_list = self.data_container.detect_contacts(data, "x", sensor_id, detect_threshold)
         self.plotter.plot_contacts(contact_info_list)
+
+    def calculate_resultant_force_action(self):
+        sensor = self.data_container.sensors[0]
+        data_result  = self.data_container.cal_resultant_force(sensor)
+        self.plotter.plot_resultant_force(data_result)
+        print("calculate resultant_force for sensor")
 
     def sum_force_action(self):
         self.plotter.plot_sum_force()

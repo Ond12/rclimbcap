@@ -42,6 +42,8 @@ class ForcesData:
         self.moments_x = np.empty(num_data_points)
         self.moments_y = np.empty(num_data_points)
         self.moments_z = np.empty(num_data_points)
+        
+        self.resultant = np.empty(num_data_points)
 
         self.data_points = pd.DataFrame()
 
@@ -106,6 +108,7 @@ class DataContainer:
     def __init__(self):
         self.sensors = []
         self.chrono_data = np.empty(0)
+        self.contacts = []
 
     def get_time_increments(self):
         #change this to do 
@@ -130,7 +133,11 @@ class DataContainer:
         result["data"] = resultant_force
 
         return result
-
+    
+    def cal_resultant_force_all_sensors(self):
+        for sensor in self.sensors:
+            resultant_force = self.cal_resultant_force(sensor.get_forces_data().forces_x,sensor.get_forces_data().forces_x,sensor.get_forces_data().forces_x)
+        
     def sum_force_data(self):
         force_data = self.sensors[0].get_forces_data()
         time_increments = force_data .get_time_increments()
@@ -168,7 +175,51 @@ class DataContainer:
 
         return time, value
 
-    def detect_contacts(self, signal, threshold=0):
+    def find_max_contacts(self, contacts_list=None):
+        if contacts_list == None:
+            contacts_list = self.contacts
+        for contact in contacts_list:
+            self.max_in_contact(contact)
+
+    def max_in_contact(self, contact):
+            start_time = contact.start_time
+            end_time = contact.end_time
+            
+            target_sensor_id = contact.sensor_id
+            sensor = self.find_sensor_by_id(target_sensor_id)
+
+            if sensor:
+                print(f"Sensor with ID {target_sensor_id} found: {sensor}")
+            else:
+                print(f"Sensor with ID {target_sensor_id} not found.")
+                return None
+            
+            start_index = self.time_to_index(start_time)
+            end_index =  self.time_to_index(end_time)
+             
+            #to change
+            signal_slice = sensor.resultant[start_index:end_index + 1]
+            
+            time, value = self.find_max(signal_slice)
+            
+            contact.max_value = value
+            contact.max_value_time = time
+
+    def time_to_index(self, time, sampling_rate, num_samples):
+        index = int(time * sampling_rate)
+        if 0 <= index < num_samples:
+            return index
+        else:
+            print(f"Invalid time value {time}. Index {index} is out of bounds.")
+            return 0
+
+    def find_sensor_by_id(sensor_list, target_id):
+        for sensor in sensor_list:
+            if sensor.id == target_id:
+                return sensor
+        return None
+
+    def detect_contacts(self,  signal, signal_name, sensor_id = 0, threshold=0):
         if not self.sensors[0]:
             return []
         
@@ -188,10 +239,11 @@ class DataContainer:
             if slope < -threshold and slope_up_detected:
                 slope_up_detected = False
                 end_time = time_increments[i]
-                cur_contact = ContactInfo(start_time, end_time)
-                cur_contact.axis_name = "X"
+                cur_contact = ContactInfo(sensor_id, start_time, end_time)
+                cur_contact.axis_name =  signal_name
                 contacts.append(cur_contact)
 
+        self.contacts = contacts
         return contacts
     
     def detect_contacts_on_sensors(self):
@@ -200,7 +252,6 @@ class DataContainer:
             self.detect_contact(resultant_force)
             
     def butter_bandstop_filter(self, stop_band, sampling_rate):
- 
         nyquist_freq = 0.5 * sampling_rate
         low_cutoff = stop_band[0] / nyquist_freq
         high_cutoff = stop_band[1] / nyquist_freq
@@ -439,8 +490,10 @@ class Wid(QMainWindow):
         self.plotter.plot_data()
 
     def find_contacts_action(self): 
+        detect_threshold = 1.5
+        sensor_id = self.data_container.sensors[0].sensor_id
         data = self.data_container.sensors[0].get_forces_data().forces_x
-        contact_info_list = self.data_container.detect_contacts(data, 1.5)
+        contact_info_list = self.data_container.detect_contacts(data, "x", sensor_id, detect_threshold)
         self.plotter.plot_contacts(contact_info_list)
 
     def sum_force_action(self):

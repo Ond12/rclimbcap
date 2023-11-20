@@ -48,9 +48,13 @@ class ContactInfo:
                 plot.removeItem(self.start_vertical_line)
                 plot.removeItem(self.end_vertical_line)
 
-    def __init__(self, start_time=0, end_time=0):
-        self.axis_name = "unknown"
+    def __init__(self, sensor_id = 0, start_time=0, end_time=0):
+        self.sensor_id = sensor_id
+        self.axis_name = "all"
         self.max_value = 0
+        self.max_value_time = 0
+        self.max_values_axis = {'x':0, 'y':0, 'z':0}
+        self.max_values_axis_time = {'x':0, 'y':0, 'z':0}
         self.start_time = start_time
         self.end_time = end_time
         self.period = end_time - start_time

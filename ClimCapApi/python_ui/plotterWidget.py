@@ -139,7 +139,7 @@ class Plotter(pg.PlotWidget):
         for contact in contact_info_list:
             contact.add_into_plot(self)
             contact.contact_display.set_visible(True)
-            self.plot_marker_max()
+            #self.plot_marker_max()
 
 class PlotterController(QWidget):
     def __init__(self, plotter):

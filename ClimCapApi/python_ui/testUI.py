@@ -218,7 +218,7 @@ class DataContainer:
                 return sensor
         return None
 
-    def detect_contacts(self,  signal, signal_name, sensor_id = 0, threshold=0):
+    def detect_contacts(self, signal, signal_name, sensor_id=0, slope_threshold_up=100, slope_threshold_down=100, use_crossing=True, crossing_threshold=0):
         if not self.sensors[0]:
             return []
         
@@ -231,16 +231,32 @@ class DataContainer:
         for i in range(1, len(signal)):
             slope = signal[i] - signal[i - 1]
 
-            if slope > threshold:
+            if slope > slope_threshold_up:
                 slope_up_detected = True
                 start_time = time_increments[i]
+        
+            if use_crossing:
+            # Use zero-crossing detection
+                if signal[i] < crossing_threshold and signal[i - 1] >= crossing_threshold and slope_up_detected:
+                    slope_up_detected = False
+                    end_time = time_increments[i]
+                    cur_contact = ContactInfo(sensor_id, start_time, end_time)
+                    cur_contact.axis_name = signal_name
+                    contacts.append(cur_contact)
 
-            if slope < -threshold and slope_up_detected:
+            elif slope < -slope_threshold_down and slope_up_detected:
                 slope_up_detected = False
                 end_time = time_increments[i]
                 cur_contact = ContactInfo(sensor_id, start_time, end_time)
                 cur_contact.axis_name =  signal_name
                 contacts.append(cur_contact)
+                
+        if slope_up_detected:
+            # Assume the end time is the last time increment in the signal
+            end_time = time_increments[-1]
+            cur_contact = ContactInfo(sensor_id, start_time, end_time)
+            cur_contact.axis_name = signal_name
+            contacts.append(cur_contact)
 
         self.contacts = contacts
         return contacts
@@ -494,15 +510,23 @@ class Wid(QMainWindow):
         self.plotter.plot_data()
 
     def find_contacts_action(self): 
-        detect_threshold = 1.5
+        detect_threshold_up = 10
+        detect_threshold_down = 10
+        crossing_threshold = 9
         sensor_id = self.data_container.sensors[0].sensor_id
-        data = self.data_container.sensors[0].get_forces_data().forces_x
-        contact_info_list = self.data_container.detect_contacts(data, "x", sensor_id, detect_threshold)
-        self.plotter.plot_contacts(contact_info_list)
+        data = self.data_container.sensors[0].get_forces_data().resultant
+        
+        print(data)
+        if len(data) > 0:
+            contact_info_list = self.data_container.detect_contacts(data, "resultant", sensor_id, detect_threshold_up, detect_threshold_down, True, crossing_threshold )
+            self.plotter.plot_contacts(contact_info_list)
+            print(f"Get contacts on resultante axis for sensor {sensor_id}")
 
     def calculate_resultant_force_action(self):
         sensor = self.data_container.sensors[0]
         data_result  = self.data_container.cal_resultant_force(sensor)
+        sensor.get_forces_data().resultant = data_result["data"]
+        
         self.plotter.plot_resultant_force(data_result)
         print("calculate resultant_force for sensor")
 

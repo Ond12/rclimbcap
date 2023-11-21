@@ -120,7 +120,7 @@ class DataContainer:
         self.sensors.append(sensor)
 
     def cal_resultant_force(self, sensor):
-        force_data = self.sensors.get_forces_data()
+        force_data = sensor.get_forces_data()
         time_increments = force_data.get_time_increments()
         
         forces = np.array([force_data.forces_x, force_data.forces_y, force_data.forces_z])
@@ -128,7 +128,7 @@ class DataContainer:
         
         result = {}
         result["sensor_id"] = sensor.sensor_id
-        result["times"] = time_increments
+        result["time"] = time_increments
         result["data"] = resultant_force
 
         return result

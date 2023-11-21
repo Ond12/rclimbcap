@@ -107,7 +107,7 @@ class Plotter(pg.PlotWidget):
     def plot_resultant_force(self, force_result):
         time_increments = force_result["time"]
         resultant_force = force_result["data"]
-        sensor_id = sensor_id["sensor_id"]
+        sensor_id = force_result["sensor_id"]
         plot_item_resultant_force = self.plot(time_increments, resultant_force, pen=pg.mkPen((255,105,180), width=2, alpha=200), name=f"Sensor {sensor_id} - Force Z")
         plot_item_resultant_force.setVisible(True)
         self.plot_items.append(plot_item_resultant_force)

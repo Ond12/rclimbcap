@@ -112,9 +112,11 @@ class Plotter(pg.PlotWidget):
         plot_item_resultant_force.setVisible(True)
         self.plot_items.append(plot_item_resultant_force)
 
-    def plot_marker_max(self, point):
-        self.plot([13, 14, 15, 16, 17], pen=(187, 26, 95), symbolBrush=(187, 26, 95), symbolPen='w', symbol='arrow_up', symbolSize=22, name="symbol='arrow_up'")
-
+    def plot_marker_max(self, time, value):
+        self.plot([time], [value],
+              pen=(187, 26, 95), symbolBrush=(187, 26, 95),
+              symbolPen='w', symbol='arrow_up', symbolSize=22, name="symbol='arrow_up'")
+    
     def clear_plot(self):
         self.sensor_plot_map = {}
         self.plot_items.clear()
@@ -135,11 +137,14 @@ class Plotter(pg.PlotWidget):
             contact.remove_from_plot(self)
         self.contact_list = []
 
-    def plot_contacts(self, contact_info_list):
+    def plot_contacts(self, contact_info_list=None):
+        if contact_info_list is None:
+            contact_info_list = self.contact_list
         for contact in contact_info_list:
             contact.add_into_plot(self)
             contact.contact_display.set_visible(True)
-            #self.plot_marker_max()
+            if contact.max_value_time != 0:
+                self.plot_marker_max(contact.max_value_time, contact.max_value)
 
 class PlotterController(QWidget):
     def __init__(self, plotter):

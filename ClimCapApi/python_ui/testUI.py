@@ -178,9 +178,9 @@ class DataContainer:
         if contacts_list == None:
             contacts_list = self.contacts
         for contact in contacts_list:
-            self.max_in_contact(contact)
+            self.find_max_in_contact(contact)
 
-    def max_in_contact(self, contact):
+    def find_max_in_contact(self, contact):
             start_time = contact.start_time
             end_time = contact.end_time
             
@@ -203,6 +203,50 @@ class DataContainer:
             
             contact.max_value = value
             contact.max_value_time = time
+            
+    def find_min(self, signal):
+        time_increments = self.get_time_increments()
+        min_value = signal[0]  
+        time = time_increments[0]
+
+        for i, value in enumerate(signal):
+            if value < min_value:
+                min_value = value
+                time = time_increments[i]
+
+        return time, min_value
+
+    def find_min_contacts(self, contacts_list=None):
+        if contacts_list is None:
+            contacts_list = self.contacts
+        for contact in contacts_list:
+            self.min_in_contact(contact)
+
+    def min_in_contact(self, contact):
+        start_time = contact.start_time
+        end_time = contact.end_time
+
+        target_sensor_id = contact.sensor_id
+        sensor = self.find_sensor_by_id(target_sensor_id)
+
+        if sensor:
+            print(f"Sensor with ID {target_sensor_id} found: {sensor}")
+        else:
+            print(f"Sensor with ID {target_sensor_id} not found.")
+            return None
+
+        sample_rate = sensor.frequency
+        num_sample = 
+        start_index = self.time_to_index(start_time, sample_rate, )
+        end_index = self.time_to_index(end_time)
+        
+        # Change to access the resultant or appropriate signal attribute
+        signal_slice = sensor.resultant[start_index:end_index + 1]
+
+        time, value = self.find_min(signal_slice)
+
+        contact.min_value = value
+        contact.min_value_time = time
 
     def time_to_index(self, time, sampling_rate, num_samples):
         index = int(time * sampling_rate)
@@ -212,9 +256,9 @@ class DataContainer:
             print(f"Invalid time value {time}. Index {index} is out of bounds.")
             return 0
 
-    def find_sensor_by_id(sensor_list, target_id):
-        for sensor in sensor_list:
-            if sensor.id == target_id:
+    def find_sensor_by_id(self, target_id):
+        for sensor in self.sensors:
+            if sensor.sensor_id == target_id:
                 return sensor
         return None
 
@@ -408,6 +452,10 @@ class Wid(QMainWindow):
         calculate_resultant_action = QAction("&Cal Resultant", self)
         calculate_resultant_action.setStatusTip("Cal Resultant")
         calculate_resultant_action.triggered.connect(self.calculate_resultant_force_action)
+        
+        find_max_in_contact_action = QAction("&Find max", self)
+        find_max_in_contact_action.setStatusTip("Find max")
+        find_max_in_contact_action.triggered.connect(self.find_max_in_contact_action)
 
         toolbar = self.addToolBar("Tools")
         toolbar.addAction(open_file_action)
@@ -416,6 +464,7 @@ class Wid(QMainWindow):
         toolbar.addAction(apply_filter_action)
         toolbar.addAction(find_contacts_action)
         toolbar.addAction(calculate_resultant_action)
+        toolbar.addAction(find_max_in_contact_action)
 
         toolbar.addAction(debug_data_action)
 
@@ -532,6 +581,10 @@ class Wid(QMainWindow):
 
     def sum_force_action(self):
         self.plotter.plot_sum_force()
+        
+    def find_max_in_contact_action(self):
+        self.data_container.find_max_contacts()
+        self.plotter.plot_contacts()
 
     def debug_action(self):
         current_sensor = Sensor(4, 6, 200)

@@ -136,7 +136,8 @@ class DataContainer:
     def cal_resultant_force_all_sensors(self):
         for sensor in self.sensors:
             resultant_force = self.cal_resultant_force(sensor.get_forces_data().forces_x, sensor.get_forces_data().forces_x, sensor.get_forces_data().forces_x)
-        
+            sensor.get_forces_data().resultant = resultant_force["data"]
+            
     def sum_force_data(self):
         force_data = self.sensors[0].get_forces_data()
         time_increments = force_data .get_time_increments()
@@ -148,11 +149,13 @@ class DataContainer:
 
         #bug if not same shape
         for sensor in self.sensors:
-            force_data = sensor.get_forces_data()
+            if sensor.sensor_id <=11:
+            
+                force_data = sensor.get_forces_data()
 
-            sum_x_data = np.add(sum_x_data, force_data.forces_x) 
-            sum_y_data = np.add(sum_y_data, force_data.forces_y)  
-            sum_z_data = np.add(sum_z_data, force_data.forces_z)  
+                sum_x_data = np.add(sum_x_data, force_data.forces_x) 
+                sum_y_data = np.add(sum_y_data, force_data.forces_y)  
+                sum_z_data = np.add(sum_z_data, force_data.forces_z)  
 
         result = {}
         result["time"] = time_increments
@@ -162,7 +165,7 @@ class DataContainer:
 
         return result
     
-    def find_max(self, signal):
+    def find_max(self, signal, startidx = 0):
         time_increments = self.get_time_increments()
         max_value = signal[0]  
         time = time_increments[0]
@@ -170,7 +173,8 @@ class DataContainer:
         for i,value in enumerate(signal):
             if value > max_value:
                 max_value = value
-                time = time_increments[i]
+                print(max_value)
+                time = time_increments[startidx + i]
 
         return time, value
 
@@ -193,13 +197,23 @@ class DataContainer:
                 print(f"Sensor with ID {target_sensor_id} not found.")
                 return None
             
-            start_index = self.time_to_index(start_time)
-            end_index =  self.time_to_index(end_time)
+            sample_rate = sensor.frequency
+            num_sample = sensor.get_forces_data().num_data_points
+            
+            start_index = self.time_to_index(start_time, sample_rate, num_sample)
+            end_index = self.time_to_index(end_time, sample_rate, num_sample)
              
             #to change
-            signal_slice = sensor.resultant[start_index:end_index + 1]
+            signal_slice = sensor.get_forces_data().resultant[start_index:end_index + 1]
             
-            time, value = self.find_max(signal_slice)
+            print(f"{signal_slice.size}")
+            
+            print(f"start t : {start_time}   sidx : {start_index}")
+            print(f"end t : {end_time}   eidx : {end_index}")
+            
+            time, value = self.find_max(signal_slice, start_index)
+            
+            print(f"max fournd : {value} time : {time}")
             
             contact.max_value = value
             contact.max_value_time = time
@@ -236,12 +250,13 @@ class DataContainer:
             return None
 
         sample_rate = sensor.frequency
-        num_sample = 
-        start_index = self.time_to_index(start_time, sample_rate, )
-        end_index = self.time_to_index(end_time)
+        num_sample = sensor.get_forces_data().num_data_points
+        
+        start_index = self.time_to_index(start_time, sample_rate, num_sample)
+        end_index = self.time_to_index(end_time, sample_rate, num_sample)
         
         # Change to access the resultant or appropriate signal attribute
-        signal_slice = sensor.resultant[start_index:end_index + 1]
+        signal_slice = sensor.get_forces_data().resultant[start_index:end_index + 1]
 
         time, value = self.find_min(signal_slice)
 
@@ -306,9 +321,21 @@ class DataContainer:
         return contacts
     
     def detect_contacts_on_sensors(self):
+        detect_threshold_up = 10
+        detect_threshold_down = 10
+        crossing_threshold = 9
+        
+        all_contacts_list = []
+        
         for sensor in self.sensors:
-            resultant_force = self.cal_resultant_force(sensor.get_forces_data().forces_x,sensor.get_forces_data().forces_x,sensor.get_forces_data().forces_x)
-            self.detect_contact(resultant_force)
+            sensor_id = sensor.sensor_id
+            resultant_force_dic = self.cal_resultant_force(sensor)
+            data = resultant_force_dic["data"]
+            cur_contacts_list = self.detect_contacts(data, f"resultant {sensor_id}", sensor_id, detect_threshold_up, detect_threshold_down, True, crossing_threshold )
+            for ccontact in cur_contacts_list:
+                all_contacts_list.append(ccontact)
+        
+        return all_contacts_list
             
     def butter_bandstop_filter(self, stop_band, sampling_rate):
         nyquist_freq = 0.5 * sampling_rate
@@ -349,7 +376,7 @@ class DataContainer:
 
         return area
 
-    def generate_debug_chrono_data(self, duration=20, sample_rate=200, rising_edge_interval=1):
+    def generate_debug_chrono_data(self, duration=5, sample_rate=200, rising_edge_interval=1):
         total_samples = duration * sample_rate
         time = np.arange(0, duration, 1 / sample_rate)
         signal = np.zeros(total_samples)
@@ -376,7 +403,7 @@ class DataContainer:
             {"amplitude": 800, "frequency": 0.2, "phase": np.pi / 2.0},
         ]
 
-        duration = 20
+        duration = 5
         sampling_rate = 200
         t = np.arange(0, duration, 1 / sampling_rate)
 
@@ -395,7 +422,7 @@ class DataContainer:
                                    signals[2][i] + white_noise[i],
                                    0, 0, 0])
 
-        self.generate_debug_chrono_data()
+        #self.generate_debug_chrono_data()
 
     def clear_all_sensor_data(self):
         for sensor in self.sensors:
@@ -465,6 +492,7 @@ class Wid(QMainWindow):
         toolbar.addAction(find_contacts_action)
         toolbar.addAction(calculate_resultant_action)
         toolbar.addAction(find_max_in_contact_action)
+        toolbar.addAction(sum_force_action)
 
         toolbar.addAction(debug_data_action)
 
@@ -565,11 +593,14 @@ class Wid(QMainWindow):
         sensor_id = self.data_container.sensors[0].sensor_id
         data = self.data_container.sensors[0].get_forces_data().resultant
         
-        print(data)
-        if len(data) > 0:
-            contact_info_list = self.data_container.detect_contacts(data, "resultant", sensor_id, detect_threshold_up, detect_threshold_down, True, crossing_threshold )
-            self.plotter.plot_contacts(contact_info_list)
-            print(f"Get contacts on resultante axis for sensor {sensor_id}")
+        sensor = self.data_container.find_sensor_by_id(3)
+        #data = sensor.get_forces_data().resultant
+        
+        #if len(data) > 0:
+            #contact_info_list = self.data_container.detect_contacts(data, "resultant", sensor_id, detect_threshold_up, detect_threshold_down, True, crossing_threshold )
+        all_contact_list = self.data_container.detect_contacts_on_sensors()
+        self.plotter.plot_contacts(all_contact_list)
+        print(f"Get contacts on resultante axis for sensor {sensor_id}")
 
     def calculate_resultant_force_action(self):
         sensor = self.data_container.sensors[0]
@@ -580,6 +611,7 @@ class Wid(QMainWindow):
         print("calculate resultant_force for sensor")
 
     def sum_force_action(self):
+        self.data_container.sum_force_data()
         self.plotter.plot_sum_force()
         
     def find_max_in_contact_action(self):

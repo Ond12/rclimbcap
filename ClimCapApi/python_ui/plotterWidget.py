@@ -28,16 +28,33 @@ colors_dict = {
     10: (128, 128, 128)   # Gray
 }
 
+class SensorPlotItem:
+    def __init__(self, sensor_id):
+        self.sensor_id = sensor_id
+        self.contacts = []
+        self.plot_items = []
+
+    def add_contact(self, contact):
+        self.contacts.append(contact)
+
+    def add_plot_item(self, plot_item):
+        self.plot_items.append(plot_item)
+        
+    def clear_contacts(self):
+        self.contacts = []
+
+    def clear_plot_items(self):
+        self.plot_items = []
+        
 class Plotter(pg.PlotWidget):
     def __init__(self, data_container, parent=None):
         super(Plotter, self).__init__(parent=parent)
         self.data_container = data_container
         
         self.plot_items = []
-
         self.contact_list = []
-
         self.sensor_plot_map = {}
+        
         self.showGrid(x=False, y=True)
         self.addLegend()
 
@@ -70,15 +87,18 @@ class Plotter(pg.PlotWidget):
                     plot_item_force_z.setVisible(False)
                     self.plot_items.append(plot_item_force_z)
 
-                    sensor_plot_items = [plot_item_force_x, plot_item_force_y, plot_item_force_z]
+                    c_plot_sensor = SensorPlotItem(sensor.sensor_id)
+                    c_plot_sensor.plot_items = [plot_item_force_x, plot_item_force_y, plot_item_force_z]
 
-                    self.sensor_plot_map[sensor.sensor_id] = sensor_plot_items
+                    self.sensor_plot_map[sensor.sensor_id] = c_plot_sensor
 
             if self.data_container:
                 cr_time_increments = self.data_container.get_time_increments()
                 cr_data = self.data_container.chrono_data
-                plot_item_chrono_data = self.plot(cr_time_increments, cr_data, pen=pg.mkPen(color_chrono, width=2, alpha=200), name=f"Chrono signal")
-                self.plot_items.append(plot_item_chrono_data)
+                if len(cr_data) > 0:
+                    plot_item_chrono_data = self.plot(cr_time_increments, cr_data, pen=pg.mkPen(color_chrono, width=2, alpha=200), name=f"Chrono signal")
+                    self.plot_items.append(plot_item_chrono_data)
+
 
             self.update()
 
@@ -111,6 +131,7 @@ class Plotter(pg.PlotWidget):
         plot_item_resultant_force = self.plot(time_increments, resultant_force, pen=pg.mkPen((255,105,180), width=2, alpha=200), name=f"Sensor {sensor_id} - Force Z")
         plot_item_resultant_force.setVisible(True)
         self.plot_items.append(plot_item_resultant_force)
+        self.sensor_plot_map[sensor_id].add_plot_item(plot_item_resultant_force)
 
     def plot_marker_max(self, time, value):
         self.plot([time], [value],
@@ -123,7 +144,7 @@ class Plotter(pg.PlotWidget):
         self.clear_contacts()
         self.clear()
 
-    def show_hide_lines(self, button, sensor_id):
+    def show_hide_lines(self, button, sensor_id, visible):
         if sensor_id in self.sensor_plot_map:
             for plot_item in self.sensor_plot_map[sensor_id]:
                 plot_item.setVisible(not plot_item.isVisible())

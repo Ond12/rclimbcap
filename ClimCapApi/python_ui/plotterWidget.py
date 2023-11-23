@@ -33,6 +33,7 @@ class SensorPlotItem:
         self.sensor_id = sensor_id
         self.contacts = []
         self.plot_items = []
+        self.is_visible = True
 
     def add_contact(self, contact):
         self.contacts.append(contact)
@@ -45,6 +46,15 @@ class SensorPlotItem:
 
     def clear_plot_items(self):
         self.plot_items = []
+    
+    def set_visible_plot(self, visible):
+        for plot_item in self.plot_items:
+            plot_item.setVisible(visible)
+            self.is_visible = visible
+    
+    def set_visible_contact(self, visible):
+        for contact_item in self.contacts:
+            contact_item.setVisible(visible)
         
 class Plotter(pg.PlotWidget):
     def __init__(self, data_container, parent=None):
@@ -144,12 +154,12 @@ class Plotter(pg.PlotWidget):
         self.clear_contacts()
         self.clear()
 
-    def show_hide_lines(self, button, sensor_id, visible):
+    def show_hide_lines(self, button, sensor_id):
         if sensor_id in self.sensor_plot_map:
-            for plot_item in self.sensor_plot_map[sensor_id]:
-                plot_item.setVisible(not plot_item.isVisible())
-                pastel_color = "background-color: #C1E1C1" if plot_item.isVisible() else "background-color: #FAA0A0"
-                button.setStyleSheet(pastel_color)
+            sensor_plot = self.sensor_plot_map[sensor_id]
+            sensor_plot.set_visible_plot(not sensor_plot.is_visible)
+            pastel_color = "background-color: #C1E1C1" if sensor_plot.is_visible else "background-color: #FAA0A0"
+            button.setStyleSheet(pastel_color)
             
             self.update()
 

@@ -1,6 +1,8 @@
 import sys
 from datetime import datetime
 import os
+import socket
+import json
 import numpy as np
 import pandas as pd
 from scipy.integrate import quad
@@ -520,9 +522,11 @@ class Wid(QMainWindow):
         self.plotter.plot_data()
 
         self.plot_controller = PlotterController(self.plotter)
+        record_widget = RecordWidget()
         
         main_grid.addWidget(self.plot_controller, 1, 0)
-        main_grid.addWidget(self.plotter)
+        main_grid.addWidget(self.plotter,2,0)
+        main_grid.addWidget(record_widget, 3, 0)
 
         self.show()
         
@@ -689,6 +693,75 @@ class Wid(QMainWindow):
             self.statusbar.showMessage(err_msg)
             return None
         
+    def udpServerinit(self):
+        self.thread = QThread()
+        self.worker = Worker_udp()
+        self.worker.moveToThread(self.thread)
+        
+        self.thread.started.connect(self.worker.run)
+        self.worker.finished.connect(self.thread.quit)
+        self.worker.finished.connect(self.worker.deleteLater)
+        self.thread.finished.connect(self.thread.deleteLater)
+        #self.worker.newData.connect(self.update_plot_data)
+        self.thread.start()
+        
+# Thread pour la Reception des données par udp
+class Worker_udp(QObject):
+
+    finished = pyqtSignal()
+    progress = pyqtSignal(int)
+    
+    start_signal = pyqtSignal()
+    stop_signal = pyqtSignal()
+
+    newData = pyqtSignal(object)
+
+    localIP     = "127.0.0.1"
+    localPort   = 20001
+    bufferSize  = 1024
+    
+    def __init__(self):
+        super().__init__()
+        self.is_running = False
+        
+    def start_server(self):
+        if not self.is_running:
+            self.is_running = True
+            self.thread = QThread()
+            self.moveToThread(self.thread)
+            self.thread.started.connect(self.run)
+            self.finished.connect(self.thread.quit)
+            self.finished.connect(self.thread.wait)
+            self.thread.start()
+            
+    def toggle_reception(self, reception):
+
+        self.is_running = reception
+
+    def run(self):
+        UDPServerSocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
+
+        UDPServerSocket.bind((self.localIP, self.localPort))
+        print("UDP server up and listening")
+
+        try:
+            UDPServerSocket.bind((self.localIP, self.localPort))
+            while(True):
+                if self.is_running:
+                    
+                    bytesAddressPair = UDPServerSocket.recvfrom(self.bufferSize)
+
+                    message = bytesAddressPair[0]
+
+                    clientMsg = "Client:{}".format(message)
+                    
+                    tram = json.loads(message)
+
+                    self.newData.emit(tram)
+        finally:
+            UDPServerSocket.close()
+            self.finished.emit()    
+             
 def main():
     app =  QApplication(sys.argv)
     widm = Wid()

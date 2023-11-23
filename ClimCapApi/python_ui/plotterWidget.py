@@ -8,6 +8,7 @@ from scipy.signal import butter, sosfilt
 import pyqtgraph as pg
 from PyQt6.QtWidgets import *
 from PyQt6.QtGui import *
+from PyQt6.QtCore import *
 
 color_x = (255, 0, 0)  # Red
 color_y = (0, 255, 0)  # Green
@@ -27,6 +28,42 @@ colors_dict = {
     9: (0, 0, 128),       # Navy
     10: (128, 128, 128)   # Gray
 }
+
+class RecordWidget(QWidget):
+    def __init__(self):
+        super().__init__()
+
+        self.record_button = QPushButton('Record', self)
+        self.record_button.setCheckable(True)
+        self.record_button.clicked.connect(self.toggle_recording)
+
+        self.blink_timer = QTimer(self)
+        self.blink_timer.timeout.connect(self.blink)
+        self.blink_timer.start(500)  # Blink every 500 milliseconds
+
+        self.is_recording = False
+
+        self.init_ui()
+
+    def init_ui(self):
+        layout = QVBoxLayout(self)
+        layout.addWidget(self.record_button)
+
+    def toggle_recording(self):
+        self.is_recording = not self.is_recording
+
+    def blink(self):
+        if self.is_recording:
+            if self.record_button.isChecked():
+                current_stylesheet = self.record_button.styleSheet()
+                if 'background-color: red;' in current_stylesheet:
+                    self.record_button.setStyleSheet('background-color: none;')
+                else:
+                    self.record_button.setStyleSheet('background-color: red;')
+            else:
+                self.record_button.setStyleSheet('background-color: none;')
+        else:
+            self.record_button.setStyleSheet('background-color: none;')
 
 class SensorPlotItem:
     def __init__(self, sensor_id):

@@ -432,8 +432,7 @@ void DataController::processNewDataPacketFromNi(const DataPacket& d)
         finalForce.dataValues[4] = result(4, 0);
         finalForce.dataValues[5] = result(5, 0);
 
-        bool debug = false;
-        if (debug)
+        if (globals::DEBUG_MOD_SENSOR)
         {
             finalForce.dataValues[0] = dataBySensor[0];
             finalForce.dataValues[1] = dataBySensor[1];

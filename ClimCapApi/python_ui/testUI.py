@@ -126,7 +126,7 @@ class DataContainer:
     def dispatch_data(self, sensor_id, unf_data):
         if sensor_id in self.sensors_dict:        
             data = unf_data["data"]
-    
+            print(data)
             self.sensors_dict[sensor_id].add_data_point(data)
         
         else:

@@ -133,16 +133,19 @@ int32 CVICALLBACK NidaqmxConnectionThread::EveryNCallback(TaskHandle taskHandle,
 	if (globals::DEBUG_MOD_SENSOR)
 	{
 		double* dummydata = new double[m_numberOfChannels];
-		for (uint i = 0; i < (m_numberOfChannels / 6); i++)
+		for (uint i = 0; i < (m_numberOfChannels % 6); i++)
 		{
 			dummydata[i * 6] = 10;
-			dummydata[i * 6 + 1] = 10;
-			dummydata[i * 6 + 2] = 10;
+			dummydata[i * 6 + 1] = 20;
+			dummydata[i * 6 + 2] = 30;
 			dummydata[i * 6 + 3] = -10;
 			dummydata[i * 6 + 4] = -20;
 			dummydata[i * 6 + 5] = -30;
 		}
+		dummydata[m_numberOfChannels - 1] = 5;
+
 		DataPacket DP2(m_numberOfChannels);
+
 		std::copy(dummydata, dummydata + m_numberOfChannels, std::begin(DP2.dataValues));
 		delete[] dummydata;
 		//DP2.printDebug();

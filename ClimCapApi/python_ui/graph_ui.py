@@ -50,7 +50,7 @@ class MplCanvas(FigureCanvasQTAgg):
 #___________________________________________________________
 
 # Thread pour la Reception des données par udp
-class Worker(QObject):
+class Worker_udp(QObject):
 
     finished = pyqtSignal()
     progress = pyqtSignal(int)

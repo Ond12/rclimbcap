@@ -126,17 +126,14 @@ class Plotter(pg.PlotWidget):
 
                     force_x = force_data.forces_x
                     plot_item_force_x = self.plot(time_increments, force_x, pen=pg.mkPen(color_x, width=2, alpha=200), name=f"Sensor {sensor.sensor_id} - Force X")
-                    #plot_item_force_x.setVisible(False)
                     self.plot_items.append(plot_item_force_x)
 
                     force_y = force_data.forces_y
                     plot_item_force_y = self.plot(time_increments, force_y, pen=pg.mkPen(color_y, width=2, alpha=200), name=f"Sensor {sensor.sensor_id} - Force Y")
-                    #plot_item_force_y.setVisible(False)
                     self.plot_items.append(plot_item_force_y)
 
                     force_z = force_data.forces_z
                     plot_item_force_z = self.plot(time_increments, force_z, pen=pg.mkPen(color_z, width=2, alpha=200), name=f"Sensor {sensor.sensor_id} - Force Z")
-                    #plot_item_force_z.setVisible(False)
                     self.plot_items.append(plot_item_force_z)
 
                     c_plot_sensor = SensorPlotItem(sensor.sensor_id)

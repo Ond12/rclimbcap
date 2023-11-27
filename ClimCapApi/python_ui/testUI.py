@@ -437,6 +437,7 @@ class Wid(QMainWindow):
     def __init__(self):
         super().__init__()
 
+        self.udpServerinit()
         self.init_ui()
         self.init_actions()
 
@@ -694,34 +695,31 @@ class Wid(QMainWindow):
             return None
         
     def udpServerinit(self):
-        self.thread = QThread()
-        self.worker = Worker_udp()
-        self.worker.moveToThread(self.thread)
+        self.worker_receiv = Worker_udp()
+        self.worker_receiv.newData.connect(self.update_plot_data)
+        self.worker_receiv.start_server()
+        self.worker_receiv.toggle_reception(True)
         
-        self.thread.started.connect(self.worker.run)
-        self.worker.finished.connect(self.thread.quit)
-        self.worker.finished.connect(self.worker.deleteLater)
-        self.thread.finished.connect(self.thread.deleteLater)
-        #self.worker.newData.connect(self.update_plot_data)
-        self.thread.start()
-        
+    def update_plot_data(self, rdata):
+        print("got data")
+        # sensor = self.sensorGraph_by_id.get(rdata["sid"])
+        # if sensor:
+        #     sensor.add_plot_data(rdata)
+            
 # Thread pour la Reception des données par udp
 class Worker_udp(QObject):
 
     finished = pyqtSignal()
-    progress = pyqtSignal(int)
-    
     start_signal = pyqtSignal()
     stop_signal = pyqtSignal()
 
     newData = pyqtSignal(object)
-
-    localIP     = "127.0.0.1"
-    localPort   = 20001
-    bufferSize  = 1024
     
     def __init__(self):
         super().__init__()
+        self.localIP     = "127.0.0.1"
+        self.localPort   = 20001
+        self.bufferSize  = 1024
         self.is_running = False
         
     def start_server(self):
@@ -732,20 +730,20 @@ class Worker_udp(QObject):
             self.thread.started.connect(self.run)
             self.finished.connect(self.thread.quit)
             self.finished.connect(self.thread.wait)
+            
+            self.finished.connect(self.deleteLater)
+            self.thread.finished.connect(self.thread.deleteLater)
             self.thread.start()
             
     def toggle_reception(self, reception):
-
         self.is_running = reception
 
     def run(self):
         UDPServerSocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
 
-        UDPServerSocket.bind((self.localIP, self.localPort))
-        print("UDP server up and listening")
-
         try:
             UDPServerSocket.bind((self.localIP, self.localPort))
+            print("UDP server up and listening")
             while(True):
                 if self.is_running:
                     

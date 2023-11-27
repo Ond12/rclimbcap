@@ -122,15 +122,22 @@ class DataContainer:
     def add_sensor(self, sensor):
         self.sensors.append(sensor)
         self.sensors_dict[sensor.sensor_id] = sensor
+        print(f"Adding sensor : {sensor.sensor_id} ")
         
     def dispatch_data(self, sensor_id, unf_data):
-        if sensor_id in self.sensors_dict:        
+        curr_sensor = self.get_sensor(sensor_id)
+        if curr_sensor:        
             data = unf_data["data"]
-            print(data)
             self.sensors_dict[sensor_id].add_data_point(data)
-        
         else:
             print(f"sensor : {sensor_id} not set up")
+
+    def get_sensor(self, sensor_id):
+        if sensor_id in self.sensors_dict:  
+            return self.sensors_dict[sensor_id]
+        else:
+            print(f"sensor : {sensor_id} not found in sensors_dict")
+        return None  
 
     def cal_resultant_force(self, sensor):
         force_data = sensor.get_forces_data()
@@ -440,7 +447,7 @@ class DataContainer:
     def clear_all_sensor_data(self):
         for sensor in self.sensors:
             sensor.clear_data()
-        self.sensors = []
+        #self.sensors = []
         self.chrono_data = np.empty(0)
 
 #_________________________________________________________________________________________
@@ -550,6 +557,13 @@ class Wid(QMainWindow):
     def settings_action(self):
         current_sensor = Sensor(1, 6, 200)
         self.data_container.add_sensor(current_sensor)
+        
+        current_sensor = Sensor(2, 6, 200)
+        self.data_container.add_sensor(current_sensor)
+        
+        # current_sensor = Sensor(3, 6, 200)
+        # self.data_container.add_sensor(current_sensor)
+        
         self.plot_controller.set_up_widget()          
 
     def file_save_action(self):
@@ -647,12 +661,6 @@ class Wid(QMainWindow):
     def debug_action(self):
         current_sensor = Sensor(4, 6, 200)
         self.data_container.add_sensor(current_sensor)
-
-        # current_sensor = Sensor(11, 6, 200)
-        # self.data_container.add_sensor(current_sensor)
-
-        # current_sensor = Sensor(2, 6, 200)
-        # self.data_container.add_sensor(current_sensor)
 
         self.data_container.fill_debug_data()
         self.plotter.plot_data()

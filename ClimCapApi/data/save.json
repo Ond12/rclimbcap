@@ -6,6 +6,20 @@
             "id": 1,
             "name": "testname",
             "zRotation": 0
+        },
+        {
+            "angle": 0,
+            "chan": 6,
+            "id": 2,
+            "name": "testname",
+            "zRotation": 0
+        },
+        {
+            "angle": 0,
+            "chan": 12,
+            "id": 3,
+            "name": "testname",
+            "zRotation": 0
         }
     ],
     "wallangle": 5

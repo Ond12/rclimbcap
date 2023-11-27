@@ -4,11 +4,14 @@ import os
 import numpy as np
 import pandas as pd
 import re
+from enum import Enum
 from scipy.signal import butter, sosfilt
 import pyqtgraph as pg
 from PyQt6.QtWidgets import *
 from PyQt6.QtGui import *
 from PyQt6.QtCore import *
+
+from contact import *
 
 color_x = (255, 0, 0)  # Red
 color_y = (0, 255, 0)  # Green
@@ -65,42 +68,58 @@ class RecordWidget(QWidget):
         else:
             self.record_button.setStyleSheet('background-color: none;')
 
+class AxisLabel(Enum):
+    X = 'x'
+    Y = 'y'
+    Z = 'z'
+    MX = 'mx'
+    MY = 'my'
+    MZ = 'mz'
+
 class SensorPlotItem:
     def __init__(self, sensor_id):
-        self.sensor_id = sensor_id
-        self.contacts = []
-        self.plot_items = []
-        self.is_visible = True
+        self.sensor_id:int = sensor_id
+        self.contacts:list = []
+        self.plot_items:dict = {}
+        self.is_visible:bool = True
 
-    def add_contact(self, contact):
+    def add_contact(self, contact:ContactInfo) -> None:
         self.contacts.append(contact)
 
-    def add_plot_item(self, plot_item):
-        self.plot_items.append(plot_item)
-        
-    def clear_contacts(self):
+    def add_plot_item(self, axis_label:AxisLabel, plot_item) -> None:
+        if not axis_label in self.plot_items: 
+            self.plot_items[axis_label] = plot_item
+        else:
+            print(f"plot item : {axis_label} already in sid : {self.sensor_id}")
+    
+    def get_plot_item(self, axis_label: AxisLabel):
+        if axis_label in self.plot_items:
+            return self.plot_items[axis_label] 
+        return None
+    
+    def clear_contacts(self) -> None:
         self.contacts = []
 
-    def clear_plot_items(self):
-        self.plot_items = []
+    def clear_plot_items(self) -> None:
+        self.plot_items = {}
     
-    def set_visible_plot(self, visible):
-        for plot_item in self.plot_items:
+    def set_visible_plot(self, visible:bool) -> None:
+        for plot_key, plot_item in self.plot_items.items():
             plot_item.setVisible(visible)
-            self.is_visible = visible
+        self.is_visible = visible
     
-    def set_visible_contact(self, visible):
+    def set_visible_contact(self, visible:bool) -> None:
         for contact_item in self.contacts:
-            contact_item.setVisible(visible)
-        
+            contact_item.setVisible(visible)            
+              
 class Plotter(pg.PlotWidget):
     def __init__(self, data_container, parent=None):
         super(Plotter, self).__init__(parent=parent)
         self.data_container = data_container
         
-        self.plot_items = []
-        self.contact_list = []
-        self.sensor_plot_map = {}
+        self.plot_items:list = []
+        self.contact_list:list = []
+        self.sensor_plot_map:dict = {}
         
         self.showGrid(x=False, y=True)
         self.addLegend()
@@ -109,6 +128,18 @@ class Plotter(pg.PlotWidget):
         self.update_timer.setInterval(160)
         self.update_timer.timeout.connect(self.plot_data)
         self.update_timer.start()
+
+    def update_plots(self):
+        for sensorPlot in self.sensor_plot_map:
+        for i, sensor in enumerate(self.data_container.sensors):
+                force_data = sensor.get_forces_data()
+                time_increments = force_data.get_time_increments()
+                force_x = force_data.forces_x
+                force_y = force_data.forces_y
+                force_z = force_data.forces_z
+
+    def update_SensorPlotItem_data(self, sensor_id:int):
+        if sensor_id in self.sensor_plot_map:
 
     def plot_data(self, colors=None):
         if self.data_container.sensors:
@@ -120,7 +151,6 @@ class Plotter(pg.PlotWidget):
             for i, sensor in enumerate(self.data_container.sensors):
                 if sensor.get_forces_data().num_data_points > 0:
 
-                    color = colors[i % len(colors)]
                     force_data = sensor.get_forces_data()
                     time_increments = force_data.get_time_increments()
 
@@ -147,7 +177,6 @@ class Plotter(pg.PlotWidget):
                 if len(cr_data) > 0:
                     plot_item_chrono_data = self.plot(cr_time_increments, cr_data, pen=pg.mkPen(color_chrono, width=2, alpha=200), name=f"Chrono signal")
                     self.plot_items.append(plot_item_chrono_data)
-
 
             self.update()
 

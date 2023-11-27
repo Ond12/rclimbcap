@@ -109,6 +109,7 @@ class Sensor:
 class DataContainer:
     def __init__(self):
         self.sensors = []
+        self.sensors_dict = {}
         self.chrono_data = np.empty(0)
         self.contacts = []
 
@@ -120,6 +121,16 @@ class DataContainer:
 
     def add_sensor(self, sensor):
         self.sensors.append(sensor)
+        self.sensors_dict[sensor.sensor_id] = sensor
+        
+    def dispatch_data(self, sensor_id, unf_data):
+        if sensor_id in self.sensors_dict:        
+            data = unf_data["data"]
+    
+            self.sensors_dict[sensor_id].add_data_point(data)
+        
+        else:
+            print(f"sensor : {sensor_id} not set up")
 
     def cal_resultant_force(self, sensor):
         force_data = sensor.get_forces_data()
@@ -486,6 +497,10 @@ class Wid(QMainWindow):
         find_max_in_contact_action = QAction("&Find max", self)
         find_max_in_contact_action.setStatusTip("Find max")
         find_max_in_contact_action.triggered.connect(self.find_max_in_contact_action)
+        
+        settings_action = QAction("&Settings", self)
+        settings_action.setStatusTip("Settings")
+        settings_action.triggered.connect(self.settings_action)
 
         toolbar = self.addToolBar("Tools")
         toolbar.addAction(open_file_action)
@@ -496,6 +511,7 @@ class Wid(QMainWindow):
         toolbar.addAction(calculate_resultant_action)
         toolbar.addAction(find_max_in_contact_action)
         toolbar.addAction(sum_force_action)
+        toolbar.addAction(settings_action)
 
         toolbar.addAction(debug_data_action)
 
@@ -531,6 +547,11 @@ class Wid(QMainWindow):
 
         self.show()
         
+    def settings_action(self):
+        current_sensor = Sensor(1, 6, 200)
+        self.data_container.add_sensor(current_sensor)
+        self.plot_controller.set_up_widget()          
+
     def file_save_action(self):
         file_dialog = QFileDialog()
         file_dialog.setAcceptMode(QFileDialog.AcceptMode.AcceptSave)
@@ -701,11 +722,11 @@ class Wid(QMainWindow):
         self.worker_receiv.toggle_reception(True)
         
     def update_plot_data(self, rdata):
-        print("got data")
-        # sensor = self.sensorGraph_by_id.get(rdata["sid"])
-        # if sensor:
-        #     sensor.add_plot_data(rdata)
-            
+
+        sensor_id = rdata["sid"]
+        print(f"got data from { sensor_id }")
+        self.data_container.dispatch_data(sensor_id, rdata)
+
 # Thread pour la Reception des données par udp
 class Worker_udp(QObject):
 

@@ -64,7 +64,7 @@ void MainWindow::openUdpPort()
         m_console->setLocalEchoEnabled(true);
         m_ui->actionConnect->setEnabled(false);
         m_ui->actionDisconnect->setEnabled(true);
-        m_ui->actionConfigure->setEnabled(false);
+        m_ui->actionConfigure->setEnabled(true);
         m_ui->actionCalibration->setEnabled(false);
 
         showStatusMessage(tr("Debut acquisition"));

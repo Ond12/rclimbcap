@@ -35,17 +35,17 @@ colors_dict = {
 }
 
 class ForcesData:
-    def __init__(self, frequency, num_data_points=0):
+    def __init__(self, frequency, num_data_points=1):
         self.frequency = frequency
         self.num_data_points = num_data_points
-        self.forces_x = np.empty(num_data_points)
-        self.forces_y = np.empty(num_data_points)
-        self.forces_z = np.empty(num_data_points)
-        self.moments_x = np.empty(num_data_points)
-        self.moments_y = np.empty(num_data_points)
-        self.moments_z = np.empty(num_data_points)
+        self.forces_x = np.zeros(num_data_points)
+        self.forces_y = np.zeros(num_data_points)
+        self.forces_z = np.zeros(num_data_points)
+        self.moments_x = np.zeros(num_data_points)
+        self.moments_y = np.zeros(num_data_points)
+        self.moments_z = np.zeros(num_data_points)
         
-        self.resultant = np.empty(num_data_points)
+        self.resultant = np.zeros(num_data_points)
 
         self.data_points = pd.DataFrame()
 
@@ -90,6 +90,9 @@ class Sensor:
         self.data = [[] for _ in range(num_channels)]
         self.force_data = ForcesData(frequency=frequency)  
 
+    def data_size(self):
+        return self.force_data.num_data_points
+        
     def add_data_point(self, forces_values):
         if len(forces_values) == 6:
             force_x, force_y, force_z, moment_x, moment_y, moment_z = forces_values #+ (0.0,) * (6 - len(forces_values))
@@ -103,6 +106,9 @@ class Sensor:
     def get_forces_data(self):
         return self.force_data
     
+    def get_frequency(self):
+        return self.frequency
+    
     def clear_data(self):
         self.force_data = ForcesData(self.frequency)  
 
@@ -110,7 +116,7 @@ class DataContainer:
     def __init__(self):
         self.sensors = []
         self.sensors_dict = {}
-        self.chrono_data = np.empty(0)
+        self.chrono_data = np.zeros(1)
         self.contacts = []
 
     def get_time_increments(self):
@@ -447,8 +453,8 @@ class DataContainer:
     def clear_all_sensor_data(self):
         for sensor in self.sensors:
             sensor.clear_data()
-        #self.sensors = []
-        self.chrono_data = np.empty(0)
+        self.sensors = []
+        self.chrono_data = np.zeros(1)
 
 #_________________________________________________________________________________________
 class Wid(QMainWindow):
@@ -543,7 +549,7 @@ class Wid(QMainWindow):
         self.data_container = DataContainer()
 
         self.plotter = Plotter(self.data_container)
-        self.plotter.plot_data()
+        self.plotter.toggle_plotter_update(True)
 
         self.plot_controller = PlotterController(self.plotter)
         record_widget = RecordWidget()
@@ -561,9 +567,16 @@ class Wid(QMainWindow):
         current_sensor = Sensor(2, 6, 200)
         self.data_container.add_sensor(current_sensor)
         
+        current_sensor = Sensor(3, 6, 200)
+        self.data_container.add_sensor(current_sensor)
+
+        # current_sensor = Sensor(2, 6, 200)
+        # self.data_container.add_sensor(current_sensor)
+        
         # current_sensor = Sensor(3, 6, 200)
         # self.data_container.add_sensor(current_sensor)
         
+        self.plotter.plot_data()
         self.plot_controller.set_up_widget()          
 
     def file_save_action(self):
@@ -621,6 +634,8 @@ class Wid(QMainWindow):
     def clear_data_action(self):
         self.data_container.clear_all_sensor_data()
         self.plotter.clear_plot()
+        self.plot_controller.clean_widget()
+        self.plot_controller.set_up_widget() 
 
     def apply_filter_action(self):
         self.data_container.apply_filter_hcutoff_to_sensors()
@@ -728,12 +743,12 @@ class Wid(QMainWindow):
         self.worker_receiv.newData.connect(self.update_plot_data)
         self.worker_receiv.start_server()
         self.worker_receiv.toggle_reception(True)
-        
+                
     def update_plot_data(self, rdata):
-
         sensor_id = rdata["sid"]
-        print(f"got data from { sensor_id }")
-        self.data_container.dispatch_data(sensor_id, rdata)
+
+        if(sensor_id > 0):
+            self.data_container.dispatch_data(sensor_id, rdata)
 
 # Thread pour la Reception des données par udp
 class Worker_udp(QObject):

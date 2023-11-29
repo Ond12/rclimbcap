@@ -82,6 +82,7 @@ class SensorPlotItem:
         self.contacts:list = []
         self.plot_items:dict = {}
         self.is_visible:bool = True
+        print(f"create sensor plot item { sensor_id}")
 
     def add_contact(self, contact:ContactInfo) -> None:
         self.contacts.append(contact)
@@ -89,12 +90,14 @@ class SensorPlotItem:
     def add_plot_item(self, axis_label:AxisLabel, plot_item) -> None:
         if not axis_label in self.plot_items: 
             self.plot_items[axis_label] = plot_item
+            print(f"create {axis_label} in  {self.sensor_id}")
         else:
             print(f"plot item : {axis_label} already in sid : {self.sensor_id}")
     
     def get_plot_item(self, axis_label: AxisLabel):
         if axis_label in self.plot_items:
             return self.plot_items[axis_label] 
+        print(f"axis {axis_label} not found in {self.sensor_id}")
         return None
     
     def clear_contacts(self) -> None:
@@ -124,23 +127,42 @@ class Plotter(pg.PlotWidget):
         self.showGrid(x=False, y=True)
         self.addLegend()
         
+        self.update_is_started = False
         self.update_timer = QTimer()
         self.update_timer.setInterval(160)
-        self.update_timer.timeout.connect(self.plot_data)
-        self.update_timer.start()
+        self.update_timer.timeout.connect(self.update_plots)
 
     def update_plots(self):
-        for sensorPlot in self.sensor_plot_map:
-        for i, sensor in enumerate(self.data_container.sensors):
-                force_data = sensor.get_forces_data()
-                time_increments = force_data.get_time_increments()
-                force_x = force_data.forces_x
-                force_y = force_data.forces_y
-                force_z = force_data.forces_z
+        first_sensor  = self.sensor_plot_map.values()[0]
+        if first_sensor:
+            max_lim = first_sensor.data_size()
+            for sensor_plot in self.sensor_plot_map.values():
+                self.update_sensor_plot_data(sensor_plot.sensor_id, max_lim)
+        
+        self.update()
 
-    def update_SensorPlotItem_data(self, sensor_id:int):
+    def update_sensor_plot_data(self, sensor_id:int, maxlimit):
         if sensor_id in self.sensor_plot_map:
-
+            cur_sensor = self.data_container.get_sensor(sensor_id)
+            if cur_sensor:
+                print(f"updating plot {cur_sensor.sensor_id}")
+                force_data = cur_sensor.get_forces_data()
+                time_increments = force_data.get_time_increments()
+                
+                force_x = force_data.forces_x[0:maxlimit]
+                force_y = force_data.forces_y[0:maxlimit]
+                force_z = force_data.forces_z[0:maxlimit]
+            
+                sensor_plot_item = self.sensor_plot_map[sensor_id]
+                
+                xplot = sensor_plot_item.get_plot_item(AxisLabel.X)
+                yplot = sensor_plot_item.get_plot_item(AxisLabel.Y)
+                zplot = sensor_plot_item.get_plot_item(AxisLabel.Z)
+                
+                xplot.setData(time_increments, force_x)
+                yplot.setData(time_increments, force_y)
+                zplot.setData(time_increments, force_z)
+                
     def plot_data(self, colors=None):
         if self.data_container.sensors:
             self.clear()
@@ -167,15 +189,17 @@ class Plotter(pg.PlotWidget):
                     self.plot_items.append(plot_item_force_z)
 
                     c_plot_sensor = SensorPlotItem(sensor.sensor_id)
-                    c_plot_sensor.plot_items = [plot_item_force_x, plot_item_force_y, plot_item_force_z]
+                    c_plot_sensor.add_plot_item(AxisLabel.X, plot_item_force_x)
+                    c_plot_sensor.add_plot_item(AxisLabel.Y, plot_item_force_y)
+                    c_plot_sensor.add_plot_item(AxisLabel.Z, plot_item_force_z)
 
                     self.sensor_plot_map[sensor.sensor_id] = c_plot_sensor
 
             if self.data_container:
-                cr_time_increments = self.data_container.get_time_increments()
                 cr_data = self.data_container.chrono_data
                 if len(cr_data) > 0:
-                    plot_item_chrono_data = self.plot(cr_time_increments, cr_data, pen=pg.mkPen(color_chrono, width=2, alpha=200), name=f"Chrono signal")
+                    time_increments_chrono_dummy = np.arange(len(cr_data)) / 200 
+                    plot_item_chrono_data = self.plot(time_increments_chrono_dummy, cr_data, pen=pg.mkPen(color_chrono, width=2, alpha=200), name=f"Chrono signal")
                     self.plot_items.append(plot_item_chrono_data)
 
             self.update()
@@ -209,7 +233,7 @@ class Plotter(pg.PlotWidget):
         plot_item_resultant_force = self.plot(time_increments, resultant_force, pen=pg.mkPen((255,105,180), width=2, alpha=200), name=f"Sensor {sensor_id} - Force Z")
         plot_item_resultant_force.setVisible(True)
         self.plot_items.append(plot_item_resultant_force)
-        self.sensor_plot_map[sensor_id].add_plot_item(plot_item_resultant_force)
+        #self.sensor_plot_map[sensor_id].add_plot_item(plot_item_resultant_force)
 
     def plot_marker_max(self, time, value):
         self.plot([time], [value],
@@ -245,7 +269,12 @@ class Plotter(pg.PlotWidget):
             if contact.max_value_time != 0:
                 self.plot_marker_max(contact.max_value_time, contact.max_value)
 
-    
+    def toggle_plotter_update(self, toggle):
+        self.update_is_started = toggle
+        if self.update_is_started:
+            self.update_timer.start()
+        else:
+            self.update_timer.stop()
 
 class PlotterController(QWidget):
     def __init__(self, plotter):

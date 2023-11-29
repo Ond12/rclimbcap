@@ -434,12 +434,12 @@ void DataController::processNewDataPacketFromNi(const DataPacket& d)
 
         if (globals::DEBUG_MOD_SENSOR)
         {
-            finalForce.dataValues[0] = dataBySensor[0];
-            finalForce.dataValues[1] = dataBySensor[1];
-            finalForce.dataValues[2] = dataBySensor[2];
-            finalForce.dataValues[3] = dataBySensor[3];
-            finalForce.dataValues[4] = dataBySensor[4];
-            finalForce.dataValues[5] = dataBySensor[5];
+            finalForce.dataValues[0] = dataBySensor[0] * currentSensorID;
+            finalForce.dataValues[1] = dataBySensor[1] * currentSensorID;
+            finalForce.dataValues[2] = dataBySensor[2] * currentSensorID;
+            finalForce.dataValues[3] = dataBySensor[3] * currentSensorID;
+            finalForce.dataValues[4] = dataBySensor[4] * currentSensorID;
+            finalForce.dataValues[5] = dataBySensor[5] * currentSensorID;
         }
 
         //finalForce.printDebug();

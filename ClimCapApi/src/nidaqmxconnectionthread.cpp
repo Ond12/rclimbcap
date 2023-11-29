@@ -118,10 +118,6 @@ int32 CVICALLBACK NidaqmxConnectionThread::EveryNCallback(TaskHandle taskHandle,
 	int32       read = 0;
 	double* data = new double[m_numberOfChannels];
 
-	/*********************************************/
-	// DAQmx Read Code
-	/*********************************************/
-
 	DAQmxErrChk(DAQmxReadAnalogF64(taskHandle, NidaqmxConnectionThread::m_callBackRate,
 		10, DAQmx_Val_GroupByScanNumber, data, NidaqmxConnectionThread::m_bufferSize, &read, NULL));
 
@@ -135,9 +131,9 @@ int32 CVICALLBACK NidaqmxConnectionThread::EveryNCallback(TaskHandle taskHandle,
 		double* dummydata = new double[m_numberOfChannels];
 		for (uint i = 0; i < (m_numberOfChannels % 6); i++)
 		{
-			dummydata[i * 6] = 10;
-			dummydata[i * 6 + 1] = 20;
-			dummydata[i * 6 + 2] = 30;
+			dummydata[i * 6] = 1;
+			dummydata[i * 6 + 1] = 2;
+			dummydata[i * 6 + 2] = 3;
 			dummydata[i * 6 + 3] = -10;
 			dummydata[i * 6 + 4] = -20;
 			dummydata[i * 6 + 5] = -30;

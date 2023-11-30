@@ -129,29 +129,33 @@ class Plotter(pg.PlotWidget):
         
         self.update_is_started = False
         self.update_timer = QTimer()
-        self.update_timer.setInterval(160)
+        self.update_timer.setInterval(1000)
         self.update_timer.timeout.connect(self.update_plots)
 
     def update_plots(self):
-        first_sensor  = self.sensor_plot_map.values()[0]
-        if first_sensor:
-            max_lim = first_sensor.data_size()
-            for sensor_plot in self.sensor_plot_map.values():
-                self.update_sensor_plot_data(sensor_plot.sensor_id, max_lim)
-        
-        self.update()
+        if self.data_container.sensors_dict:
+            first_sensor  = list(self.data_container.sensors_dict.values())[0]
+            if first_sensor:
+                max_lim = first_sensor.data_size()
+                for sensor_plot in self.sensor_plot_map.values():
+                    self.update_sensor_plot_data(sensor_plot.sensor_id, max_lim)
+            
+            self.update()
 
     def update_sensor_plot_data(self, sensor_id:int, maxlimit):
         if sensor_id in self.sensor_plot_map:
             cur_sensor = self.data_container.get_sensor(sensor_id)
             if cur_sensor:
-                print(f"updating plot {cur_sensor.sensor_id}")
+                
                 force_data = cur_sensor.get_forces_data()
-                time_increments = force_data.get_time_increments()
+                time_increments = force_data.x_time
                 
                 force_x = force_data.forces_x[0:maxlimit]
                 force_y = force_data.forces_y[0:maxlimit]
                 force_z = force_data.forces_z[0:maxlimit]
+            
+                #print(force_x)
+                time_increments = time_increments[0:maxlimit]
             
                 sensor_plot_item = self.sensor_plot_map[sensor_id]
                 
@@ -163,6 +167,10 @@ class Plotter(pg.PlotWidget):
                 yplot.setData(time_increments, force_y)
                 zplot.setData(time_increments, force_z)
                 
+                print(f"updating plot sensor {cur_sensor.sensor_id} until {maxlimit} lx {len(force_x)}")
+        else:
+            print(f"sensor {sensor_id} not in sensor plot map")      
+             
     def plot_data(self, colors=None):
         if self.data_container.sensors:
             self.clear()

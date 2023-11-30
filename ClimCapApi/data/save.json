@@ -20,6 +20,27 @@
             "id": 3,
             "name": "testname",
             "zRotation": 0
+        },
+        {
+            "angle": 0,
+            "chan": 18,
+            "id": 4,
+            "name": "testname",
+            "zRotation": 0
+        },
+        {
+            "angle": 0,
+            "chan": 24,
+            "id": 5,
+            "name": "testname",
+            "zRotation": 0
+        },
+        {
+            "angle": 0,
+            "chan": 30,
+            "id": 6,
+            "name": "testname",
+            "zRotation": 0
         }
     ],
     "wallangle": 5

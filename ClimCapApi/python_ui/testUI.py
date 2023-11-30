@@ -46,6 +46,8 @@ class ForcesData:
         self.moments_z = np.zeros(num_data_points)
         
         self.resultant = np.zeros(num_data_points)
+        
+        self.x_time = np.zeros(num_data_points)
 
         self.data_points = pd.DataFrame()
 
@@ -57,6 +59,7 @@ class ForcesData:
         self.moments_x = np.append(self.moments_x, moment_x)
         self.moments_y = np.append(self.moments_y, moment_y)
         self.moments_z = np.append(self.moments_z, moment_z)
+        self.x_time = np.append(self.x_time, self.x_time[-1]  + (1 / self.frequency) )
 
     def get_time_increments(self):
         time_increments = np.arange(self.num_data_points) / self.frequency
@@ -97,6 +100,7 @@ class Sensor:
         if len(forces_values) == 6:
             force_x, force_y, force_z, moment_x, moment_y, moment_z = forces_values #+ (0.0,) * (6 - len(forces_values))
             self.force_data.add_data_point(force_x, force_y, force_z, moment_x, moment_y, moment_z)
+            print(f"adding {forces_values} to sensor {self.sensor_id}")
         else:
             raise ValueError("Invalid channel index or values")
 
@@ -570,11 +574,14 @@ class Wid(QMainWindow):
         current_sensor = Sensor(3, 6, 200)
         self.data_container.add_sensor(current_sensor)
 
-        # current_sensor = Sensor(2, 6, 200)
-        # self.data_container.add_sensor(current_sensor)
+        current_sensor = Sensor(4, 6, 200)
+        self.data_container.add_sensor(current_sensor)
         
-        # current_sensor = Sensor(3, 6, 200)
-        # self.data_container.add_sensor(current_sensor)
+        current_sensor = Sensor(5, 6, 200)
+        self.data_container.add_sensor(current_sensor)
+        
+        current_sensor = Sensor(6, 6, 200)
+        self.data_container.add_sensor(current_sensor)
         
         self.plotter.plot_data()
         self.plot_controller.set_up_widget()          

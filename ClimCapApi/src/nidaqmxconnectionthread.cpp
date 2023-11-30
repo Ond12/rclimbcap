@@ -129,7 +129,7 @@ int32 CVICALLBACK NidaqmxConnectionThread::EveryNCallback(TaskHandle taskHandle,
 	if (globals::DEBUG_MOD_SENSOR)
 	{
 		double* dummydata = new double[m_numberOfChannels];
-		for (uint i = 0; i < (m_numberOfChannels % 6); i++)
+		for (uint i = 0; i < ((m_numberOfChannels - 1) / 6); i++)
 		{
 			dummydata[i * 6] = 1;
 			dummydata[i * 6 + 1] = 2;

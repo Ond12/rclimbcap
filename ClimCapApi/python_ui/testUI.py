@@ -49,7 +49,6 @@ class ForcesData:
         
         self.x_time = np.zeros(num_data_points)
 
-        self.data_points = pd.DataFrame()
 
     def add_data_point(self, force_x, force_y, force_z, moment_x, moment_y, moment_z):
         self.num_data_points += 1
@@ -83,6 +82,33 @@ class ForcesData:
         print(f"y: {self.forces_y}")
         print(f"z: {self.forces_z}")
 
+class AnalogData:
+    def __init__(self, frequency, num_channels, num_data_points=1):
+        self.frequency = frequency
+        self.num_data_points = num_data_points
+        self.num_channels = num_channels
+        
+        self.datas = [[0] for _ in range(self.num_channels)]
+        
+        self.x_time = [0]
+
+    def add_data_point(self, analog_data):
+        if len(analog_data) == self.num_channels:
+            self.num_data_points += 1
+
+            for i, sub_list in enumerate(self.datas):
+                sub_list.append(analog_data[i])
+
+            # Append to x_time
+            self.x_time.append(self.x_time[-1] + (1 / self.frequency))
+
+    def to_dataframe(self):
+        data_dict = {
+            f'analog_{i+1}': data for i, data in enumerate(self.datas)
+        }
+        df = pd.DataFrame(data_dict)
+        return df
+
 class Sensor:
     def __init__(self, sensor_id, num_channels, frequency):
         self.sensor_name = f"Force sensor {sensor_id}"
@@ -90,19 +116,21 @@ class Sensor:
         self.sensor_id = sensor_id
         self.num_channels = num_channels
         self.frequency = frequency
-        self.data = [[] for _ in range(num_channels)]
-        self.force_data = ForcesData(frequency=frequency)  
+        self.analog_data = AnalogData(frequency, num_channels)
+        self.force_data = ForcesData(frequency)  
 
     def data_size(self):
         return self.force_data.num_data_points
         
-    def add_data_point(self, forces_values):
-        if len(forces_values) == 6:
-            force_x, force_y, force_z, moment_x, moment_y, moment_z = forces_values #+ (0.0,) * (6 - len(forces_values))
-            self.force_data.add_data_point(force_x, force_y, force_z, moment_x, moment_y, moment_z)
-            print(f"adding {forces_values} to sensor {self.sensor_id}")
-        else:
-            raise ValueError("Invalid channel index or values")
+    def add_data_point(self, forces_values, analog_values):
+    
+        force_x, force_y, force_z, moment_x, moment_y, moment_z = forces_values #+ (0.0,) * (6 - len(forces_values))
+        self.force_data.add_data_point(force_x, force_y, force_z, moment_x, moment_y, moment_z)
+        
+        self.analog_data.add_data_point(analog_values)
+        
+        print(f"adding {forces_values} to sensor {self.sensor_id}")
+
 
     def get_num_channels(self):
         return self.num_channels
@@ -565,23 +593,12 @@ class Wid(QMainWindow):
         self.show()
         
     def settings_action(self):
-        current_sensor = Sensor(1, 6, 200)
-        self.data_container.add_sensor(current_sensor)
         
-        current_sensor = Sensor(2, 6, 200)
-        self.data_container.add_sensor(current_sensor)
-        
-        current_sensor = Sensor(3, 6, 200)
-        self.data_container.add_sensor(current_sensor)
+        sensor_ids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
 
-        current_sensor = Sensor(4, 6, 200)
-        self.data_container.add_sensor(current_sensor)
-        
-        current_sensor = Sensor(5, 6, 200)
-        self.data_container.add_sensor(current_sensor)
-        
-        current_sensor = Sensor(6, 6, 200)
-        self.data_container.add_sensor(current_sensor)
+        for sensor_id in sensor_ids:
+            current_sensor = Sensor(sensor_id, 6, 200)
+            self.data_container.add_sensor(current_sensor)        
         
         self.plotter.plot_data()
         self.plot_controller.set_up_widget()          
@@ -753,7 +770,7 @@ class Wid(QMainWindow):
                 
     def update_plot_data(self, rdata):
         sensor_id = rdata["sid"]
-
+        print(rdata)
         if(sensor_id > 0):
             self.data_container.dispatch_data(sensor_id, rdata)
 

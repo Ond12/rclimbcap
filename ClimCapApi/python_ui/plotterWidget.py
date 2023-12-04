@@ -120,6 +120,8 @@ class Plotter(pg.PlotWidget):
         super(Plotter, self).__init__(parent=parent)
         self.data_container = data_container
         
+        self.refresh_rate = 1500
+        
         self.plot_items:list = []
         self.contact_list:list = []
         self.sensor_plot_map:dict = {}
@@ -129,7 +131,7 @@ class Plotter(pg.PlotWidget):
         
         self.update_is_started = False
         self.update_timer = QTimer()
-        self.update_timer.setInterval(1000)
+        self.update_timer.setInterval( self.refresh_rate )
         self.update_timer.timeout.connect(self.update_plots)
 
     def update_plots(self):

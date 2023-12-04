@@ -36,16 +36,17 @@ MyUDP::MyUDP(QObject *parent) :
     //connect(socket, SIGNAL(readyRead()), this, SLOT(readyRead()));
 }
 
-void MyUDP::streamData(const DataPacket& data, uint sensorId) const
+void MyUDP::streamData(const DataPacket& data, const DataPacket& analogData, uint sensorId) const
 {
     int sid = sensorId;
     QJsonObject jsdata;
 
     jsdata.insert("sid", sid);
-    jsdata.insert("tkey", data.timeKey);
-    jsdata.insert("fra", (int)(data.frameNumber));
-    const auto jsArr = serialize(&data.dataValues, 6);
+    const auto jsArr = serialize(&data.dataValues, data.m_channelNumber);
     jsdata.insert("data", jsArr);
+
+    const auto jsArrtwo = serialize(&analogData.dataValues, analogData.m_channelNumber);
+    jsdata.insert("analogdata", jsArrtwo);
 
     QJsonDocument jsonDoc;
     jsonDoc.setObject(jsdata);

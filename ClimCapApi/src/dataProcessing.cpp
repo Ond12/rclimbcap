@@ -432,6 +432,15 @@ void DataController::processNewDataPacketFromNi(const DataPacket& d)
         finalForce.dataValues[4] = result(4, 0);
         finalForce.dataValues[5] = result(5, 0);
 
+
+        DataPacket analogData(6);
+
+        //fill up analog values
+        for (uint i = 0; i < 6; i++)
+        {
+            analogData.dataValues[i] = dataBySensor[i];
+        }
+
         if (globals::DEBUG_MOD_SENSOR)
         {
             finalForce.dataValues[0] = dataBySensor[0] * currentSensorID;
@@ -440,13 +449,19 @@ void DataController::processNewDataPacketFromNi(const DataPacket& d)
             finalForce.dataValues[3] = dataBySensor[3] * currentSensorID;
             finalForce.dataValues[4] = dataBySensor[4] * currentSensorID;
             finalForce.dataValues[5] = dataBySensor[5] * currentSensorID;
+
+            for (uint i = 0; i < 6; i++)
+            {
+                analogData.dataValues[6 + i] = i;
+            }
+            
         }
 
         //finalForce.printDebug();
 
         //(*gp).pushDataForceMoment(finalForce);
 
-        udpClient->streamData(finalForce, currentSensorID);
+        udpClient->streamData(finalForce, analogData, currentSensorID);
     }
 
     //send_chrono_pulse
@@ -454,7 +469,8 @@ void DataController::processNewDataPacketFromNi(const DataPacket& d)
     double lastDataCol = d.dataValues[d.m_channelNumber - 1];
     chrono_pulse.dataValues[0] = lastDataCol;
 
-    udpClient->streamData(chrono_pulse, 0);
+    DataPacket dummy(1);
+    udpClient->streamData(chrono_pulse, dummy, 0);
 
 }
 
@@ -523,10 +539,18 @@ void DataController::processNewDataPacketPlatformFromNi(const DataPacket& d)
         finalForce.dataValues[4] = result(4, 0);
         finalForce.dataValues[5] = result(5, 0);
 
+        DataPacket analogData(6);
+
+        //fill up analog values
+        for (uint i = 0; i < 6; i++)
+        {
+            analogData.dataValues[i] = dataBySensor[i];
+        }
+
 
         //finalForce.printDebug();
 
-        udpClient->streamData(finalForce, currentSensorID);
+        udpClient->streamData(finalForce, analogData, currentSensorID);
     }
 
 }
@@ -578,8 +602,6 @@ void DataController::connectToUdpSteam(const MyUDP* udps)
 {
     this->udpClient = udps;
 }
-
-
 
 
 #pragma endregion

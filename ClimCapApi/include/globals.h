@@ -19,7 +19,7 @@ namespace globals
 	constexpr auto IMPORT_START_TRIGGER_PIN = "PFI1";
 	constexpr auto EXPORT_SAMPLE_CLOCK_PIN = "PFI4";
 	constexpr auto EXPORT_START_TRIGGER_PIN = "PFI5";
-	constexpr auto CHRONO_PULSE_PIN = 50;
+	constexpr auto CHRONO_PULSE_PIN = 78;
 
 	constexpr auto SENSOR_ACQ_CARD_NAME = "Dev1";
 	constexpr auto PLATFORM_ACQ_CARD_NAME = "Dev1";

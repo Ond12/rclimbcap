@@ -44,19 +44,19 @@ void MyUDP::streamData(const DataPacket& data, const DataPacket& analogData, uin
     jsdata.insert("sid", sid);
     const auto jsArr = serialize(&data.dataValues, data.m_channelNumber);
     jsdata.insert("data", jsArr);
-
     const auto jsArrtwo = serialize(&analogData.dataValues, analogData.m_channelNumber);
-    jsdata.insert("analogdata", jsArrtwo);
+    jsdata.insert("analog", jsArrtwo);
 
     QJsonDocument jsonDoc;
     jsonDoc.setObject(jsdata);
 
-    QString jsString = QString::fromLatin1( jsonDoc.toJson() );
+    QString jsString = QString::fromLatin1(jsonDoc.toJson());
     QByteArray datagrudp;
     datagrudp.append(jsString.toUtf8());
 
     socket->writeDatagram(datagrudp, QHostAddress::LocalHost, 20001);
 }
+
 
 
 void MyUDP::readyRead()

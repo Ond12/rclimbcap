@@ -452,7 +452,7 @@ void DataController::processNewDataPacketFromNi(const DataPacket& d)
 
             for (uint i = 0; i < 6; i++)
             {
-                analogData.dataValues[6 + i] = i;
+                analogData.dataValues[i] = i;
             }
             
         }
@@ -470,7 +470,7 @@ void DataController::processNewDataPacketFromNi(const DataPacket& d)
     chrono_pulse.dataValues[0] = lastDataCol;
 
     DataPacket dummy(1);
-    udpClient->streamData(chrono_pulse, dummy, 0);
+    udpClient->streamData(chrono_pulse,dummy, 0);
 
 }
 
@@ -550,7 +550,7 @@ void DataController::processNewDataPacketPlatformFromNi(const DataPacket& d)
 
         //finalForce.printDebug();
 
-        udpClient->streamData(finalForce, analogData, currentSensorID);
+        //udpClient->streamData(finalForce, currentSensorID);
     }
 
 }
@@ -578,7 +578,7 @@ void DataController::displaySensor() const
 
 Sensor& DataController::getPlatform(uint id)
 {
-    for (Sensor& s : this->m_sensorsList) {
+    for (Sensor& s : this->m_plaformsList) {
         if (id == s.getSensorId()) {
             return s;
         }

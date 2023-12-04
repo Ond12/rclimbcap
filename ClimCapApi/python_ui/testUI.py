@@ -131,7 +131,6 @@ class Sensor:
         
         print(f"adding {forces_values} to sensor {self.sensor_id}")
 
-
     def get_num_channels(self):
         return self.num_channels
 
@@ -166,7 +165,7 @@ class DataContainer:
         curr_sensor = self.get_sensor(sensor_id)
         if curr_sensor:        
             data = unf_data["data"]
-            self.sensors_dict[sensor_id].add_data_point(data)
+            self.sensors_dict[sensor_id].add_data_point(data,[])
         else:
             print(f"sensor : {sensor_id} not set up")
 
@@ -478,7 +477,7 @@ class DataContainer:
             sensor.add_data_point([signals[0][i] + white_noise[i],
                                    signals[1][i] + white_noise[i],
                                    signals[2][i] + white_noise[i],
-                                   0, 0, 0])
+                                   0, 0, 0],[])
 
         #self.generate_debug_chrono_data()
 
@@ -753,7 +752,7 @@ class Wid(QMainWindow):
                             c_y = column_data_y[i]
                             c_z = column_data_z[i]
                             #todo load moment 
-                            current_sensor.add_data_point([c_x, c_y, c_z, 0, 0, 0])
+                            current_sensor.add_data_point([c_x, c_y, c_z, 0, 0, 0],[])
 
             return sheets_dict
         except Exception as e:

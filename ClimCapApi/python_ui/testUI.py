@@ -148,6 +148,9 @@ class Sensor:
 
     def get_forces_data(self):
         return self.force_data
+
+    def get_analog_data(self):
+        return self.analog_data
     
     def get_frequency(self):
         return self.frequency
@@ -177,7 +180,8 @@ class DataContainer:
         curr_sensor = self.get_sensor(sensor_id)
         if curr_sensor:        
             data = unf_data["data"]
-            self.sensors_dict[sensor_id].add_data_point(data, [])
+            data_analog = unf_data["analog"]
+            self.sensors_dict[sensor_id].add_data_point(data, data_analog)
         else:
             print(f"sensor : {sensor_id} not set up")
 
@@ -659,9 +663,13 @@ class Wid(QMainWindow):
 
                     for curr_sensor in sensors:
                         sheet_name = f"Capteur {curr_sensor.sensor_id}"
-                        data = curr_sensor.get_forces_data().to_dataframe()
-                        df = data
+                        dataforce = curr_sensor.get_forces_data().to_dataframe()
+                        dataanalog = curr_sensor.get_analog_data().to_dataframe()
                         curr_sensor.get_forces_data().print_debug_data()
+                        
+            
+                        df = pd.concat([dataforce, dataanalog], axis=1)
+                        
                         df.to_excel(writer, sheet_name=sheet_name, index=False)
 
                 print(f"sheets created and saved to {folder_path}")

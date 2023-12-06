@@ -451,7 +451,7 @@ void DataController::processNewDataPacketFromNi(const DataPacket& d)
 
             for (uint i = 0; i < 6; i++)
             {
-                analogData.dataValues[i] = i;
+                analogData.dataValues[i] = i + currentSensorID;
             }
             
         }

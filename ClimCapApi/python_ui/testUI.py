@@ -34,31 +34,43 @@ colors_dict = {
     10: (128, 128, 128)   # Gray
 }
 
+class RingBuffer:
+    def __init__(self, capacity):
+        self.capacity = capacity
+        self.buffer = [None] * capacity
+        self.write_index = 0
+
+    def write(self, data):
+        self.buffer[self.write_index] = data
+        self.write_index = (self.write_index + 1) % self.capacity
+
+    def get_data(self):
+        return self.buffer
+
 class ForcesData:
     def __init__(self, frequency, num_data_points=1):
         self.frequency = frequency
         self.num_data_points = num_data_points
-        self.forces_x = np.zeros(num_data_points)
-        self.forces_y = np.zeros(num_data_points)
-        self.forces_z = np.zeros(num_data_points)
-        self.moments_x = np.zeros(num_data_points)
-        self.moments_y = np.zeros(num_data_points)
-        self.moments_z = np.zeros(num_data_points)
+        self.forces_x = [0] * num_data_points
+        self.forces_y = [0] * num_data_points
+        self.forces_z = [0] * num_data_points
+        self.moments_x = [0] * num_data_points
+        self.moments_y = [0] * num_data_points
+        self.moments_z = [0] * num_data_points
         
-        self.resultant = np.zeros(num_data_points)
+        self.resultant = [0] * num_data_points
         
-        self.x_time = np.zeros(num_data_points)
-
+        self.x_time = [0] * num_data_points
 
     def add_data_point(self, force_x, force_y, force_z, moment_x, moment_y, moment_z):
         self.num_data_points += 1
-        self.forces_x = np.append(self.forces_x, force_x)
-        self.forces_y = np.append(self.forces_y, force_y)
-        self.forces_z = np.append(self.forces_z, force_z)
-        self.moments_x = np.append(self.moments_x, moment_x)
-        self.moments_y = np.append(self.moments_y, moment_y)
-        self.moments_z = np.append(self.moments_z, moment_z)
-        self.x_time = np.append(self.x_time, self.x_time[-1]  + (1 / self.frequency) )
+        self.forces_x.append(force_x)
+        self.forces_y.append(force_y)
+        self.forces_z.append(force_z)
+        #self.moments_x.append(moment_x)
+        #self.moments_y.append(moment_y)
+        #self.moments_z.append(moment_z)
+        self.x_time.append(self.x_time[-1]  + (1 / self.frequency) )
 
     def get_time_increments(self):
         time_increments = np.arange(self.num_data_points) / self.frequency
@@ -69,18 +81,18 @@ class ForcesData:
             'fx': self.forces_x,
             'fy': self.forces_y,
             'fz': self.forces_z,
-            'm_x': self.moments_x,
-            'm_y': self.moments_y,
-            'm_z': self.moments_z
+            #'m_x': self.moments_x,
+            #'m_y': self.moments_y,
+            #'m_z': self.moments_z
         }
         df = pd.DataFrame(data_dict)
         return df
     
     def print_debug_data(self):
         print(f"len: {self.num_data_points}")
-        print(f"x: {self.forces_x}")
-        print(f"y: {self.forces_y}")
-        print(f"z: {self.forces_z}")
+        print(f"x: {len(self.forces_x)}")
+        print(f"y: {len(self.forces_y)}")
+        print(f"z: {len(self.forces_z)}")
 
 class AnalogData:
     def __init__(self, frequency, num_channels, num_data_points=1):
@@ -596,7 +608,8 @@ class Wid(QMainWindow):
         
     def settings_action(self):
         
-        sensor_ids = [1]#, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+        #domo
+        sensor_ids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
 
         for sensor_id in sensor_ids:
             current_sensor = Sensor(sensor_id, 6, 200)
@@ -648,6 +661,7 @@ class Wid(QMainWindow):
                         sheet_name = f"Capteur {curr_sensor.sensor_id}"
                         data = curr_sensor.get_forces_data().to_dataframe()
                         df = data
+                        curr_sensor.get_forces_data().print_debug_data()
                         df.to_excel(writer, sheet_name=sheet_name, index=False)
 
                 print(f"sheets created and saved to {folder_path}")

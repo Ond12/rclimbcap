@@ -129,7 +129,7 @@ class Sensor:
         
         self.analog_data.add_data_point(analog_values)
         
-        print(f"adding {forces_values} to sensor {self.sensor_id}")
+        #print(f"adding {forces_values} to sensor {self.sensor_id}")
 
     def get_num_channels(self):
         return self.num_channels
@@ -165,7 +165,7 @@ class DataContainer:
         curr_sensor = self.get_sensor(sensor_id)
         if curr_sensor:        
             data = unf_data["data"]
-            self.sensors_dict[sensor_id].add_data_point(data,[])
+            self.sensors_dict[sensor_id].add_data_point(data, [])
         else:
             print(f"sensor : {sensor_id} not set up")
 
@@ -189,6 +189,9 @@ class DataContainer:
         result["data"] = resultant_force
 
         return result
+    
+    def add_chrono_data_point(self, data_value):
+        self.chrono_data = np.append(self.chrono_data, data_value)
     
     def cal_resultant_force_all_sensors(self):
         for sensor in self.sensors:
@@ -477,7 +480,7 @@ class DataContainer:
             sensor.add_data_point([signals[0][i] + white_noise[i],
                                    signals[1][i] + white_noise[i],
                                    signals[2][i] + white_noise[i],
-                                   0, 0, 0],[])
+                                   0, 0, 0], [])
 
         #self.generate_debug_chrono_data()
 
@@ -593,7 +596,7 @@ class Wid(QMainWindow):
         
     def settings_action(self):
         
-        sensor_ids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+        sensor_ids = [1]#, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
 
         for sensor_id in sensor_ids:
             current_sensor = Sensor(sensor_id, 6, 200)
@@ -769,8 +772,11 @@ class Wid(QMainWindow):
                 
     def update_plot_data(self, rdata):
         sensor_id = rdata["sid"]
-        print(rdata)
-        if(sensor_id > 0):
+
+        if sensor_id == 0:
+            data = rdata["data"]
+            self.data_container.add_chrono_data_point( data[0] )
+        else:
             self.data_container.dispatch_data(sensor_id, rdata)
 
 # Thread pour la Reception des données par udp

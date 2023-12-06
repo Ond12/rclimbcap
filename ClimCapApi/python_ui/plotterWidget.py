@@ -75,6 +75,7 @@ class AxisLabel(Enum):
     MX = 'mx'
     MY = 'my'
     MZ = 'mz'
+    CHRONO = 'chrono'
 
 class SensorPlotItem:
     def __init__(self, sensor_id):
@@ -141,8 +142,18 @@ class Plotter(pg.PlotWidget):
                 max_lim = first_sensor.data_size()
                 for sensor_plot in self.sensor_plot_map.values():
                     self.update_sensor_plot_data(sensor_plot.sensor_id, max_lim)
-            
-            self.update()
+        
+        if self.data_container.sensors_dict:
+            first_sensor  = list(self.data_container.sensors_dict.values())[0]
+            max_lim = first_sensor.data_size()
+            self.update_chrono_plot_data(max_lim)
+        
+        self.update()
+
+    def update_chrono_plot_data(self, maxlimit):
+        cr_data = self.data_container.chrono_data[0:maxlimit]
+        time_increments_chrono_dummy = np.arange( len(cr_data) ) / 200 
+        self.chrono_plot_item.setData(time_increments_chrono_dummy, cr_data)
 
     def update_sensor_plot_data(self, sensor_id:int, maxlimit):
         if sensor_id in self.sensor_plot_map:
@@ -156,7 +167,6 @@ class Plotter(pg.PlotWidget):
                 force_y = force_data.forces_y[0:maxlimit]
                 force_z = force_data.forces_z[0:maxlimit]
             
-                #print(force_x)
                 time_increments = time_increments[0:maxlimit]
             
                 sensor_plot_item = self.sensor_plot_map[sensor_id]
@@ -169,7 +179,7 @@ class Plotter(pg.PlotWidget):
                 yplot.setData(time_increments, force_y)
                 zplot.setData(time_increments, force_z)
                 
-                print(f"updating plot sensor {cur_sensor.sensor_id} until {maxlimit} lx {len(force_x)}")
+                #print(f"updating plot sensor {cur_sensor.sensor_id} until {maxlimit} lx {len(force_x)}")
         else:
             print(f"sensor {sensor_id} not in sensor plot map")      
              
@@ -208,9 +218,11 @@ class Plotter(pg.PlotWidget):
             if self.data_container:
                 cr_data = self.data_container.chrono_data
                 if len(cr_data) > 0:
-                    time_increments_chrono_dummy = np.arange(len(cr_data)) / 200 
+                    time_increments_chrono_dummy = np.arange( len(cr_data) ) / 200 
                     plot_item_chrono_data = self.plot(time_increments_chrono_dummy, cr_data, pen=pg.mkPen(color_chrono, width=2, alpha=200), name=f"Chrono signal")
                     self.plot_items.append(plot_item_chrono_data)
+                    
+                    self.chrono_plot_item = plot_item_chrono_data
 
             self.update()
 

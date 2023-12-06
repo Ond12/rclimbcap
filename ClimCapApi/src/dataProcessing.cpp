@@ -432,7 +432,6 @@ void DataController::processNewDataPacketFromNi(const DataPacket& d)
         finalForce.dataValues[4] = result(4, 0);
         finalForce.dataValues[5] = result(5, 0);
 
-
         DataPacket analogData(6);
 
         //fill up analog values

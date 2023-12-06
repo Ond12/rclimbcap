@@ -58,7 +58,6 @@ void MyUDP::streamData(const DataPacket& data, const DataPacket& analogData, uin
 }
 
 
-
 void MyUDP::readyRead()
 {
     QByteArray buffer;

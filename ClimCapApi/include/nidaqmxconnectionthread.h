@@ -3,11 +3,11 @@
 
 #include <QThread>
 #include <QObject>
+#include <QTimer>
 
 #include <NIDAQmx.h>
 #include "globals.h"
 #include "dataPacket.h"
-
 
 namespace NIDAQmx
 {

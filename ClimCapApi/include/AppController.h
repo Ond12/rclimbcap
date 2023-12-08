@@ -5,6 +5,7 @@
 #include "nidaqmxconnectionthread.h"
 #include "globals.h"
 #include <QSettings>
+#include "dummySender.h"
 
 
 class AppController
@@ -151,6 +152,12 @@ public:
 					qDebug() << "Acquisition Capteurs désactivees";
 				}
 
+				////////////////////////////////////////////////////////////////
+
+				if (globals::DUMMY_SENDER)
+				{
+
+				}
 			}
 			else {
 				qCritical() << "DataController nullptr";
@@ -188,12 +195,21 @@ public:
 
 		if (MyNidaqmxConnectionThread != nullptr)
 		{
+			if (!globals::DUMMY_SENDER)
+			{
+				QObject::connect(MyNidaqmxConnectionThread, SIGNAL(newDataPacketNi(const DataPacket&)),
+					MyDataController, SLOT(processNewDataPacketFromNi(const DataPacket&)));
 
-			QObject::connect(MyNidaqmxConnectionThread, SIGNAL(newDataPacketNi(const DataPacket&)),
-				MyDataController, SLOT(processNewDataPacketFromNi(const DataPacket&)));
+				QObject::connect(MyNidaqmxConnectionThread, SIGNAL(newDataPacketPlatform(const DataPacket&)),
+					MyDataController, SLOT(processNewDataPacketPlatformFromNi(const DataPacket&)));
 
-			QObject::connect(MyNidaqmxConnectionThread, SIGNAL(newDataPacketPlatform(const DataPacket&)),
-				MyDataController, SLOT(processNewDataPacketPlatformFromNi(const DataPacket&)));
+			}
+			else 
+			{
+				QObject::connect(MyNidaqmxConnectionThread, SIGNAL(newDataPacketNi(const DataPacket&)),
+					MyDataController, SLOT(processNewDataPacketFromNi(const DataPacket&)));
+
+			}
 
 		}
 

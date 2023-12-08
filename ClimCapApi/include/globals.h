@@ -22,11 +22,11 @@ namespace globals
 	constexpr auto CHRONO_PULSE_PIN = 72;
 
 	constexpr auto SENSOR_ACQ_CARD_NAME = "Dev1";
-	constexpr auto PLATFORM_ACQ_CARD_NAME = "Dev2";
+	constexpr auto PLATFORM_ACQ_CARD_NAME = "Dev3";
 
 	//Debug globals
 
 	constexpr auto DEBUG_MOD_PLATFORM = true;
-	constexpr auto DEBUG_MOD_SENSOR = true;
+	constexpr auto DEBUG_MOD_SENSOR = false;
 
 }

@@ -26,7 +26,7 @@ namespace globals
 
 	//Debug globals
 
-	constexpr auto DEBUG_MOD_PLATFORM = true;
+	constexpr auto DEBUG_MOD_PLATFORM = false;
 	constexpr auto DEBUG_MOD_SENSOR = false;
 
 	constexpr auto DUMMY_SENDER = true;

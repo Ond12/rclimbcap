@@ -19,8 +19,20 @@ public:
         connect(timer, &QTimer::timeout, this, &DummySender::onTimeout);
 
 
-        timer->start(1000); 
+        //timer->start(1000); 
     }
+
+	void setNbchan(uint nbchan) {
+		this->m_numberOfChannels = nbchan;
+	}
+
+	void start() {
+		timer->start(1000);
+	}
+
+	void stop() {
+		timer->stop();
+	}
 
 public slots:
     void onTimeout() {
@@ -41,7 +53,8 @@ public slots:
 
 			std::copy(dummydata, dummydata + m_numberOfChannels, std::begin(DP2.dataValues));
 			delete[] dummydata;
-			emit NidaqmxConnectionThread::GetInstance()->newDataPacketNi(DP2);
+			qDebug("dummy send packet");
+			emit newDataPacketNi(DP2);
     }
 
 

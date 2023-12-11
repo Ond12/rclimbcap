@@ -613,10 +613,12 @@ class Wid(QMainWindow):
     def settings_action(self):
         
         #domo
-        sensor_ids = [1,2]#7, 8]# 9, 10, 11]
-        #[1, 2, 3, 4, 5, 6, 
+        sensor_ids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+        
+        sensor_frequency = 200
+        
         for sensor_id in sensor_ids:
-            current_sensor = Sensor(sensor_id, 6, 200)
+            current_sensor = Sensor(sensor_id, 6, sensor_frequency)
             self.data_container.add_sensor(current_sensor)        
         
         self.plotter.plot_data()

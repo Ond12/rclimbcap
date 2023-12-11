@@ -8,28 +8,35 @@ class DummySender : public QThread {
 private:
 	QTimer* timer;
 	uint  m_numberOfChannels;
+	uint m_frequency;
 
 signals:
 	void newDataPacketNi(const DataPacket&);
 
 public:
-	DummySender() {
+	DummySender()
+	{
         timer = new QTimer(this);
 		m_numberOfChannels = 12;
+		m_frequency = 200;
         connect(timer, &QTimer::timeout, this, &DummySender::onTimeout);
         //timer->start(1000); 
     }
 
-	void setNbchan(uint nbchan) {
+	void setNbchan(uint nbchan)
+	{
 		this->m_numberOfChannels = nbchan;
 		qDebug() << "set chan nb: " << nbchan;
 	}
 
-	void start() {
-		timer->start(1000);
+	void start()
+	{
+		uint time_ms = 1 / m_frequency * 1000;
+		timer->start(5);
 	}
 
-	void stop() {
+	void stop() 
+	{
 		timer->stop();
 	}
 

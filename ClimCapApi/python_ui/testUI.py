@@ -613,7 +613,7 @@ class Wid(QMainWindow):
     def settings_action(self):
         
         #domo
-        sensor_ids = [7, 8]# 9, 10, 11]
+        sensor_ids = [1,2]#7, 8]# 9, 10, 11]
         #[1, 2, 3, 4, 5, 6, 
         for sensor_id in sensor_ids:
             current_sensor = Sensor(sensor_id, 6, 200)

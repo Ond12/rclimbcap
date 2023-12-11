@@ -363,7 +363,7 @@ const QGenericMatrix<1, 6, double> DataController::ChannelanalogToForce3axisForc
 void DataController::processNewDataPacketFromNi(const DataPacket& d)
 {
     double dataBySensor[6] = { 0,0,0,0,0,0 };
-    //d.printDebug();
+    d.printDebug();
     emit this->gotNewDataPacket(d);
 
     for (auto gp = m_sensorsList.begin(); gp != m_sensorsList.end(); gp++)

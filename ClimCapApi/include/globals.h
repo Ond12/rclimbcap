@@ -12,7 +12,7 @@ namespace globals
 	constexpr auto  DEFAULT_SAMPLE_CALIBRATION_NUMBER = 1000;
 
 	constexpr auto  ENABLE_PLATFORM = false;
-	constexpr auto  ENABLE_SENSOR = true;
+	constexpr auto  ENABLE_SENSOR = false;
 
 	//NIDAQmx globals
 	constexpr auto IMPORT_SAMPLE_CLOCK_PIN = "PFI0";

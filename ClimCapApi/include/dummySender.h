@@ -3,7 +3,7 @@
 #include <QTimer>
 #include <QObject>
 
-class DummySender : public QObject {
+class DummySender : public QThread {
     Q_OBJECT
 private:
 	QTimer* timer;
@@ -15,15 +15,14 @@ signals:
 public:
 	DummySender() {
         timer = new QTimer(this);
-		
+		m_numberOfChannels = 12;
         connect(timer, &QTimer::timeout, this, &DummySender::onTimeout);
-
-
         //timer->start(1000); 
     }
 
 	void setNbchan(uint nbchan) {
 		this->m_numberOfChannels = nbchan;
+		qDebug() << "set chan nb: " << nbchan;
 	}
 
 	void start() {
@@ -38,7 +37,7 @@ public slots:
     void onTimeout() {
 
 			double* dummydata = new double[m_numberOfChannels];
-			for (uint i = 0; i < ((m_numberOfChannels - 1) / 6); i++)
+			for (uint i = 0; i < ((m_numberOfChannels) / 6); i++)
 			{
 				dummydata[i * 6] = 1;
 				dummydata[i * 6 + 1] = 2;
@@ -47,13 +46,12 @@ public slots:
 				dummydata[i * 6 + 4] = -20;
 				dummydata[i * 6 + 5] = -30;
 			}
-			dummydata[m_numberOfChannels - 1] = 5;
+			//dummydata[m_numberOfChannels - 1] = 5;
 
 			DataPacket DP2(m_numberOfChannels);
 
 			std::copy(dummydata, dummydata + m_numberOfChannels, std::begin(DP2.dataValues));
 			delete[] dummydata;
-			qDebug("dummy send packet");
 			emit newDataPacketNi(DP2);
     }
 

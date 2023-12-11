@@ -94,8 +94,8 @@ NidaqmxConnectionThread::NidaqmxConnectionThread(float acquisitionRate, float ca
 	DAQmxErrChk(DAQmxResetDevice(this->platformCardName.toStdString().c_str()));
 
 Error:
-	if (DAQmxFailed(error)) {
-
+	if (DAQmxFailed(error)) 
+	{
 		DAQmxGetExtendedErrorInfo(errBuff, 2048);
 		qDebug("DAQmx Error: %s\n", errBuff);
 		this->errorFlag = true;

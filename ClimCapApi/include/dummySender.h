@@ -26,7 +26,6 @@ public:
 	void setNbchan(uint nbchan)
 	{
 		this->m_numberOfChannels = nbchan;
-		qDebug() << "set chan nb: " << nbchan;
 	}
 
 	void start()

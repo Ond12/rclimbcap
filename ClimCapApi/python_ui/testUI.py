@@ -48,29 +48,44 @@ class RingBuffer:
         return self.buffer
 
 class ForcesData:
-    def __init__(self, frequency, num_data_points=1):
+    def __init__(self, frequency):
         self.frequency = frequency
-        self.num_data_points = num_data_points
-        self.forces_x = [0] * num_data_points
-        self.forces_y = [0] * num_data_points
-        self.forces_z = [0] * num_data_points
-        self.moments_x = [0] * num_data_points
-        self.moments_y = [0] * num_data_points
-        self.moments_z = [0] * num_data_points
+        self.num_data_points = 1
         
-        self.resultant = [0] * num_data_points
+        self.write_index = 0
+        self.capacity = 10000
         
-        self.x_time = [0] * num_data_points
+        self.forces_x = [0] * self.capacity
+        self.forces_y = [0] * self.capacity
+        self.forces_z = [0] * self.capacity
+        self.moments_x = [0] * self.capacity
+        self.moments_y = [0] * self.capacity
+        self.moments_z = [0] * self.capacity
+        
+        self.resultant = [0] * self.capacity
+        
+        self.x_time = [0] * self.capacity
 
-    def add_data_point(self, force_x, force_y, force_z, moment_x, moment_y, moment_z):
+    def write_or_append_data(self, array, index, value):
+        if index < len(array):
+            array[index] = value
+        else:
+            array.append(value)
+
+    def add_data_point(self, force_x_val, force_y_val, force_z_val, moment_x_val, moment_y_val, moment_z_val):
         self.num_data_points += 1
-        self.forces_x.append(force_x)
-        self.forces_y.append(force_y)
-        self.forces_z.append(force_z)
+        self.write_index += 1
+
+        self.write_or_append_data(self.forces_x, self.write_index, force_x_val)
+        self.write_or_append_data(self.forces_y, self.write_index, force_y_val)
+        self.write_or_append_data(self.forces_z, self.write_index, force_z_val)
+        
         #self.moments_x.append(moment_x)
         #self.moments_y.append(moment_y)
         #self.moments_z.append(moment_z)
-        self.x_time.append(self.x_time[-1]  + (1 / self.frequency) )
+
+        time_val = (1 / self.frequency) * self.write_index
+        self.write_or_append_data(self.x_time, self.write_index, time_val)
 
     def get_time_increments(self):
         time_increments = np.arange(self.num_data_points) / self.frequency
@@ -78,9 +93,9 @@ class ForcesData:
     
     def to_dataframe(self):
         data_dict = {
-            'fx': self.forces_x,
-            'fy': self.forces_y,
-            'fz': self.forces_z,
+            'fx': self.forces_x[0:self.write_index],
+            'fy': self.forces_y[0:self.write_index],
+            'fz': self.forces_z[0:self.write_index],
             #'m_x': self.moments_x,
             #'m_y': self.moments_y,
             #'m_z': self.moments_z
@@ -90,33 +105,41 @@ class ForcesData:
     
     def print_debug_data(self):
         print(f"len: {self.num_data_points}")
-        print(f"x: {len(self.forces_x)}")
-        print(f"y: {len(self.forces_y)}")
-        print(f"z: {len(self.forces_z)}")
+        print(f"write idx {self.write_index}")
+        print(f"len slice : {len(self.forces_x[0:self.write_index])}")
 
 class AnalogData:
-    def __init__(self, frequency, num_channels, num_data_points=1):
+    def __init__(self, frequency, num_channels):
         self.frequency = frequency
-        self.num_data_points = num_data_points
+        self.num_data_points = 1
         self.num_channels = num_channels
+        self.capacity = 10000
+        self.write_index = 0
         
-        self.datas = [[0] for _ in range(self.num_channels)]
+        self.datas = [[0] * self.capacity for _ in range(self.num_channels)]
         
-        self.x_time = [0]
+        self.x_time = [0] * self.capacity
+        
+    def write_or_append_data(self, array, index, value):
+        if index < len(array):
+            array[index] = value
+        else:
+            array.append(value)
 
     def add_data_point(self, analog_data):
         if len(analog_data) == self.num_channels:
             self.num_data_points += 1
+            self.write_index += 1
 
             for i, sub_list in enumerate(self.datas):
-                sub_list.append(analog_data[i])
+                self.write_or_append_data(sub_list, self.write_index, analog_data[i])
 
-            # Append to x_time
-            self.x_time.append(self.x_time[-1] + (1 / self.frequency))
+            time_val = (1 / self.frequency) * self.write_index
+            self.write_or_append_data(self.x_time, self.write_index, time_val)
 
     def to_dataframe(self):
         data_dict = {
-            f'analog_{i+1}': data for i, data in enumerate(self.datas)
+            f'analog_{i+1}': data[0:self.write_index] for i, data in enumerate(self.datas)
         }
         df = pd.DataFrame(data_dict)
         return df
@@ -162,15 +185,16 @@ class DataContainer:
     def __init__(self):
         self.sensors = []
         self.sensors_dict = {}
-        self.chrono_data = np.zeros(1)
+        self.chrono_data = [0] * 1
         self.contacts = []
+        self.chrono_freq = 200
 
     def get_time_increments(self):
         #change this to do 
         force_data = self.sensors[0].get_forces_data()
         time_increments = force_data.get_time_increments()
         return time_increments
-
+    
     def add_sensor(self, sensor):
         self.sensors.append(sensor)
         self.sensors_dict[sensor.sensor_id] = sensor
@@ -207,7 +231,7 @@ class DataContainer:
         return result
     
     def add_chrono_data_point(self, data_value):
-        self.chrono_data = np.append(self.chrono_data, data_value)
+        self.chrono_data.append(data_value)
     
     def cal_resultant_force_all_sensors(self):
         for sensor in self.sensors:
@@ -504,7 +528,7 @@ class DataContainer:
         for sensor in self.sensors:
             sensor.clear_data()
         self.sensors = []
-        self.chrono_data = np.zeros(1)
+        self.chrono_data = [0] * 1 
 
 #_________________________________________________________________________________________
 class Wid(QMainWindow):

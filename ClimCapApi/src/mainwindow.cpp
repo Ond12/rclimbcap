@@ -33,7 +33,7 @@ MainWindow::MainWindow(QWidget *parent) :
     m_ui->actionQuit->setEnabled(true);
 
     MyApc = new AppController(); 
-    if (MyApc->startUp())
+    if (!MyApc->startUp())
     {
         m_ui->actionConnect->setEnabled(true);
     };

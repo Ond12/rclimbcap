@@ -140,6 +140,7 @@ class Plotter(pg.PlotWidget):
             first_sensor  = list(self.data_container.sensors_dict.values())[0]
             if first_sensor:
                 max_lim = first_sensor.data_size()
+
                 for sensor_plot in self.sensor_plot_map.values():
                     self.update_sensor_plot_data(sensor_plot.sensor_id, max_lim)
         
@@ -152,7 +153,7 @@ class Plotter(pg.PlotWidget):
 
     def update_chrono_plot_data(self, maxlimit):
         cr_data = self.data_container.chrono_data[0:maxlimit]
-        time_increments_chrono_dummy = np.arange( len(cr_data) ) / 200 
+        time_increments_chrono_dummy = np.arange( len(cr_data) ) / self.data_container.chrono_freq
         self.chrono_plot_item.setData(time_increments_chrono_dummy, cr_data)
 
     def update_sensor_plot_data(self, sensor_id:int, maxlimit):
@@ -197,15 +198,15 @@ class Plotter(pg.PlotWidget):
                     time_increments = force_data.get_time_increments()
 
                     force_x = force_data.forces_x
-                    plot_item_force_x = self.plot(time_increments, force_x, pen=pg.mkPen(color_x, width=2, alpha=200), name=f"Sensor {sensor.sensor_id} - Force X")
+                    plot_item_force_x = self.plot(time_increments, [0], pen=pg.mkPen(color_x, width=2, alpha=200), name=f"Sensor {sensor.sensor_id} - Force X")
                     self.plot_items.append(plot_item_force_x)
 
                     force_y = force_data.forces_y
-                    plot_item_force_y = self.plot(time_increments, force_y, pen=pg.mkPen(color_y, width=2, alpha=200), name=f"Sensor {sensor.sensor_id} - Force Y")
+                    plot_item_force_y = self.plot(time_increments, [0], pen=pg.mkPen(color_y, width=2, alpha=200), name=f"Sensor {sensor.sensor_id} - Force Y")
                     self.plot_items.append(plot_item_force_y)
 
                     force_z = force_data.forces_z
-                    plot_item_force_z = self.plot(time_increments, force_z, pen=pg.mkPen(color_z, width=2, alpha=200), name=f"Sensor {sensor.sensor_id} - Force Z")
+                    plot_item_force_z = self.plot(time_increments, [0], pen=pg.mkPen(color_z, width=2, alpha=200), name=f"Sensor {sensor.sensor_id} - Force Z")
                     self.plot_items.append(plot_item_force_z)
 
                     c_plot_sensor = SensorPlotItem(sensor.sensor_id)
@@ -217,6 +218,7 @@ class Plotter(pg.PlotWidget):
 
             if self.data_container:
                 cr_data = self.data_container.chrono_data
+                print(f"cr len {len(cr_data)}")
                 if len(cr_data) > 0:
                     time_increments_chrono_dummy = np.arange( len(cr_data) ) / 200 
                     plot_item_chrono_data = self.plot(time_increments_chrono_dummy, cr_data, pen=pg.mkPen(color_chrono, width=2, alpha=200), name=f"Chrono signal")

@@ -5,6 +5,7 @@
 #include "nidaqmxconnectionthread.h"
 #include "globals.h"
 #include <QSettings>
+#include "dummySender.h"
 
 
 class AppController
@@ -15,6 +16,8 @@ public:
 	MyUDP* MyUdpClient;
 	DataController* MyDataController;
 	NidaqmxConnectionThread* MyNidaqmxConnectionThread;
+
+	DummySender* dummySender;
 
 	uint m_sampleRate;
 	int m_totalAcqTimeS;
@@ -28,6 +31,10 @@ public:
 
 	AppController()
 	{
+		MyUdpClient = nullptr;
+		MyDataController = nullptr;
+		MyNidaqmxConnectionThread = nullptr;
+
 		this->resetSettings();
 		this->readSettings();
 
@@ -110,11 +117,11 @@ public:
 
 	bool reloadSensorConfiguration()
 	{
-		if (MyNidaqmxConnectionThread != nullptr)
+		if (MyDataController != nullptr)
 		{
-			if (MyDataController != nullptr)
+			this->readSettings();
+			if (MyNidaqmxConnectionThread != nullptr)
 			{
-				this->readSettings();
 				MyNidaqmxConnectionThread->clearTask();
 
 				if (globals::ENABLE_PLATFORM)
@@ -129,7 +136,8 @@ public:
 					MyNidaqmxConnectionThread->setUPPlatformTask(m_sampleRate, m_callbackrate, totalNumberOfChannels, m_triggerEnable, numberOfSample);
 					MyNidaqmxConnectionThread->setUpPlatformCalibrationTask(m_calibrationRate, m_callbackrate, totalNumberOfChannels, m_triggerEnable, m_calibrationNumberSample);
 				}
-				else {
+				else 
+				{
 					qDebug() << "Acquisition Plateformes désactivees";
 				}
 
@@ -147,23 +155,38 @@ public:
 					MyNidaqmxConnectionThread->setUpCalibrationTask(m_calibrationRate, m_callbackrate, totalNumberOfChannels, m_triggerEnable, m_calibrationNumberSample);
 
 				}
-				else {
+				else
+				{
 					qDebug() << "Acquisition Capteurs désactivees";
 				}
 
+				////////////////////////////////////////////////////////////////
 			}
-			else {
-				qCritical() << "DataController nullptr";
+			else if (globals::DUMMY_SENDER)
+			{
+				uint NsensorLoaded = MyDataController->loadSensorToAnalogConfig();
+				if (NsensorLoaded == 0) { qCritical() << "Echec dans le chargement de la configuration capteur, vide"; return 0; };
+
+				int totalNumberOfChannels = NsensorLoaded * 6;
+
+				if (dummySender != nullptr)
+					dummySender->setNbchan(totalNumberOfChannels);
+
+				qDebug("set up dummy sender mode");
+			}
+			else
+			{
+				qCritical() << "Echec NidaqmxConnectionThread ";
 				return false;
 			}
 		}
 		else
 		{
-			qCritical() << "Echec NidaqmxConnectionThread ";
+			qCritical() << "DataController nullptr";
 			return false;
 		}
 
-		return true;
+		return false;
 	}
 
 	bool startUp()
@@ -175,26 +198,38 @@ public:
 
 		MyDataController->connectToUdpSteam(MyUdpClient);
 
-		NidaqmxConnectionThread::init(0, 0, 0, 0, 0);
-		MyNidaqmxConnectionThread = NidaqmxConnectionThread::GetInstance();
-
-		if (!MyNidaqmxConnectionThread->HasError()) {
-			errorFlag = this->reloadSensorConfiguration();
-		}
-		else {
-			qDebug() << "Erreur programme en pause";
-			return false;
-		}
-
-		if (MyNidaqmxConnectionThread != nullptr)
+		if (globals::ENABLE_SENSOR || globals::ENABLE_PLATFORM)
 		{
+			NidaqmxConnectionThread::init(0, 0, 0, 0, 0);
+			MyNidaqmxConnectionThread = NidaqmxConnectionThread::GetInstance();
 
-			QObject::connect(MyNidaqmxConnectionThread, SIGNAL(newDataPacketNi(const DataPacket&)),
+			if (!MyNidaqmxConnectionThread->HasError())
+			{
+				errorFlag = this->reloadSensorConfiguration();
+			}
+
+			if (MyNidaqmxConnectionThread != nullptr)
+			{
+				QObject::connect(MyNidaqmxConnectionThread, SIGNAL(newDataPacketNi(const DataPacket&)),
+					MyDataController, SLOT(processNewDataPacketFromNi(const DataPacket&)));
+
+				QObject::connect(MyNidaqmxConnectionThread, SIGNAL(newDataPacketPlatform(const DataPacket&)),
+					MyDataController, SLOT(processNewDataPacketPlatformFromNi(const DataPacket&)));		
+			}
+			else 
+			{
+				qDebug() << "Erreur MyNidaqmxConnectionThread est null programme en pause";
+				return false;
+			}
+		}
+
+		if(globals::DUMMY_SENDER)
+		{
+			dummySender = new DummySender();
+			errorFlag = this->reloadSensorConfiguration();
+			qDebug("init dummy senser");
+			QObject::connect(dummySender, SIGNAL(newDataPacketNi(const DataPacket&)),
 				MyDataController, SLOT(processNewDataPacketFromNi(const DataPacket&)));
-
-			QObject::connect(MyNidaqmxConnectionThread, SIGNAL(newDataPacketPlatform(const DataPacket&)),
-				MyDataController, SLOT(processNewDataPacketPlatformFromNi(const DataPacket&)));
-
 		}
 
 		return errorFlag;
@@ -207,12 +242,14 @@ public:
 	{
 		if(globals::ENABLE_SENSOR) MyNidaqmxConnectionThread->startSensorAcquisition();
 		if(globals::ENABLE_PLATFORM) MyNidaqmxConnectionThread->startPlaformAcquisition();
+		if (globals::DUMMY_SENDER) dummySender->start();
 	};
 
 	void stopAcquisition() const
 	{
 		if(globals::ENABLE_SENSOR) MyNidaqmxConnectionThread->stopSensorAcquisition();
 		if(globals::ENABLE_PLATFORM) MyNidaqmxConnectionThread->stopPlaformAcquisition();
+		if(globals::DUMMY_SENDER) dummySender->stop();
 	};
 
 	void startCalibrationTask() const

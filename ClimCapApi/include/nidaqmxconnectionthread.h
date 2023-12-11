@@ -3,11 +3,11 @@
 
 #include <QThread>
 #include <QObject>
+#include <QTimer>
 
 #include <NIDAQmx.h>
 #include "globals.h"
 #include "dataPacket.h"
-
 
 namespace NIDAQmx
 {
@@ -251,11 +251,8 @@ public:
     void startPlaformCalibration() const;
     void stopPlaformCalibration() const;
 
-
     void setUPPlatformTask(float acquisitionRate, float callBackRate, uint nOfChannels, bool triggerEnable, uint numberOfSample);
     void setUpPlatformCalibrationTask(float acquisitionRate, float callBackRate, uint nOfChannels, bool triggerEnable, uint numberOfSample);
-
-
 
     void clearTask();
 
@@ -268,8 +265,6 @@ private:
 
     NidaqmxConnectionThread(float acquisitionRate, float callBackRate, uint nOfChannels, bool triggerEnable, uint numberOfSample);
     static NidaqmxConnectionThread* getInstanceImpl(float acquisitionRate, float callBackRate, uint nOfChannels, bool triggerEnable, uint numberOfSample);
-
-
 
     NIDAQmx::Task* m_acquisitionTask;
     NIDAQmx::Task* m_calibrationTask;

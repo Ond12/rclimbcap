@@ -13,6 +13,7 @@ SettingsWidget::SettingsWidget(QWidget *parent) :
     this->setUpComboBox();
     this->loadJson();
     this->setWindowTitle(tr("Parametres"));
+    this->setGeometry(QRect(0,0,800, 600));
     this->ui->sensorListWidget->hide();
 
     connect(this->ui->checkBox, &QCheckBox::stateChanged, this, &SettingsWidget::onCheckboxStateChanged);
@@ -87,7 +88,7 @@ void SettingsWidget::on_addPushButton_clicked()
         this->ui->nbSensorComboBox->removeItem( this->ui->nbSensorComboBox->currentIndex() );
         this->ui->analogRangeComboBox->removeItem( this->ui->analogRangeComboBox->currentIndex() );
 
-        addNewSensorToTable(currentSensorId, "testname", currentAnalogRange, currentSensorAngle, Zrotation);
+        addNewSensorToTable(currentSensorId, "testname", currentAnalogRange, currentSensorAngle, Zrotation, false);
 
         this->sensorIDtoAnaloEntry.insert(currentSensorId, currentAnalogRange);
         this->ui->sensorListWidget->addItem( "Capteur " + QString::number(currentSensorId) + " -> " + QString::number(currentAnalogRange) + "-" + QString::number(currentAnalogRange+5) );
@@ -114,21 +115,16 @@ void SettingsWidget::writeJson(QJsonDocument& json) const
             sensorItem["chan"]  =  this->ui->tableWidget->item(row, 2)->text().toInt();
             sensorItem["angle"] =  this->ui->tableWidget->item(row, 3)->text().toDouble();
             sensorItem["zRotation"] = this->ui->tableWidget->item(row, 4)->text().toDouble();
+            sensorItem["isFlip"] = this->ui->tableWidget->item(row, 5)->text().toInt();
             array.append(sensorItem);
         }
-
-        //while (i.hasNext())
-        //{ 
-        //    i.next();
-        //    vmap.insert(QString::number(i.key()), i.value());
-        //}
 
         doc["sensors"] = array;
         json = QJsonDocument(doc);
     }
 }
 
-void SettingsWidget::addNewSensorToTable(uint sensorid, QString sensorname, uint sensorChannel, double sensorAngle, double sensorZRotation)
+void SettingsWidget::addNewSensorToTable(uint sensorid, QString sensorname, uint sensorChannel, double sensorAngle, double sensorZRotation, bool isFlip)
 {
     uint rowcount = ui->tableWidget->rowCount();
 
@@ -146,6 +142,10 @@ void SettingsWidget::addNewSensorToTable(uint sensorid, QString sensorname, uint
 
     ui->tableWidget->setItem(rowcount, 3, new QTableWidgetItem(QString::number(sensorAngle)));
     ui->tableWidget->setItem(rowcount, 4, new QTableWidgetItem(QString::number(sensorZRotation)));
+
+    QTableWidgetItem* flipitem = new QTableWidgetItem(QString::number(isFlip));
+    ui->tableWidget->setItem(rowcount, 5, flipitem);
+
 }
 
 bool SettingsWidget::loadJson()
@@ -177,13 +177,13 @@ bool SettingsWidget::loadJson()
     QJsonArray array = jsonObj["sensors"].toArray();
 
     uint row = 0;
-    uint column = 5;
+    uint column = 6;
 
     this->ui->tableWidget->setRowCount(row);
     this->ui->tableWidget->setColumnCount(column);
 
     QStringList horzHeaders;
-    horzHeaders << "Numero" << "Nom" << "Entree" << "Angle" << "Rotation";
+    horzHeaders << "Numero" << "Nom" << "Entree" << "Angle" << "Rotation" << "Flip";
     ui->tableWidget->setHorizontalHeaderLabels(horzHeaders);
 
     if( !doc.isEmpty() )
@@ -197,8 +197,9 @@ bool SettingsWidget::loadJson()
             uint sensorChannel = obj["chan"].toInt();
             double sensorAngle = obj["angle"].toDouble();
             double sensorZRotation = obj["zRotation"].toDouble();
+            bool isFlip = obj["isFlip"].toInt();
 
-            this->addNewSensorToTable(sensorId, sensorname, sensorChannel, sensorAngle, sensorZRotation);
+            this->addNewSensorToTable(sensorId, sensorname, sensorChannel, sensorAngle, sensorZRotation, isFlip);
 
             this->ui->sensorListWidget->addItem("Capteur " + sensorname + " -> " + QString::number(sensorChannel) + "-" + QString::number(sensorChannel + 5));
 

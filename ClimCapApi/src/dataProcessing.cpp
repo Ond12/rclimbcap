@@ -182,9 +182,11 @@ uint DataController::loadSensorToAnalogConfig()
             uint sensorChannel = obj["chan"].toInt();
             double sensorAngle = obj["angle"].toDouble();
             double sensorZRotation = obj["zRotation"].toDouble();
+            uint isFlip = obj["isFlip"].toInt();
 
             Sensor tms(sensorId, sensorChannel, sensorAngle);
-
+            tms.setFlip(isFlip);
+ 
             if (sensorZRotation != 0)
                 tms.setRotationAngle(sensorZRotation, 'z');
 
@@ -432,6 +434,12 @@ void DataController::processNewDataPacketFromNi(const DataPacket& d)
         finalForce.dataValues[4] = result(4, 0);
         finalForce.dataValues[5] = result(5, 0);
 
+        //flip z if sensor is corps d'epreuve flip side
+        if ((*gp).getFlip())
+        {
+            finalForce.dataValues[2] = -finalForce.dataValues[2];
+        }
+
         DataPacket analogData(6);
 
         //fill up analog values
@@ -455,10 +463,6 @@ void DataController::processNewDataPacketFromNi(const DataPacket& d)
             }
             
         }
-
-        //finalForce.printDebug();
-
-        //(*gp).pushDataForceMoment(finalForce);
 
         udpClient->streamData(finalForce, analogData, currentSensorID);
     }

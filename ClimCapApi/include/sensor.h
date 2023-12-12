@@ -22,6 +22,8 @@ private:
 	double wallAngle;
 	double Zangle;  
 
+	bool m_isFlip;
+
 	QGenericMatrix<6, 6, double> calibrationMatriceOrdre1;
 	QGenericMatrix<12, 6, double> calibrationMatriceOrdre2;
 
@@ -51,6 +53,7 @@ public:
 	uint getfirstChannel() const;
 	void setChannelCalibrationValues(double* calibrationValues);
 	void setRotationAngle(double angle, char axis);
+	void setFlip(bool isFlip);
 
 	const double* getChannelCalibrationValuesArr() const;
 	const QGenericMatrix<1, 6, double> ChannelanalogToForce3axisForce(double rawAnalogChannelValues[6]);
@@ -58,6 +61,7 @@ public:
 
 	uint getSensorId() const;
 	uint getNumberOfChan() const;
+	bool getFlip() const;
 	void toString(bool showCalMat) const;
 
 	const QGenericMatrix<12, 6, double>& getCalibrationMatriceO2PLATFORM() const;

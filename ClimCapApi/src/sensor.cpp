@@ -61,6 +61,11 @@ void Sensor::setRotationAngle(double angle, char axis)
     }
 }
 
+void Sensor::setFlip(bool isFlip)
+{
+    m_isFlip = isFlip;
+}
+
 
 #pragma endregion
 
@@ -197,4 +202,9 @@ void Sensor::toString(bool showCalMat) const
     }
 
     qDebug() << "___";
+}
+
+bool Sensor::getFlip() const
+{
+    return m_isFlip;
 }

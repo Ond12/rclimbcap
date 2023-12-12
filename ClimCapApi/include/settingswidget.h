@@ -38,7 +38,7 @@ private:
     bool loadJson();
     QString m_saveFilePath;
 
-    void addNewSensorToTable(uint sensorid, QString sensorname, uint sensorChannel, double sensorAngle, double sensorZRotation);
+    void addNewSensorToTable(uint sensorid, QString sensorname, uint sensorChannel, double sensorAngle, double sensorZRotation, bool isFlip);
 
 signals:
     void newConfigFile();

@@ -79,25 +79,26 @@ uint DataController::loadPlatformToAnalogConfig()
 {
     this->m_plaformsList.clear();
 
-    Sensor platformL(40, 0, 0);
-    Sensor platformR(41, 8, 0);
+    Platform platformL(40, 0, 0);
+    Platform platformR(41, 8, 0);
 
-    QGenericMatrix<12, 6, double> calibrationMatrixO2container;
+
+    PlaformMatrice calibrationMatrixO2container;
 
     loadCalibrationMatriceOrdre2PLATFORM(platformL.getSensorId(), calibrationMatrixO2container);
-    platformL.setCalibrationMatriceO2PLATFORM(calibrationMatrixO2container);
+
+    platformL.setCalibrationMatriceO2(calibrationMatrixO2container);
     this->m_plaformsList.push_back(platformL);
 
     loadCalibrationMatriceOrdre2PLATFORM(platformR.getSensorId(), calibrationMatrixO2container);
-    platformL.setCalibrationMatriceO2PLATFORM(calibrationMatrixO2container);
+    platformL.setCalibrationMatriceO2(calibrationMatrixO2container);
     this->m_plaformsList.push_back(platformR);
 
     return true;
 }
 
-bool DataController::loadCalibrationMatriceOrdre2PLATFORM(uint sensorNumber, QGenericMatrix<12, 6, double>& matrice)
+bool DataController::loadCalibrationMatriceOrdre2PLATFORM(uint sensorNumber, PlaformMatrice& matrice)
 {
-  
     QString path;
     path.append(m_calibrationFilesPath);
     
@@ -125,7 +126,7 @@ bool DataController::loadCalibrationMatriceOrdre2PLATFORM(uint sensorNumber, QGe
             }
 
         }
-        QGenericMatrix<12, 6, double> calibrationMatrixO2(matriceData);
+        PlaformMatrice calibrationMatrixO2(matriceData);
         matrice = calibrationMatrixO2;
         inputFile.close();
     }
@@ -208,7 +209,7 @@ uint DataController::loadSensorToAnalogConfig()
     return this->m_sensorsList.count();
 }
 
-bool DataController::loadCalibrationMatriceOrdre2(uint sensorNumber, QGenericMatrix<12, 6, double>& matrice)
+bool DataController::loadCalibrationMatriceOrdre2(uint sensorNumber, SensorMatrice& matrice)
 {
     if (sensorNumber == 0) sensorNumber = 1;
 
@@ -216,7 +217,7 @@ bool DataController::loadCalibrationMatriceOrdre2(uint sensorNumber, QGenericMat
     path.append(m_calibrationFilesPath);
     path.append("/" + m_sensorCalibrationFiles[sensorNumber - 1]);
 
-    //qDebug() << "Ouverture matrice de calibration" << path;
+    qDebug() << "Ouverture matrice de calibration" << path;
 
     QFile inputFile(path);
 
@@ -237,7 +238,7 @@ bool DataController::loadCalibrationMatriceOrdre2(uint sensorNumber, QGenericMat
             }
 
         }
-        QGenericMatrix<12, 6, double> calibrationMatrixO2(matriceData);
+        SensorMatrice calibrationMatrixO2(matriceData);
         matrice = calibrationMatrixO2;
         inputFile.close();
     }
@@ -318,7 +319,8 @@ void DataController::handleResultsAvgZero(uint sensorid, const DataPacket& analo
     double darr[6];
 
     getSensor(sensorid).toString(false);
-    for (uint i = 0; i < 6; ++i) {
+    for (uint i = 0; i < 6; ++i) 
+    {
         darr[i] = analogZeroCorrection.dataValues[i];
         qDebug() << "dari : " << darr[i] << " ::" << analogZeroCorrection.dataValues[i];
     }
@@ -330,17 +332,18 @@ void DataController::handleResultsAvgZeroPlatform(uint sensorid, const DataPacke
 {
     qDebug() << "Handle new calibration avg result for platforme" << sensorid << "array " << getPlatform(sensorid).getSensorId();
 
-    double darr[6];
+    double darr[8];
 
     getPlatform(sensorid).toString(false);
 
     //change this nb of channels
-    for (uint i = 0; i < 6; ++i) {
+    for (uint i = 0; i < 8; ++i) 
+    {
         darr[i] = analogZeroCorrection.dataValues[i];
         qDebug() << "dari : " << darr[i] << " ::" << analogZeroCorrection.dataValues[i];
     }
     getPlatform(sensorid).setChannelCalibrationValues(darr);
-    for (uint i = 0; i < 6; ++i) qDebug() << getPlatform(sensorid).getChannelCalibrationValuesArr()[i];
+    for (uint i = 0; i < 8; ++i) qDebug() << getPlatform(sensorid).getChannelCalibrationValuesArr()[i];
 }
 
 #pragma endregion
@@ -348,24 +351,11 @@ void DataController::handleResultsAvgZeroPlatform(uint sensorid, const DataPacke
 #pragma region DATA PROCESSING
 //_____________________
 //Data Processing______
-const QGenericMatrix<1, 6, double> DataController::ChannelanalogToForce3axisForce(double rawAnalogChannelValues[6], Sensor& sensor)
-{
-    QGenericMatrix<1, 6, double> result;
-
-    double analogDataSquared[12];
-    for (uint i = 0; i < 6; i++) analogDataSquared[i] = rawAnalogChannelValues[i];
-    for (uint i = 0; i < 6; i++) analogDataSquared[i + 6] = rawAnalogChannelValues[i] * rawAnalogChannelValues[i];
-
-    QGenericMatrix<1, 12, double> analogValuesSquare(analogDataSquared);
-    result = sensor.getCalibrationMatriceO2() * analogValuesSquare;
-    
-    return result;
-}
 
 void DataController::processNewDataPacketFromNi(const DataPacket& d)
 {
     double dataBySensor[6] = { 0,0,0,0,0,0 };
-    //d.printDebug();
+    d.printDebug();
     emit this->gotNewDataPacket(d);
 
     for (auto gp = m_sensorsList.begin(); gp != m_sensorsList.end(); gp++)
@@ -399,7 +389,7 @@ void DataController::processNewDataPacketFromNi(const DataPacket& d)
         }
 
         //calculate forces
-        QGenericMatrix<1, 6, double> result = this->ChannelanalogToForce3axisForce(dataBySensor, (*gp));
+        QGenericMatrix<1, 6, double> result = (*gp).ChannelanalogToForce3axisForce(dataBySensor);
 
         DataPacket finalForce(6);
 
@@ -477,32 +467,13 @@ void DataController::processNewDataPacketFromNi(const DataPacket& d)
 
 }
 
-// Data processing platform
-const QGenericMatrix<1, 6, double> DataController::PLATFORMChannelanalogToForce3axisForce(double rawAnalogChannelValues[8], Sensor& sensor)
-{
-
-    // to do 
-    QGenericMatrix<1, 6, double> result;
-
-    double analogDataSquared[12];
-
-
-    for (uint i = 0; i < 6; i++) analogDataSquared[i] = rawAnalogChannelValues[i];
-    for (uint i = 0; i < 6; i++) analogDataSquared[i + 6] = rawAnalogChannelValues[i] * rawAnalogChannelValues[i];
-
-    QGenericMatrix<1, 12, double> analogValuesSquare(analogDataSquared);
-    result = sensor.getCalibrationMatriceO2PLATFORM() * analogValuesSquare;
-
-    return result;
-}
-
 void DataController::processNewDataPacketPlatformFromNi(const DataPacket& d)
 {
     double dataBySensor[8] = { 0,0,0,0,0,0,0,0 };
     //d.printDebug();
     //emit this->gotNewDataPacket(d);
 
-    for (auto gp = m_plaformsList.begin(); gp != m_sensorsList.end(); gp++)
+    for (auto gp = m_plaformsList.begin(); gp != m_plaformsList.end(); gp++)
     {
         uint currentSensorID = (*gp).getSensorId();
 
@@ -533,7 +504,7 @@ void DataController::processNewDataPacketPlatformFromNi(const DataPacket& d)
         }
 
         //calculate forces
-        QGenericMatrix<1, 6, double> result = this->ChannelanalogToForce3axisForce(dataBySensor, (*gp));
+        QGenericMatrix<1, 6, double> result = (*gp).ChannelanalogToForce3axisForce(dataBySensor);
 
         DataPacket finalForce(6);
 
@@ -579,9 +550,9 @@ void DataController::displaySensor() const
     }
 }
 
-Sensor& DataController::getPlatform(uint id)
+Platform& DataController::getPlatform(uint id)
 {
-    for (Sensor& s : this->m_plaformsList) {
+    for (auto& s : this->m_plaformsList) {
         if (id == s.getSensorId()) {
             return s;
         }
@@ -592,7 +563,7 @@ Sensor& DataController::getPlatform(uint id)
 
 Sensor& DataController::getSensor(uint id)
 {
-    for (Sensor& s : this->m_sensorsList) {
+    for (auto& s : this->m_sensorsList) {
         if (id == s.getSensorId()) {
             return s;
         }

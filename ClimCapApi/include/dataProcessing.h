@@ -127,7 +127,7 @@ private:
 	const MyUDP* udpClient;
 
 	QVector<Sensor> m_sensorsList;
-	QVector<Sensor> m_plaformsList;
+	QVector<Platform> m_plaformsList;
 
 	QString m_configFilePath;
 	QString m_calibrationFilesPath;
@@ -140,9 +140,6 @@ private:
 	bool applyRotMatrix;
 	bool applyOffset;
 	bool applyWallRotation;
-
-	const QGenericMatrix<1, 6, double> PLATFORMChannelanalogToForce3axisForce(double rawAnalogChannelValues[6], Sensor& sensor);
-	const QGenericMatrix<1, 6, double> ChannelanalogToForce3axisForce(double rawAnalogChannelValues[6], Sensor& sensor);
 	
 	void clearSensorConfiguration();
 
@@ -152,7 +149,7 @@ public:
 
 	void displaySensor() const;
 
-	Sensor& getPlatform(uint id);
+	Platform& getPlatform(uint id);
 	Sensor& getSensor(uint id);
 
 	void calibrate_sensors(uint nbSamples, int mode);
@@ -161,9 +158,9 @@ public:
 	uint loadPlatformToAnalogConfig();
 	uint loadSensorToAnalogConfig();
 
-	bool loadCalibrationMatriceOrdre2(uint sensorNumber, QGenericMatrix<12, 6, double>& matrice);
+	bool loadCalibrationMatriceOrdre2(uint sensorNumber, SensorMatrice& matrice);
 
-	bool loadCalibrationMatriceOrdre2PLATFORM(uint sensorNumber, QGenericMatrix<12, 6, double>& matrice);
+	bool loadCalibrationMatriceOrdre2PLATFORM(uint sensorNumber, PlaformMatrice& matrice);
 
 	void connectToUdpSteam(const MyUDP* udps);
 

@@ -265,6 +265,11 @@ public:
 			MyNidaqmxConnectionThread->startPlaformCalibration();
 			MyDataController->calibrate_sensors(m_sampleCalibrationNumber, 2);
 		}
+
+		if (globals::DUMMY_SENDER)
+		{
+
+		}
 	}
 #pragma endregion
 

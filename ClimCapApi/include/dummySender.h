@@ -43,14 +43,16 @@ public slots:
     void onTimeout() {
 
 			double* dummydata = new double[m_numberOfChannels];
-			for (uint i = 0; i < ((m_numberOfChannels) / 6); i++)
+			for (uint i = 0; i < ((m_numberOfChannels) / 8); i++)
 			{
-				dummydata[i * 6] = 1;
-				dummydata[i * 6 + 1] = 2;
-				dummydata[i * 6 + 2] = 3;
-				dummydata[i * 6 + 3] = -10;
-				dummydata[i * 6 + 4] = -20;
-				dummydata[i * 6 + 5] = -30;
+				dummydata[i * 8] = 1;
+				dummydata[i * 8 + 1] = 2;
+				dummydata[i * 8 + 2] = 3;
+				dummydata[i * 8 + 3] = 4;
+				dummydata[i * 8 + 4] = 5;
+				dummydata[i * 8 + 5] = 6;
+				dummydata[i * 8 + 6] = 7;
+				dummydata[i * 8 + 7] = 8;
 			}
 			//dummydata[m_numberOfChannels - 1] = 5;
 

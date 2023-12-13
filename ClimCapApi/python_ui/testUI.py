@@ -637,13 +637,19 @@ class Wid(QMainWindow):
     def settings_action(self):
         
         #domo
-        sensor_ids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+        #sensor_ids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+        sensor_ids = []
         
         sensor_frequency = 200
         
         for sensor_id in sensor_ids:
             current_sensor = Sensor(sensor_id, 6, sensor_frequency)
-            self.data_container.add_sensor(current_sensor)        
+            self.data_container.add_sensor(current_sensor)       
+            
+        current_sensor = Sensor(41, 8, sensor_frequency)
+        self.data_container.add_sensor(current_sensor)         
+        current_sensor = Sensor(40, 8, sensor_frequency)
+        self.data_container.add_sensor(current_sensor)    
         
         self.plotter.plot_data()
         self.plot_controller.set_up_widget()          
@@ -821,6 +827,7 @@ class Wid(QMainWindow):
     def update_plot_data(self, rdata):
         sensor_id = rdata["sid"]
 
+        print(rdata)
         if sensor_id == 0:
             data = rdata["data"]
             self.data_container.add_chrono_data_point( data[0] )

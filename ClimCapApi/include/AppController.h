@@ -167,12 +167,18 @@ public:
 				uint NsensorLoaded = MyDataController->loadSensorToAnalogConfig();
 				if (NsensorLoaded == 0) { qCritical() << "Echec dans le chargement de la configuration capteur, vide"; return 0; };
 
-				int totalNumberOfChannels = NsensorLoaded * 6;
+				int totalNumberOfChannelssensor = NsensorLoaded * 6;
+
+				uint NplatformLoaded = MyDataController->loadPlatformToAnalogConfig();
+
+				int totalNumberOfChannelsplat = NplatformLoaded * 8;
 
 				if (dummySender != nullptr)
-					dummySender->setNbchan(totalNumberOfChannels);
+				{
+					dummySender->setNbchan(totalNumberOfChannelsplat);
+				}
 
-				qDebug("set up dummy sender mode");
+				qDebug() << "set up dummy sender mode nbchan plat " << totalNumberOfChannelsplat;
 			}
 			else
 			{
@@ -228,8 +234,13 @@ public:
 			dummySender = new DummySender();
 			errorFlag = this->reloadSensorConfiguration();
 			qDebug("init dummy senser");
+			//QObject::connect(dummySender, SIGNAL(newDataPacketNi(const DataPacket&)),
+			//	MyDataController, SLOT(processNewDataPacketFromNi(const DataPacket&)));
+			
 			QObject::connect(dummySender, SIGNAL(newDataPacketNi(const DataPacket&)),
-				MyDataController, SLOT(processNewDataPacketFromNi(const DataPacket&)));
+				MyDataController, SLOT(processNewDataPacketPlatformFromNi(const DataPacket&)));
+
+			
 		}
 
 		return errorFlag;
@@ -268,7 +279,9 @@ public:
 
 		if (globals::DUMMY_SENDER)
 		{
-
+			dummySender->start();
+			//MyDataController->calibrate_sensors(m_sampleCalibrationNumber, 1);
+			MyDataController->calibrate_sensors(m_sampleCalibrationNumber, 2);
 		}
 	}
 #pragma endregion

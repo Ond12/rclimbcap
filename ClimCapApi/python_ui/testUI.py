@@ -638,18 +638,20 @@ class Wid(QMainWindow):
         
         #domo
         #sensor_ids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
-        sensor_ids = []
+        sensor_ids = [1]
         
         #41 gauche
         #40 droite
         #plat marche pas si disable sensoracq
+        #fin cali stop auto? et boutton gris
+        #bug calibration matrice
         sensor_frequency = 200
         
         for sensor_id in sensor_ids:
             current_sensor = Sensor(sensor_id, 6, sensor_frequency)
             self.data_container.add_sensor(current_sensor)       
             
-        add_platformes = True
+        add_platformes = False
         if add_platformes:
             current_sensor = Sensor(41, 8, sensor_frequency)
             self.data_container.add_sensor(current_sensor)         

@@ -11,7 +11,7 @@ namespace globals
 	constexpr auto  DEFAULT_TRIGGER_SETTING = 0;
 	constexpr auto  DEFAULT_SAMPLE_CALIBRATION_NUMBER = 1000;
 
-	constexpr auto  ENABLE_PLATFORM = true;
+	constexpr auto  ENABLE_PLATFORM = false;
 	constexpr auto  ENABLE_SENSOR = true;
 
 	//NIDAQmx globals

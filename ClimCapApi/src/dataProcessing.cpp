@@ -86,13 +86,13 @@ uint DataController::loadPlatformToAnalogConfig()
     platformL.setCalibrationMatriceO2(calibrationMatrixO2container);
     this->m_plaformsList.push_back(platformL);
     qDebug() << "- Platforme L" << platformL.getSensorId() << " OK -";
-    platformL.toString(true);
+    //platformL.toString(true);
 
     Platform platformR(41, 8, 0);
     loadCalibrationMatriceOrdre2PLATFORM(platformR.getSensorId(), calibrationMatrixO2container);
     platformR.setCalibrationMatriceO2(calibrationMatrixO2container);
     this->m_plaformsList.push_back(platformR);
-    platformR.toString(true);
+    //platformR.toString(true);
     qDebug() << "- Platforme R" << platformR.getSensorId() << " OK -";
 
     return this->m_plaformsList.count();
@@ -266,7 +266,9 @@ void DataController::calibrate_sensors(uint nbSamples, int mode)
             auto curSensor = this->m_sensorsList.at(i);
 
             createThreadAvgZero(curSensor.getSensorId(), curSensor.getfirstChannel(), nbSamples, curSensor.getNumberOfChan());
+            
         }
+        break;
     case 2:
         for (uint i = 0; i < this->m_plaformsList.count(); ++i)
         {
@@ -332,10 +334,10 @@ void DataController::handleResultsAvgZero(uint sensorid, const DataPacket& analo
         for (uint i = 0; i < 6; ++i)
         {
             darr[i] = analogZeroCorrection.dataValues[i];
-            qDebug() << "dari : " << darr[i] << " ::" << analogZeroCorrection.dataValues[i];
+            //qDebug() << "dari : " << darr[i] << " ::" << analogZeroCorrection.dataValues[i];
         }
         getSensor(sensorid).setChannelCalibrationValues(darr);
-        for (uint i = 0; i < 6; ++i) qDebug() << getSensor(sensorid).getChannelCalibrationValuesArr()[i];
+        //for (uint i = 0; i < 6; ++i) qDebug() << getSensor(sensorid).getChannelCalibrationValuesArr()[i];
         qDebug() << "Handle new calibration avg result for sensor" << sensorid << "sn array " << getSensor(sensorid).getSensorId();
 
     }
@@ -347,7 +349,7 @@ void DataController::handleResultsAvgZeroPlatform(uint sensorid, const DataPacke
 
     double darr[8];
 
-    getPlatform(sensorid).toString(false);
+    //getPlatform(sensorid).toString(false);
 
     //change this nb of channels
     for (uint i = 0; i < 8; ++i) 

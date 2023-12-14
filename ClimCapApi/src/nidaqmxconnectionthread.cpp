@@ -378,7 +378,6 @@ int32 CVICALLBACK NidaqmxConnectionThread::EveryNCallbackPlatform(TaskHandle tas
 	int32       read = 0;
 	double* data = new double[numberOfChannels];
 
-
 	DAQmxErrChk(DAQmxReadAnalogF64(taskHandle, NidaqmxConnectionThread::m_callBackRate,
 		10, DAQmx_Val_GroupByScanNumber, data, bufferSize, &read, NULL));
 
@@ -517,10 +516,8 @@ void NidaqmxConnectionThread::stopSensorCalibration() const
 
 void NidaqmxConnectionThread::startPlaformAcquisition() const
 {
-	qDebug("la");
 	if (m_platformAcquisitionTask != nullptr)
 	{
-		qDebug("ici");
 		m_platformAcquisitionTask->Start();
 	}	
 	if (m_enableStartTrigger)

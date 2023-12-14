@@ -56,7 +56,7 @@ public:
 
 	virtual ~CalibrationWork() 
 	{
-		qDebug("deleting calibration work");
+		//qDebug("deleting calibration work");
 		for (QVector<double>* row : m_data) {
 			delete row;
 		}

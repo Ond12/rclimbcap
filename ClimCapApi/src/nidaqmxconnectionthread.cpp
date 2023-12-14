@@ -280,6 +280,7 @@ void NidaqmxConnectionThread::setUPPlatformTask(float acquisitionRate, float cal
 
 	std::string taskname = current_card_name.toStdString() + "forceAcq";
 	current_task = new NIDAQmx::Task(taskname);
+	this->m_platformAcquisitionTask = current_task;
 
 	QString channelNamePrefix = current_card_name + "/ai";
 
@@ -337,6 +338,8 @@ void NidaqmxConnectionThread::setUpPlatformCalibrationTask(float acquisitionRate
 
 	std::string taskname = current_card_name.toStdString() + "calibration";
 	current_task = new NIDAQmx::Task(taskname);
+
+	this->m_platformCalibrationTask = current_task;
 	QString channelNamePrefix = this->platformCardName + "/ai";
 
 	qDebug() << "initialisation" << taskname.c_str();
@@ -362,6 +365,7 @@ Error:
 
 int32 CVICALLBACK NidaqmxConnectionThread::EveryNCallbackPlatform(TaskHandle taskHandle, int32 everyNsamplesEventType, uInt32 nSamples, void* callbackData)
 {
+	
 	uint numberOfChannels = 16;
 	uint bufferSize = NidaqmxConnectionThread::m_callBackRate * numberOfChannels;
 
@@ -401,7 +405,7 @@ int32 CVICALLBACK NidaqmxConnectionThread::EveryNCallbackPlatform(TaskHandle tas
 		DataPacket DP2(numberOfChannels);
 		std::copy(dummydata, dummydata + numberOfChannels, std::begin(DP2.dataValues));
 		delete[] dummydata;
-		//DP2.printDebug();
+		DP2.printDebug();
 		emit NidaqmxConnectionThread::GetInstance()->newDataPacketPlatform(DP2);
 	}
 	else
@@ -513,7 +517,12 @@ void NidaqmxConnectionThread::stopSensorCalibration() const
 
 void NidaqmxConnectionThread::startPlaformAcquisition() const
 {
-	if (m_platformAcquisitionTask != nullptr) m_platformAcquisitionTask->Start();
+	qDebug("la");
+	if (m_platformAcquisitionTask != nullptr)
+	{
+		qDebug("ici");
+		m_platformAcquisitionTask->Start();
+	}	
 	if (m_enableStartTrigger)
 	{
 		qDebug("En attente de declenchement platformes");

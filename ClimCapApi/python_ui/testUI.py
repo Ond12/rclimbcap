@@ -640,17 +640,22 @@ class Wid(QMainWindow):
         #sensor_ids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
         sensor_ids = []
         
+        #41 gauche
+        #40 droite
+        #plat marche pas si disable sensoracq
         sensor_frequency = 200
         
         for sensor_id in sensor_ids:
             current_sensor = Sensor(sensor_id, 6, sensor_frequency)
             self.data_container.add_sensor(current_sensor)       
             
-        current_sensor = Sensor(41, 8, sensor_frequency)
-        self.data_container.add_sensor(current_sensor)         
-        current_sensor = Sensor(40, 8, sensor_frequency)
-        self.data_container.add_sensor(current_sensor)    
-        
+        add_platformes = True
+        if add_platformes:
+            current_sensor = Sensor(41, 8, sensor_frequency)
+            self.data_container.add_sensor(current_sensor)         
+            current_sensor = Sensor(40, 8, sensor_frequency)
+            self.data_container.add_sensor(current_sensor)    
+            
         self.plotter.plot_data()
         self.plot_controller.set_up_widget()          
 
@@ -698,7 +703,6 @@ class Wid(QMainWindow):
                         dataforce = curr_sensor.get_forces_data().to_dataframe()
                         dataanalog = curr_sensor.get_analog_data().to_dataframe()
                         curr_sensor.get_forces_data().print_debug_data()
-                        
             
                         df = pd.concat([dataforce, dataanalog], axis=1)
                         
@@ -716,6 +720,8 @@ class Wid(QMainWindow):
         self.plotter.clear_plot()
         self.plot_controller.clean_widget()
         self.plot_controller.set_up_widget() 
+        
+        self.settings_action()
 
     def apply_filter_action(self):
         self.data_container.apply_filter_hcutoff_to_sensors()
@@ -827,7 +833,7 @@ class Wid(QMainWindow):
     def update_plot_data(self, rdata):
         sensor_id = rdata["sid"]
 
-        print(rdata)
+        #print(rdata)
         if sensor_id == 0:
             data = rdata["data"]
             self.data_container.add_chrono_data_point( data[0] )

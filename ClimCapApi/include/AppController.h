@@ -43,7 +43,7 @@ public:
 		m_callbackrate = 1;
 		m_calibrationRate = 1000;
 		m_calibrationTime = 1;
-		m_calibrationNumberSample = m_calibrationRate * m_calibrationTime;
+		m_calibrationNumberSample = 1000;
 	}
 
 	~AppController()
@@ -134,7 +134,8 @@ public:
 					int numberOfSample = m_totalAcqTimeS * m_sampleRate; //used if acquisition have a define time else its infinity
 
 					MyNidaqmxConnectionThread->setUPPlatformTask(m_sampleRate, m_callbackrate, totalNumberOfChannels, m_triggerEnable, numberOfSample);
-					MyNidaqmxConnectionThread->setUpPlatformCalibrationTask(m_calibrationRate, m_callbackrate, totalNumberOfChannels, m_triggerEnable, m_calibrationNumberSample);
+					//MyNidaqmxConnectionThread->setUpPlatformCalibrationTask(m_calibrationRate, m_callbackrate, totalNumberOfChannels, m_triggerEnable, m_calibrationNumberSample);
+					MyNidaqmxConnectionThread->setUpPlatformCalibrationTask(1, m_callbackrate, totalNumberOfChannels, m_triggerEnable, 5);
 				}
 				else 
 				{
@@ -237,8 +238,8 @@ public:
 			//QObject::connect(dummySender, SIGNAL(newDataPacketNi(const DataPacket&)),
 			//	MyDataController, SLOT(processNewDataPacketFromNi(const DataPacket&)));
 			
-			QObject::connect(dummySender, SIGNAL(newDataPacketNi(const DataPacket&)),
-				MyDataController, SLOT(processNewDataPacketPlatformFromNi(const DataPacket&)));
+			//QObject::connect(dummySender, SIGNAL(newDataPacketNi(const DataPacket&)),
+			//	MyDataController, SLOT(processNewDataPacketPlatformFromNi(const DataPacket&)));
 
 			
 		}

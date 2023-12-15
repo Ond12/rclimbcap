@@ -85,15 +85,15 @@ uint DataController::loadPlatformToAnalogConfig()
     loadCalibrationMatriceOrdre2PLATFORM(platformL.getSensorId(), calibrationMatrixO2container);
     platformL.setCalibrationMatriceO2(calibrationMatrixO2container);
     this->m_plaformsList.push_back(platformL);
-    qDebug() << "- Platforme L" << platformL.getSensorId() << " OK -";
+    //qDebug() << "- Platforme L" << platformL.getSensorId() << " OK -";
     //platformL.toString(true);
 
-    Platform platformR(41, 8, 0);
-    loadCalibrationMatriceOrdre2PLATFORM(platformR.getSensorId(), calibrationMatrixO2container);
-    platformR.setCalibrationMatriceO2(calibrationMatrixO2container);
-    this->m_plaformsList.push_back(platformR);
-    //platformR.toString(true);
-    qDebug() << "- Platforme R" << platformR.getSensorId() << " OK -";
+    //Platform platformR(41, 8, 0);
+    //loadCalibrationMatriceOrdre2PLATFORM(platformR.getSensorId(), calibrationMatrixO2container);
+    //platformR.setCalibrationMatriceO2(calibrationMatrixO2container);
+    //this->m_plaformsList.push_back(platformR);
+    ////platformR.toString(true);
+    //qDebug() << "- Platforme R" << platformR.getSensorId() << " OK -";
 
     return this->m_plaformsList.count();
 }
@@ -106,7 +106,7 @@ bool DataController::loadCalibrationMatriceOrdre2PLATFORM(uint sensorNumber, Pla
     //NOT IDEAL TO DO 
     path.append("/" + m_plaformCalibrationFiles[sensorNumber - 40]);
 
-    qDebug() << "Ouverture matrice de calibration platforme " << path;
+    //qDebug() << "Ouverture matrice de calibration platforme " << path;
 
     QFile inputFile(path);
 
@@ -273,8 +273,8 @@ void DataController::calibrate_sensors(uint nbSamples, int mode)
         for (uint i = 0; i < this->m_plaformsList.count(); ++i)
         {
             auto curSensor = this->m_plaformsList.at(i);
-
-            createThreadAvgZero(curSensor.getSensorId(), curSensor.getfirstChannel(), nbSamples, curSensor.getNumberOfChan());
+            //domo
+            createThreadAvgZero(curSensor.getSensorId(), curSensor.getfirstChannel(), 5, curSensor.getNumberOfChan());
         }
     default:
         break;
@@ -306,8 +306,17 @@ void DataController::createThreadAvgZero(uint sensorID, uint sensorStartChannel,
     connect(worker, &CalibrationWork::finished, worker, &CalibrationWork::deleteLater);
     connect(thread, &QThread::finished, thread, &QThread::deleteLater);
 
-    connect(this, SIGNAL(gotNewDataPacket(DataPacket)), worker, SLOT(getNewAnalogData(DataPacket)));
-    connect(worker, SIGNAL(resultReady(uint, DataPacket)), this, SLOT(handleResultsAvgZero(uint, DataPacket)));
+    if (sensorID > 11)
+    {
+        connect(this, SIGNAL(gotNewDataPacketPlatform(DataPacket)), worker, SLOT(getNewAnalogData(DataPacket)));
+        connect(worker, SIGNAL(resultReady(uint, DataPacket)), this, SLOT(handleResultsAvgZero(uint, DataPacket)));
+    }
+    else 
+    {
+        connect(this, SIGNAL(gotNewDataPacket(DataPacket)), worker, SLOT(getNewAnalogData(DataPacket)));
+        connect(worker, SIGNAL(resultReady(uint, DataPacket)), this, SLOT(handleResultsAvgZero(uint, DataPacket)));
+    }
+
     connect(worker, SIGNAL(progress(int)), progressDialog, SLOT(setValue(int)));
 
     connect(progressDialog, &QProgressDialog::canceled, worker, &CalibrationWork::finished);
@@ -486,7 +495,7 @@ void DataController::processNewDataPacketPlatformFromNi(const DataPacket& d)
 {
     double dataBySensor[8] = { 0,0,0,0,0,0,0,0 };
     //d.printDebug();
-    emit this->gotNewDataPacket(d);
+    emit this->gotNewDataPacketPlatform(d);
 
     for (auto gp = m_plaformsList.begin(); gp != m_plaformsList.end(); gp++)
     {

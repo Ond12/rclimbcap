@@ -17,7 +17,7 @@ public:
 	DummySender()
 	{
         timer = new QTimer(this);
-		m_numberOfChannels = 12;
+		m_numberOfChannels = 16;
 		m_frequency = 200;
         connect(timer, &QTimer::timeout, this, &DummySender::onTimeout);
         //timer->start(1000); 
@@ -43,16 +43,9 @@ public slots:
     void onTimeout() {
 
 			double* dummydata = new double[m_numberOfChannels];
-			for (uint i = 0; i < ((m_numberOfChannels) / 8); i++)
+			for (uint i = 0; i < ((m_numberOfChannels)); i++)
 			{
-				dummydata[i * 8] = 1;
-				dummydata[i * 8 + 1] = 2;
-				dummydata[i * 8 + 2] = 3;
-				dummydata[i * 8 + 3] = 4;
-				dummydata[i * 8 + 4] = 5;
-				dummydata[i * 8 + 5] = 6;
-				dummydata[i * 8 + 6] = 7;
-				dummydata[i * 8 + 7] = 8;
+				dummydata[i] = i;
 			}
 			//dummydata[m_numberOfChannels - 1] = 5;
 

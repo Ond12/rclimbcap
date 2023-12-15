@@ -86,10 +86,6 @@ void MainWindow::appSettingsChanged()
 
 void MainWindow::startCalibration()
 {
-    m_ui->actionConnect->setEnabled(false);
-    m_ui->actionDisconnect->setEnabled(true);
-    m_ui->actionCalibration->setEnabled(false);
-
     this->MyApc->startCalibrationTask();
 
     showStatusMessage(tr("Lancement Calibration"));

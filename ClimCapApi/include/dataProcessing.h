@@ -73,7 +73,7 @@ public slots:
 
 	void getNewAnalogData(const DataPacket& d)
 	{ 
-		//qDebug() << "work s:"<< m_sensorID << " at " << this->m_steps << "/" << this->m_maxSampleNumber << " / nbchannel " << m_channelsNumbers;
+		qDebug() << "work s:"<< m_sensorID << " at " << this->m_steps << "/" << this->m_maxSampleNumber << " / nbchannel " << m_channelsNumbers;
 
 		uint channelIdx = (this->m_sensorStartChannel);
 
@@ -109,6 +109,7 @@ public slots:
 		}
 
 	};
+
 
 signals:
 
@@ -174,5 +175,6 @@ public slots:
 
 signals:
 	void gotNewDataPacket(const DataPacket& data);
+	void gotNewDataPacketPlatform(const DataPacket& data);
 };
 

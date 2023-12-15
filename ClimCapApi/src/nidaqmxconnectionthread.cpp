@@ -246,8 +246,6 @@ void NidaqmxConnectionThread::setUpCalibrationTask(float acquisitionRate, float 
 	m_calibrationTask = new NIDAQmx::Task(taskname);
 	QString channelNamePrefix = this->cardName + "/ai";
 
-	qDebug() << "initialisation" << taskname.c_str();
-
 	for (uint i = 0; i < nOfChannels; ++i)
 	{
 		QString channelName = channelNamePrefix + QString::number(i);
@@ -258,6 +256,13 @@ void NidaqmxConnectionThread::setUpCalibrationTask(float acquisitionRate, float 
 	DAQmxErrChk(DAQmxCfgSampClkTiming(m_calibrationTask->m_handle, "", acquisitionRate, DAQmx_Val_Rising, DAQmx_Val_FiniteSamps, numberOfSample));
 	DAQmxErrChk(DAQmxRegisterEveryNSamplesEvent(m_calibrationTask->m_handle, DAQmx_Val_Acquired_Into_Buffer, callBackRate, 0, &NidaqmxConnectionThread::EveryNCallback, NULL));
 	DAQmxErrChk(DAQmxRegisterDoneEvent(m_calibrationTask->m_handle, 0, DoneCallback, NULL));
+
+
+	qDebug() << "Tache calibration initialisee :"
+		<< taskname.c_str()
+		<< " - Frequence: " << acquisitionRate << " hz"
+		<< " - Taille de trame " << callBackRate << " ech "
+		<< " - Nb voies: " << nOfChannels;
 
 Error:
 
@@ -331,33 +336,35 @@ Error:
 
 void NidaqmxConnectionThread::setUpPlatformCalibrationTask(float acquisitionRate, float callBackRate, uint nOfChannels, bool triggerEnable, uint numberOfSample)
 {
-	int32	error = 0;
+	int32       error = 0;
+	char        errBuff[2048] = { '\0' };
 
-	QString current_card_name = this->platformCardName;
-	auto* current_task = this->m_platformCalibrationTask;
-
-	std::string taskname = current_card_name.toStdString() + "calibration";
-	current_task = new NIDAQmx::Task(taskname);
-
-	this->m_platformCalibrationTask = current_task;
+	std::string taskname = this->platformCardName.toStdString() + "calibrationPlatform";
+	this->m_platformCalibrationTask = new NIDAQmx::Task(taskname);
 	QString channelNamePrefix = this->platformCardName + "/ai";
-
-	qDebug() << "initialisation" << taskname.c_str();
 
 	for (uint i = 0; i < nOfChannels; ++i)
 	{
 		QString channelName = channelNamePrefix + QString::number(i);
 		std::string str = channelName.toStdString();
-		current_task->AddChannel(str, DAQmx_Val_RSE, -10.0, 10.0);
+		this->m_platformCalibrationTask->AddChannel(str, DAQmx_Val_RSE, -10.0, 10.0);
 	}
 
-	DAQmxErrChk(DAQmxCfgSampClkTiming(current_task->m_handle, "", acquisitionRate, DAQmx_Val_Rising, DAQmx_Val_FiniteSamps, numberOfSample));
-	DAQmxErrChk(DAQmxRegisterEveryNSamplesEvent(current_task->m_handle, DAQmx_Val_Acquired_Into_Buffer, callBackRate, 0, &NidaqmxConnectionThread::EveryNCallbackPlatform, NULL));
-	DAQmxErrChk(DAQmxRegisterDoneEvent(current_task->m_handle, 0, DoneCallback, NULL));
+	DAQmxErrChk(DAQmxCfgSampClkTiming(this->m_platformCalibrationTask->m_handle, "", acquisitionRate, DAQmx_Val_Rising, DAQmx_Val_FiniteSamps, numberOfSample));
+	DAQmxErrChk(DAQmxRegisterEveryNSamplesEvent(this->m_platformCalibrationTask->m_handle, DAQmx_Val_Acquired_Into_Buffer, callBackRate, 0, &NidaqmxConnectionThread::EveryNCallbackPlatform, NULL));
+	DAQmxErrChk(DAQmxRegisterDoneEvent(this->m_platformCalibrationTask->m_handle, 0, DoneCallback, NULL));
+
+
+	qDebug() << "Tache calibration platformes initialisee :"
+		<< taskname.c_str()
+		<< " - Frequence: " << acquisitionRate << " hz"
+		<< " - Taille de trame " << callBackRate << " ech "
+		<< " - Nb voies: " << nOfChannels
+		<< " - Nb sample: " << numberOfSample;
 
 Error:
+
 	if (DAQmxFailed(error)) {
-		char        errBuff[2048] = { '\0' };
 		DAQmxGetExtendedErrorInfo(errBuff, 2048);
 		qDebug("DAQmx Error: %s\n", errBuff);
 	}
@@ -365,8 +372,7 @@ Error:
 
 int32 CVICALLBACK NidaqmxConnectionThread::EveryNCallbackPlatform(TaskHandle taskHandle, int32 everyNsamplesEventType, uInt32 nSamples, void* callbackData)
 {
-	
-	uint numberOfChannels = 16;
+	uint numberOfChannels = 8;
 	uint bufferSize = NidaqmxConnectionThread::m_callBackRate * numberOfChannels;
 
 	DataPacket DP(numberOfChannels);
@@ -386,32 +392,32 @@ int32 CVICALLBACK NidaqmxConnectionThread::EveryNCallbackPlatform(TaskHandle tas
 		//qDebug("Acquisition de %d echantillons. Total %d\r", (int)read, (int)(totalRead += read));
 	//}
 
-
 	if (globals::DEBUG_MOD_PLATFORM)
 	{
 		double* dummydata = new double[numberOfChannels];
+		
 		for (uint i = 0; i < (numberOfChannels / 8); i++)
 		{
-			dummydata[i * 6] = 10;
-			dummydata[i * 6 + 1] = 10;
-			dummydata[i * 6 + 2] = 10;
-			dummydata[i * 6 + 3] = -40;
-			dummydata[i * 6 + 4] = -50;
-			dummydata[i * 6 + 5] = -60;
-			dummydata[i * 6 + 6] = -70;
-			dummydata[i * 6 + 7] = -80;
+			dummydata[i * 8] = 10;
+			dummydata[i * 8 + 1] = 20;
+			dummydata[i * 8 + 2] = 20;
+			dummydata[i * 8 + 3] = -40;
+			dummydata[i * 8 + 4] = -50;
+			dummydata[i * 8 + 5] = -60;
+			dummydata[i * 8 + 6] = -70;
+			dummydata[i * 8 + 7] = -80;
 		}
+
 		DataPacket DP2(numberOfChannels);
 		std::copy(dummydata, dummydata + numberOfChannels, std::begin(DP2.dataValues));
 		delete[] dummydata;
-		DP2.printDebug();
+		//DP2.printDebug();
 		emit NidaqmxConnectionThread::GetInstance()->newDataPacketPlatform(DP2);
 	}
 	else
 	{
 		std::copy(data, data + numberOfChannels, std::begin(DP.dataValues));
 		delete[] data;
-
 		emit NidaqmxConnectionThread::GetInstance()->newDataPacketPlatform(DP);
 	}
 
@@ -498,8 +504,11 @@ void NidaqmxConnectionThread::startSensorAcquisition() const
 
 void NidaqmxConnectionThread::stopSensorAcquisition() const
 {
-	if (m_acquisitionTask != nullptr) m_acquisitionTask->Stop();
-	qDebug("Fin de l'acquisition");
+	if (m_acquisitionTask != nullptr)
+	{
+		m_acquisitionTask->Stop();
+		qDebug("Fin de l'acquisition");
+	}
 };
 
 void NidaqmxConnectionThread::startSensorCalibration() const
@@ -507,12 +516,12 @@ void NidaqmxConnectionThread::startSensorCalibration() const
 	if (m_calibrationTask != nullptr) m_calibrationTask->Start();
 }
 
-//__PLATFORM___________________________________________________________________________
-
 void NidaqmxConnectionThread::stopSensorCalibration() const
 {
 	if (m_calibrationTask != nullptr) m_calibrationTask->Stop();
 }
+
+//__PLATFORM___________________________________________________________________________
 
 void NidaqmxConnectionThread::startPlaformAcquisition() const
 {
@@ -530,6 +539,7 @@ void NidaqmxConnectionThread::startPlaformAcquisition() const
 	}
 }
 
+
 void NidaqmxConnectionThread::stopPlaformAcquisition() const
 {
 	if (m_platformAcquisitionTask != nullptr) m_platformAcquisitionTask->Stop();
@@ -537,7 +547,10 @@ void NidaqmxConnectionThread::stopPlaformAcquisition() const
 
 void NidaqmxConnectionThread::startPlaformCalibration() const
 {
-	if (m_platformAcquisitionTask != nullptr) m_platformAcquisitionTask->Start();
+	if (m_platformCalibrationTask != nullptr) {
+		qDebug("Debut de calibration platformes");
+		m_platformCalibrationTask->Start();
+	}
 }
 
 void NidaqmxConnectionThread::stopPlaformCalibration() const

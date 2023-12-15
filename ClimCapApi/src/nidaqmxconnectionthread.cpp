@@ -372,7 +372,7 @@ Error:
 
 int32 CVICALLBACK NidaqmxConnectionThread::EveryNCallbackPlatform(TaskHandle taskHandle, int32 everyNsamplesEventType, uInt32 nSamples, void* callbackData)
 {
-	uint numberOfChannels = 8;
+	uint numberOfChannels = 16;
 	uint bufferSize = NidaqmxConnectionThread::m_callBackRate * numberOfChannels;
 
 	DataPacket DP(numberOfChannels);
@@ -400,7 +400,7 @@ int32 CVICALLBACK NidaqmxConnectionThread::EveryNCallbackPlatform(TaskHandle tas
 		{
 			dummydata[i * 8] = 10;
 			dummydata[i * 8 + 1] = 20;
-			dummydata[i * 8 + 2] = 20;
+			dummydata[i * 8 + 2] = 30;
 			dummydata[i * 8 + 3] = -40;
 			dummydata[i * 8 + 4] = -50;
 			dummydata[i * 8 + 5] = -60;

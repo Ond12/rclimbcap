@@ -274,8 +274,9 @@ void DataController::calibrate_sensors(uint nbSamples, int mode)
         {
             auto curSensor = this->m_plaformsList.at(i);
             //domo
-            createThreadAvgZero(curSensor.getSensorId(), curSensor.getfirstChannel(), 5, curSensor.getNumberOfChan());
+            createThreadAvgZero(curSensor.getSensorId(), curSensor.getfirstChannel(), nbSamples, curSensor.getNumberOfChan());
         }
+        break;
     default:
         break;
     }   

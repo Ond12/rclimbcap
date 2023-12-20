@@ -16,9 +16,9 @@
 DataController::DataController(QObject* parent)
     : QObject{ parent }
 {
-    this->applyRotMatrix = true;
+    this->applyRotMatrix = false;
     this->applyOffset = true;
-    this->applyWallRotation = true;
+    this->applyWallRotation = false;
 
     m_calibrationFilesPath = globals::MATRICES_FILES_PATH;
 
@@ -81,19 +81,19 @@ uint DataController::loadPlatformToAnalogConfig()
 
     PlaformMatrice calibrationMatrixO2container;
 
-    Platform platformL(40, 0, 0);
+    Platform platformL(40, 8, 0);
     loadCalibrationMatriceOrdre2PLATFORM(platformL.getSensorId(), calibrationMatrixO2container);
-    platformL.setCalibrationMatriceO2(calibrationMatrixO2container);
+    platformL.setCalibrationMatrice02platform(calibrationMatrixO2container);
     this->m_plaformsList.push_back(platformL);
-    //qDebug() << "- Platforme L" << platformL.getSensorId() << " OK -";
     //platformL.toString(true);
+    qDebug() << "- Platforme L" << platformL.getSensorId() << " OK -";
 
-    //Platform platformR(41, 8, 0);
-    //loadCalibrationMatriceOrdre2PLATFORM(platformR.getSensorId(), calibrationMatrixO2container);
-    //platformR.setCalibrationMatriceO2(calibrationMatrixO2container);
-    //this->m_plaformsList.push_back(platformR);
-    ////platformR.toString(true);
-    //qDebug() << "- Platforme R" << platformR.getSensorId() << " OK -";
+    Platform platformR(41, 0, 0);
+    loadCalibrationMatriceOrdre2PLATFORM(platformR.getSensorId(), calibrationMatrixO2container);
+    platformR.setCalibrationMatrice02platform(calibrationMatrixO2container);
+    this->m_plaformsList.push_back(platformR);
+    //platformR.toString(true);
+    qDebug() << "- Platforme R" << platformR.getSensorId() << " OK -";
 
     return this->m_plaformsList.count();
 }
@@ -111,7 +111,7 @@ bool DataController::loadCalibrationMatriceOrdre2PLATFORM(uint sensorNumber, Pla
     QFile inputFile(path);
 
     QStringList splitList;
-    double matriceData[16 * 6];
+    double matriceData[8 * 6];
 
     if (inputFile.open(QIODevice::ReadOnly)) {
         QTextStream in(&inputFile);
@@ -201,7 +201,7 @@ uint DataController::loadSensorToAnalogConfig()
             tms.setCalibrationMatriceO2(calibrationMatrixO2container);
             this->m_sensorsList.push_back(tms);
 
-            qDebug() << "- Capteur" << tms.getSensorId() << " OK -";
+            //qDebug() << "- Capteur" << tms.getSensorId() << " OK -";
             //tms.toString(true);
         }
         qDebug("______");
@@ -218,7 +218,7 @@ bool DataController::loadCalibrationMatriceOrdre2(uint sensorNumber, SensorMatri
     path.append(m_calibrationFilesPath);
     path.append("/" + m_sensorCalibrationFiles[sensorNumber - 1]);
 
-    qDebug() << "Ouverture matrice de calibration" << path;
+    //qDebug() << "Ouverture matrice de calibration" << path;
 
     QFile inputFile(path);
 
@@ -289,7 +289,7 @@ void DataController::createThreadAvgZero(uint sensorID, uint sensorStartChannel,
         << "start channel: " << sensorStartChannel;
 
     QString name = "Calibration du capteur :" + sensorID;
-    QProgressDialog* progressDialog = new QProgressDialog(name, "Stop", 0, nbSamples);
+    QProgressDialog* progressDialog = new QProgressDialog("lol", "Stop", 0, nbSamples);
     progressDialog->setWindowModality(Qt::WindowModal);
     progressDialog->setMinimumDuration(0);
     progressDialog->setValue(0);
@@ -332,11 +332,11 @@ void DataController::handleResultsAvgZero(uint sensorid, const DataPacket& analo
         for (uint i = 0; i < 8; ++i)
         {
             darr[i] = analogZeroCorrection.dataValues[i];
-            qDebug() << "dari : " << darr[i] << " ::" << analogZeroCorrection.dataValues[i];
+            //qDebug() << "dari : " << darr[i] << " ::" << analogZeroCorrection.dataValues[i];
         }
         getPlatform(sensorid).setChannelCalibrationValues(darr);
-        for (uint i = 0; i < 8; ++i) qDebug() << getPlatform(sensorid).getChannelCalibrationValuesArr()[i];
-        qDebug() << "Handle new calibration avg result for sensor" << sensorid << "sn array " << getPlatform(sensorid).getSensorId();
+        //for (uint i = 0; i < 8; ++i) qDebug() << getPlatform(sensorid).getChannelCalibrationValuesArr()[i];
+        //qDebug() << "Handle new calibration avg result for platform" << sensorid << "sn array " << getPlatform(sensorid).getSensorId();
     }
     else 
     {
@@ -348,7 +348,7 @@ void DataController::handleResultsAvgZero(uint sensorid, const DataPacket& analo
         }
         getSensor(sensorid).setChannelCalibrationValues(darr);
         //for (uint i = 0; i < 6; ++i) qDebug() << getSensor(sensorid).getChannelCalibrationValuesArr()[i];
-        qDebug() << "Handle new calibration avg result for sensor" << sensorid << "sn array " << getSensor(sensorid).getSensorId();
+        //qDebug() << "Handle new calibration avg result for sensor" << sensorid << "sn array " << getSensor(sensorid).getSensorId();
 
     }
 }
@@ -529,7 +529,7 @@ void DataController::processNewDataPacketPlatformFromNi(const DataPacket& d)
         }
 
         //calculate forces
-        QGenericMatrix<1, 6, double> result = (*gp).ChannelanalogToForce3axisForce(dataBySensor);
+        QGenericMatrix<1, 6, double> result = (*gp).ChannelanalogToForce3axisForcePlat(dataBySensor);
 
         DataPacket finalForce(6);
 
@@ -547,6 +547,7 @@ void DataController::processNewDataPacketPlatformFromNi(const DataPacket& d)
         {
             analogData.dataValues[i] = dataBySensor[i];
         }
+
 
         udpClient->streamData(finalForce, analogData, currentSensorID);
     }

@@ -28,6 +28,8 @@ private:
 
     QGenericMatrix<channelNumber * 2, 6, double> calibrationMatriceOrdre2;
 
+    QGenericMatrix<8, 6, double> calibrationMatriceOrdre2plat;
+
     QGenericMatrix<3, 3, double> rotationMatrice;
     QGenericMatrix<3, 3, double> wallRotMatrix;
 
@@ -113,6 +115,11 @@ public:
         return this->calibrationMatriceOrdre2;
     }
 
+    const  QGenericMatrix<8, 6, double>& getCalibrationMatriceO2plat() const
+    {
+        return this->calibrationMatriceOrdre2plat;
+    }
+
     const QGenericMatrix<3, 3, double>& getRotationMatrix() const
     {
         return this->rotationMatrice;
@@ -154,6 +161,24 @@ public:
         return result;
     }
 
+    const QGenericMatrix<1, 6, double> ChannelanalogToForce3axisForcePlat(double rawAnalogChannelValues[8])
+    {
+        uint chnd = 8;
+        double* analogDataSquared = new double[chnd];
+
+        //array is first all analog data then following all analog data squared
+        // ex nchan = 3   rawdata = [1,2,3]   analogDataSquare = [1,2,3,1,4,9]
+
+        for (uint i = 0; i < chnd; i++) analogDataSquared[i] = rawAnalogChannelValues[i];
+
+        QGenericMatrix<1, 8, double> analogValuesSquare(analogDataSquared);
+        QGenericMatrix<1, 6, double> result = this->getCalibrationMatriceO2plat() * analogValuesSquare;
+
+        delete[] analogDataSquared;
+
+        return result;
+    }
+
     void resetCalibrationValues()
     {
         for (uint i = 0; i < this->m_channelNumber; ++i)
@@ -175,6 +200,11 @@ public:
         this->calibrationMatriceOrdre2 = calibrationMatriceOrdre2;
     }
 
+    void setCalibrationMatrice02platform(QGenericMatrix<8, 6, double> matx)
+    {
+        this->calibrationMatriceOrdre2plat = matx;
+    }
+
     void toString(bool showCalMat) const
     {
         qDebug() << "___";
@@ -182,7 +212,7 @@ public:
 
         if (showCalMat)
         {
-            qDebug() << "Cal mat " << this->calibrationMatriceOrdre2;
+            qDebug() << "Cal mat " << this->calibrationMatriceOrdre2plat;
             qDebug() << "Angle: " << this->angle << " deg";
             qDebug() << "Zrotation: " << this->Zangle << " deg";
             qDebug() << this->rotationMatrice;
@@ -196,5 +226,5 @@ public:
 typedef SensorG<6> Sensor;
 typedef SensorG<8> Platform;
 
-typedef QGenericMatrix<16, 6, double> PlaformMatrice;
+typedef QGenericMatrix<8, 6, double> PlaformMatrice;
 typedef QGenericMatrix<12, 6, double> SensorMatrice; 

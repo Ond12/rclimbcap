@@ -53,7 +53,7 @@ class ForcesData:
         self.num_data_points = 1
         
         self.write_index = 0
-        self.capacity = 10000
+        self.capacity = 12000
         
         self.forces_x = [0] * self.capacity
         self.forces_y = [0] * self.capacity
@@ -67,12 +67,12 @@ class ForcesData:
         self.x_time = [0] * self.capacity
 
     def write_or_append_data(self, array, index, value):
-        if index < len(array):
+        if index < self.capacity:
             array[index] = value
         else:
             array.append(value)
 
-    def add_data_point(self, force_x_val, force_y_val, force_z_val, moment_x_val, moment_y_val, moment_z_val):
+    def add_data_point(self, force_x_val, force_y_val, force_z_val):
         self.num_data_points += 1
         self.write_index += 1
 
@@ -113,7 +113,7 @@ class AnalogData:
         self.frequency = frequency
         self.num_data_points = 1
         self.num_channels = num_channels
-        self.capacity = 10000
+        self.capacity = 12000
         self.write_index = 0
         
         self.datas = [[0] * self.capacity for _ in range(self.num_channels)]
@@ -121,21 +121,21 @@ class AnalogData:
         self.x_time = [0] * self.capacity
         
     def write_or_append_data(self, array, index, value):
-        if index < len(array):
+        if index < self.capacity:
             array[index] = value
         else:
             array.append(value)
 
     def add_data_point(self, analog_data):
-        if len(analog_data) == self.num_channels:
-            self.num_data_points += 1
-            self.write_index += 1
 
-            for i, sub_list in enumerate(self.datas):
-                self.write_or_append_data(sub_list, self.write_index, analog_data[i])
+        self.num_data_points += 1
+        self.write_index += 1
 
-            time_val = (1 / self.frequency) * self.write_index
-            self.write_or_append_data(self.x_time, self.write_index, time_val)
+        for i, sub_list in enumerate(self.datas):
+            self.write_or_append_data(sub_list, self.write_index, analog_data[i])
+
+        # time_val = (1 / self.frequency) * self.write_index
+        # self.write_or_append_data(self.x_time, self.write_index, time_val)
 
     def to_dataframe(self):
         data_dict = {
@@ -159,8 +159,7 @@ class Sensor:
         
     def add_data_point(self, forces_values, analog_values):
     
-        force_x, force_y, force_z, moment_x, moment_y, moment_z = forces_values #+ (0.0,) * (6 - len(forces_values))
-        self.force_data.add_data_point(force_x, force_y, force_z, moment_x, moment_y, moment_z)
+        self.force_data.add_data_point(forces_values[0], forces_values[1], forces_values[2])
         
         self.analog_data.add_data_point(analog_values)
         
@@ -201,13 +200,11 @@ class DataContainer:
         print(f"Adding sensor : {sensor.sensor_id} ")
         
     def dispatch_data(self, sensor_id, unf_data):
-        curr_sensor = self.get_sensor(sensor_id)
-        if curr_sensor:        
-            data = unf_data["data"]
-            data_analog = unf_data["analog"]
-            self.sensors_dict[sensor_id].add_data_point(data, data_analog)
-        else:
-            print(f"sensor : {sensor_id} not set up")
+        #curr_sensor = self.get_sensor(sensor_id)
+
+        data = unf_data["data"]
+        data_analog = unf_data["analog"]
+        self.sensors_dict[sensor_id].add_data_point(data, data_analog)
 
     def get_sensor(self, sensor_id):
         if sensor_id in self.sensors_dict:  
@@ -636,22 +633,19 @@ class Wid(QMainWindow):
         
     def settings_action(self):
         
-        #domo
-        #sensor_ids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
-        sensor_ids = [1]
+        #stop send data when calibration task 
         
-        #41 gauche
-        #40 droite
-        #plat marche pas si disable sensoracq
-        #fin cali stop auto? et boutton gris
-        #bug calibration matrice
+        #domo
+        sensor_ids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+        #sensor_ids = [1, 2, 3]
+        
         sensor_frequency = 200
         
         for sensor_id in sensor_ids:
             current_sensor = Sensor(sensor_id, 6, sensor_frequency)
             self.data_container.add_sensor(current_sensor)       
             
-        add_platformes = False
+        add_platformes = True
         if add_platformes:
             current_sensor = Sensor(41, 8, sensor_frequency)
             self.data_container.add_sensor(current_sensor)         
@@ -835,10 +829,8 @@ class Wid(QMainWindow):
     def update_plot_data(self, rdata):
         sensor_id = rdata["sid"]
 
-        #print(rdata)
         if sensor_id == 0:
-            data = rdata["data"]
-            self.data_container.add_chrono_data_point( data[0] )
+            self.data_container.add_chrono_data_point(  rdata["data"][0] )
         else:
             self.data_container.dispatch_data(sensor_id, rdata)
 

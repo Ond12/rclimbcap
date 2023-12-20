@@ -56,7 +56,6 @@ public:
 
 	virtual ~CalibrationWork() 
 	{
-		//qDebug("deleting calibration work");
 		for (QVector<double>* row : m_data) {
 			delete row;
 		}
@@ -67,13 +66,13 @@ public slots:
 
 	void starting()
 	{
-		qDebug() << "Start Calibration";
-		qDebug() << "work s:" << m_sensorID << " / nbchannel " << m_channelsNumbers;
+		//qDebug() << "Start Calibration";
+		//qDebug() << "work s:" << m_sensorID << " / nbchannel " << m_channelsNumbers;
 	}
 
 	void getNewAnalogData(const DataPacket& d)
 	{ 
-		qDebug() << "work s:"<< m_sensorID << " at " << this->m_steps << "/" << this->m_maxSampleNumber << " / nbchannel " << m_channelsNumbers;
+		//qDebug() << "work s:"<< m_sensorID << " at " << this->m_steps << "/" << this->m_maxSampleNumber << " / nbchannel " << m_channelsNumbers;
 
 		uint channelIdx = (this->m_sensorStartChannel);
 

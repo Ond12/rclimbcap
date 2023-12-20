@@ -39,8 +39,8 @@ DataController::DataController(QObject* parent)
     };
 
     m_plaformCalibrationFiles = {
-        "G_PF1_PF2_202109A1.txt",
-        "G_PF1_PF2_202109A1.txt"
+        "G_PF1_202109A1.txt",
+        "G_PF2_202109A1.txt"
     };
 
 }
@@ -85,14 +85,14 @@ uint DataController::loadPlatformToAnalogConfig()
     loadCalibrationMatriceOrdre2PLATFORM(platformL.getSensorId(), calibrationMatrixO2container);
     platformL.setCalibrationMatrice02platform(calibrationMatrixO2container);
     this->m_plaformsList.push_back(platformL);
-    //platformL.toString(true);
+    platformL.toString(true);
     qDebug() << "- Platforme L" << platformL.getSensorId() << " OK -";
 
     Platform platformR(41, 0, 0);
     loadCalibrationMatriceOrdre2PLATFORM(platformR.getSensorId(), calibrationMatrixO2container);
     platformR.setCalibrationMatrice02platform(calibrationMatrixO2container);
     this->m_plaformsList.push_back(platformR);
-    //platformR.toString(true);
+    platformR.toString(true);
     qDebug() << "- Platforme R" << platformR.getSensorId() << " OK -";
 
     return this->m_plaformsList.count();
@@ -336,7 +336,7 @@ void DataController::handleResultsAvgZero(uint sensorid, const DataPacket& analo
         }
         getPlatform(sensorid).setChannelCalibrationValues(darr);
         //for (uint i = 0; i < 8; ++i) qDebug() << getPlatform(sensorid).getChannelCalibrationValuesArr()[i];
-        //qDebug() << "Handle new calibration avg result for platform" << sensorid << "sn array " << getPlatform(sensorid).getSensorId();
+        qDebug() << "Handle new calibration avg result for platform" << sensorid << "sn array " << getPlatform(sensorid).getSensorId();
     }
     else 
     {
@@ -348,8 +348,7 @@ void DataController::handleResultsAvgZero(uint sensorid, const DataPacket& analo
         }
         getSensor(sensorid).setChannelCalibrationValues(darr);
         //for (uint i = 0; i < 6; ++i) qDebug() << getSensor(sensorid).getChannelCalibrationValuesArr()[i];
-        //qDebug() << "Handle new calibration avg result for sensor" << sensorid << "sn array " << getSensor(sensorid).getSensorId();
-
+        qDebug() << "Handle new calibration avg result for sensor" << sensorid << "sn array " << getSensor(sensorid).getSensorId();
     }
 }
 
@@ -377,11 +376,12 @@ void DataController::handleResultsAvgZeroPlatform(uint sensorid, const DataPacke
 //_____________________
 //Data Processing______
 
+
 void DataController::processNewDataPacketFromNi(const DataPacket& d)
 {
     double dataBySensor[6] = { 0,0,0,0,0,0 };
     //d.printDebug();
-    emit this->gotNewDataPacket(d);
+    //emit this->gotNewDataPacket(d);
 
     for (auto gp = m_sensorsList.begin(); gp != m_sensorsList.end(); gp++)
     {
@@ -496,7 +496,7 @@ void DataController::processNewDataPacketPlatformFromNi(const DataPacket& d)
 {
     double dataBySensor[8] = { 0,0,0,0,0,0,0,0 };
     //d.printDebug();
-    emit this->gotNewDataPacketPlatform(d);
+    //emit this->gotNewDataPacketPlatform(d);
 
     for (auto gp = m_plaformsList.begin(); gp != m_plaformsList.end(); gp++)
     {

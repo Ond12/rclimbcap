@@ -169,6 +169,61 @@ Error:
 	return 0;
 }
 
+int32 CVICALLBACK NidaqmxConnectionThread::EveryNCallbackCalibration(TaskHandle taskHandle, int32 everyNsamplesEventType, uInt32 nSamples, void* callbackData)
+{
+	DataPacket DP(m_numberOfChannels);
+
+	int32       error = 0;
+	char        errBuff[2048] = { '\0' };
+
+	static int  totalRead = 0;
+	static int  frameNumber = 0;
+	int32       read = 0;
+	double* data = new double[m_numberOfChannels];
+
+	DAQmxErrChk(DAQmxReadAnalogF64(taskHandle, NidaqmxConnectionThread::m_callBackRate,
+		10, DAQmx_Val_GroupByScanNumber, data, NidaqmxConnectionThread::m_bufferSize, &read, NULL));
+
+	if (globals::DEBUG_MOD_SENSOR)
+	{
+		double* dummydata = new double[m_numberOfChannels];
+		for (uint i = 0; i < ((m_numberOfChannels - 1) / 6); i++)
+		{
+			dummydata[i * 6] = 1;
+			dummydata[i * 6 + 1] = 2;
+			dummydata[i * 6 + 2] = 3;
+			dummydata[i * 6 + 3] = -10;
+			dummydata[i * 6 + 4] = -20;
+			dummydata[i * 6 + 5] = -30;
+		}
+		dummydata[m_numberOfChannels - 1] = 5;
+
+		DataPacket DP2(m_numberOfChannels);
+
+		std::copy(dummydata, dummydata + m_numberOfChannels, std::begin(DP2.dataValues));
+		delete[] dummydata;
+		//DP2.printDebug();
+		emit NidaqmxConnectionThread::GetInstance()->newDataPacketNiCalibration(DP2);
+	}
+	else
+	{
+		std::copy(data, data + m_numberOfChannels, std::begin(DP.dataValues));
+		delete[] data;
+
+		emit NidaqmxConnectionThread::GetInstance()->newDataPacketNiCalibration(DP);
+	}
+
+Error:
+	if (DAQmxFailed(error)) {
+		DAQmxGetExtendedErrorInfo(errBuff, 2048);
+		DAQmxStopTask(taskHandle);
+		DAQmxClearTask(taskHandle);
+		qDebug("DAQmx Error: %s\n", errBuff);
+	}
+
+	return 0;
+}
+
 void NidaqmxConnectionThread::setUPTask(float acquisitionRate, float callBackRate, uint nOfChannels, bool triggerEnable, uint numberOfSample)
 {
 	int32       error = 0;
@@ -254,7 +309,7 @@ void NidaqmxConnectionThread::setUpCalibrationTask(float acquisitionRate, float 
 	}
 
 	DAQmxErrChk(DAQmxCfgSampClkTiming(m_calibrationTask->m_handle, "", acquisitionRate, DAQmx_Val_Rising, DAQmx_Val_FiniteSamps, numberOfSample));
-	DAQmxErrChk(DAQmxRegisterEveryNSamplesEvent(m_calibrationTask->m_handle, DAQmx_Val_Acquired_Into_Buffer, callBackRate, 0, &NidaqmxConnectionThread::EveryNCallback, NULL));
+	DAQmxErrChk(DAQmxRegisterEveryNSamplesEvent(m_calibrationTask->m_handle, DAQmx_Val_Acquired_Into_Buffer, callBackRate, 0, &NidaqmxConnectionThread::EveryNCallbackCalibration, NULL));
 	DAQmxErrChk(DAQmxRegisterDoneEvent(m_calibrationTask->m_handle, 0, DoneCallback, NULL));
 
 
@@ -271,7 +326,6 @@ Error:
 		qDebug("DAQmx Error: %s\n", errBuff);
 	}
 }
-
 
 #pragma endregion
 
@@ -351,7 +405,7 @@ void NidaqmxConnectionThread::setUpPlatformCalibrationTask(float acquisitionRate
 	}
 
 	DAQmxErrChk(DAQmxCfgSampClkTiming(this->m_platformCalibrationTask->m_handle, "", acquisitionRate, DAQmx_Val_Rising, DAQmx_Val_FiniteSamps, numberOfSample));
-	DAQmxErrChk(DAQmxRegisterEveryNSamplesEvent(this->m_platformCalibrationTask->m_handle, DAQmx_Val_Acquired_Into_Buffer, callBackRate, 0, &NidaqmxConnectionThread::EveryNCallbackPlatform, NULL));
+	DAQmxErrChk(DAQmxRegisterEveryNSamplesEvent(this->m_platformCalibrationTask->m_handle, DAQmx_Val_Acquired_Into_Buffer, callBackRate, 0, &NidaqmxConnectionThread::EveryNCallbackPlatformCalibration, NULL));
 	DAQmxErrChk(DAQmxRegisterDoneEvent(this->m_platformCalibrationTask->m_handle, 0, DoneCallback, NULL));
 
 
@@ -432,6 +486,62 @@ Error:
 	return 0;
 }
 
+int32 CVICALLBACK NidaqmxConnectionThread::EveryNCallbackPlatformCalibration(TaskHandle taskHandle, int32 everyNsamplesEventType, uInt32 nSamples, void* callbackData)
+{
+	uint numberOfChannels = 16;
+	uint bufferSize = NidaqmxConnectionThread::m_callBackRate * numberOfChannels;
+
+	DataPacket DP(numberOfChannels);
+
+	int32       error = 0;
+	char        errBuff[2048] = { '\0' };
+	static int  totalRead = 0;
+	static int  frameNumber = 0;
+	int32       read = 0;
+	double* data = new double[numberOfChannels];
+
+	DAQmxErrChk(DAQmxReadAnalogF64(taskHandle, NidaqmxConnectionThread::m_callBackRate,
+		10, DAQmx_Val_GroupByScanNumber, data, bufferSize, &read, NULL));
+
+	if (globals::DEBUG_MOD_PLATFORM)
+	{
+		double* dummydata = new double[numberOfChannels];
+
+		for (uint i = 0; i < (numberOfChannels / 8); i++)
+		{
+			dummydata[i * 8] = 10;
+			dummydata[i * 8 + 1] = 20;
+			dummydata[i * 8 + 2] = 30;
+			dummydata[i * 8 + 3] = -40;
+			dummydata[i * 8 + 4] = -50;
+			dummydata[i * 8 + 5] = -60;
+			dummydata[i * 8 + 6] = -70;
+			dummydata[i * 8 + 7] = -80;
+		}
+
+		DataPacket DP2(numberOfChannels);
+		std::copy(dummydata, dummydata + numberOfChannels, std::begin(DP2.dataValues));
+		delete[] dummydata;
+		//DP2.printDebug();
+		emit NidaqmxConnectionThread::GetInstance()->newDataPacketPlatformCalibration(DP2);
+	}
+	else
+	{
+		std::copy(data, data + numberOfChannels, std::begin(DP.dataValues));
+		delete[] data;
+		emit NidaqmxConnectionThread::GetInstance()->newDataPacketPlatformCalibration(DP);
+	}
+
+Error:
+	if (DAQmxFailed(error)) {
+		DAQmxGetExtendedErrorInfo(errBuff, 2048);
+
+		DAQmxStopTask(taskHandle);
+		DAQmxClearTask(taskHandle);
+		qDebug("DAQmx Error: %s\n", errBuff);
+	}
+	return 0;
+}
 #pragma endregion
 
 int32 CVICALLBACK NidaqmxConnectionThread::DoneCallback(TaskHandle taskHandle, int32 status, void* callbackData)

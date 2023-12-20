@@ -217,11 +217,24 @@ public:
 
 			if (MyNidaqmxConnectionThread != nullptr)
 			{
+				//sensor card signal
 				QObject::connect(MyNidaqmxConnectionThread, SIGNAL(newDataPacketNi(const DataPacket&)),
 					MyDataController, SLOT(processNewDataPacketFromNi(const DataPacket&)));
 
+				//platform card signal
 				QObject::connect(MyNidaqmxConnectionThread, SIGNAL(newDataPacketPlatform(const DataPacket&)),
 					MyDataController, SLOT(processNewDataPacketPlatformFromNi(const DataPacket&)));		
+
+				//calibration signal
+
+				//sensor card calibration signal
+				QObject::connect(MyNidaqmxConnectionThread, SIGNAL(newDataPacketNiCalibration(const DataPacket&)),
+					MyDataController, SIGNAL(gotNewDataPacket(const DataPacket&)));
+
+				//platform card calibration signal
+				QObject::connect(MyNidaqmxConnectionThread, SIGNAL(newDataPacketPlatformCalibration(const DataPacket&)),
+					MyDataController, SIGNAL(gotNewDataPacketPlatform(const DataPacket&)));
+				
 			}
 			else 
 			{

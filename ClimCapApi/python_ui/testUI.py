@@ -637,7 +637,8 @@ class Wid(QMainWindow):
         
         #domo
         sensor_ids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
-        #sensor_ids = [1, 2, 3]
+        sensor_ids = [1]#, 2, 3]
+        add_platformes = False
         
         sensor_frequency = 200
         
@@ -645,7 +646,7 @@ class Wid(QMainWindow):
             current_sensor = Sensor(sensor_id, 6, sensor_frequency)
             self.data_container.add_sensor(current_sensor)       
             
-        add_platformes = True
+
         if add_platformes:
             current_sensor = Sensor(41, 8, sensor_frequency)
             self.data_container.add_sensor(current_sensor)         

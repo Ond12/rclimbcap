@@ -217,11 +217,12 @@ public:
     bool HasError() const;
 
     static int32 CVICALLBACK EveryNCallback(TaskHandle taskHandle, int32 everyNsamplesEventType, uInt32 nSamples, void* callbackData);
+    static int32 CVICALLBACK EveryNCallbackCalibration(TaskHandle taskHandle, int32 everyNsamplesEventType, uInt32 nSamples, void* callbackData);
 
     static int32 CVICALLBACK EveryNCallbackPlatform(TaskHandle taskHandle, int32 everyNsamplesEventType, uInt32 nSamples, void* callbackData);
+    static int32 CVICALLBACK EveryNCallbackPlatformCalibration(TaskHandle taskHandle, int32 everyNsamplesEventType, uInt32 nSamples, void* callbackData);
 
     static int32 CVICALLBACK DoneCallback(TaskHandle taskHandle, int32 status, void* callbackData);
-
 
     QString cardName;
     QString platformCardName;
@@ -277,6 +278,9 @@ private:
 signals:
     void newDataPacketNi(const DataPacket&);
     void newDataPacketPlatform(const DataPacket&);
+
+    void newDataPacketNiCalibration(const DataPacket&);
+    void newDataPacketPlatformCalibration(const DataPacket&);
 
 
 

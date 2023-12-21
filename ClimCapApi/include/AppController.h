@@ -44,6 +44,7 @@ public:
 		m_calibrationRate = 1000;
 		m_calibrationTime = 1;
 		m_calibrationNumberSample = 1000;
+
 	}
 
 	~AppController()
@@ -267,7 +268,8 @@ public:
 	{
 		if(globals::ENABLE_SENSOR) MyNidaqmxConnectionThread->startSensorAcquisition();
 		if(globals::ENABLE_PLATFORM) MyNidaqmxConnectionThread->startPlaformAcquisition();
-		if (globals::DUMMY_SENDER) dummySender->start();
+		if(globals::DUMMY_SENDER) dummySender->start();
+		globals::nbpacketsend = 0;
 	};
 
 	void stopAcquisition() const
@@ -275,6 +277,7 @@ public:
 		if(globals::ENABLE_SENSOR) MyNidaqmxConnectionThread->stopSensorAcquisition();
 		if(globals::ENABLE_PLATFORM) MyNidaqmxConnectionThread->stopPlaformAcquisition();
 		if(globals::DUMMY_SENDER) dummySender->stop();
+		qDebug() << "Paquets : " << globals::nbpacketsend;
 	};
 
 	void startCalibrationTask() const

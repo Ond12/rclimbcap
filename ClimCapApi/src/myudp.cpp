@@ -1,4 +1,5 @@
 #include "myudp.h"
+#include "globals.h"
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
@@ -55,6 +56,7 @@ void MyUDP::streamData(const DataPacket& data, const DataPacket& analogData, uin
     datagrudp.append(jsString.toUtf8());
 
     socket->writeDatagram(datagrudp, QHostAddress::LocalHost, 20001);
+    globals::nbpacketsend++;
 }
 
 

@@ -127,6 +127,8 @@ class Plotter(pg.PlotWidget):
         self.contact_list:list = []
         self.sensor_plot_map:dict = {}
         
+        self.chrono_plot_item = None
+        
         self.showGrid(x=False, y=True)
         self.addLegend()
         
@@ -154,7 +156,8 @@ class Plotter(pg.PlotWidget):
     def update_chrono_plot_data(self, maxlimit):
         cr_data = self.data_container.chrono_data[0:maxlimit]
         time_increments_chrono_dummy = np.arange( len(cr_data) ) / self.data_container.chrono_freq
-        self.chrono_plot_item.setData(time_increments_chrono_dummy, cr_data)
+        if(self.chrono_plot_item):
+            self.chrono_plot_item.setData(time_increments_chrono_dummy, cr_data)
 
     def update_sensor_plot_data(self, sensor_id:int, maxlimit):
         if sensor_id in self.sensor_plot_map:
@@ -218,7 +221,7 @@ class Plotter(pg.PlotWidget):
 
             if self.data_container:
                 cr_data = self.data_container.chrono_data
-                print(f"cr len {len(cr_data)}")
+                #print(f"cr len {len(cr_data)}")
                 if len(cr_data) > 0:
                     time_increments_chrono_dummy = np.arange( len(cr_data) ) / 200 
                     plot_item_chrono_data = self.plot(time_increments_chrono_dummy, cr_data, pen=pg.mkPen(color_chrono, width=2, alpha=200), name=f"Chrono signal")

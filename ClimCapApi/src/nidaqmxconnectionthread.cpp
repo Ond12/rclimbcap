@@ -158,9 +158,6 @@ int32 CVICALLBACK NidaqmxConnectionThread::EveryNCallback(TaskHandle taskHandle,
 Error:
 	if (DAQmxFailed(error)) {
 		DAQmxGetExtendedErrorInfo(errBuff, 2048);
-		/*********************************************/
-		// DAQmx Stop Code
-		/*********************************************/
 		DAQmxStopTask(taskHandle);
 		DAQmxClearTask(taskHandle);
 		qDebug("DAQmx Error: %s\n", errBuff);
@@ -368,7 +365,6 @@ void NidaqmxConnectionThread::setUPPlatformTask(float acquisitionRate, float cal
 		current_task->SetupContinuousAcquisition(acquisitionRate, 1000);
 	}
 
-
 	DAQmxErrChk(DAQmxRegisterEveryNSamplesEvent(current_task->m_handle, DAQmx_Val_Acquired_Into_Buffer, callBackRate, 0, &NidaqmxConnectionThread::EveryNCallbackPlatform, NULL));
 	DAQmxErrChk(DAQmxRegisterDoneEvent(current_task->m_handle, 0, DoneCallback, NULL));
 
@@ -535,7 +531,6 @@ int32 CVICALLBACK NidaqmxConnectionThread::EveryNCallbackPlatformCalibration(Tas
 Error:
 	if (DAQmxFailed(error)) {
 		DAQmxGetExtendedErrorInfo(errBuff, 2048);
-
 		DAQmxStopTask(taskHandle);
 		DAQmxClearTask(taskHandle);
 		qDebug("DAQmx Error: %s\n", errBuff);
@@ -648,7 +643,6 @@ void NidaqmxConnectionThread::startPlaformAcquisition() const
 		qDebug("Debut de l'acquisition capteur platformes");
 	}
 }
-
 
 void NidaqmxConnectionThread::stopPlaformAcquisition() const
 {

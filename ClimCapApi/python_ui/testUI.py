@@ -130,7 +130,7 @@ class AnalogData:
 
         self.num_data_points += 1
         self.write_index += 1
-
+        
         for i, sub_list in enumerate(self.datas):
             self.write_or_append_data(sub_list, self.write_index, analog_data[i])
 
@@ -782,7 +782,7 @@ class Wid(QMainWindow):
             return None
 
     def read_excel_file(self, file_path):
-        try:
+
             sheets_dict = pd.read_excel(file_path, sheet_name=None)
 
             for sheet_name, df in sheets_dict.items():
@@ -803,23 +803,19 @@ class Wid(QMainWindow):
                         column_data_x = np.array(df["fx"])
                         column_data_y = np.array(df["fy"])
                         column_data_z = np.array(df["fz"])
-                        column_moment_x = np.array(df["m_x"])
-                        column_moment_y = np.array(df["m_y"])
-                        column_moment_z = np.array(df["m_z"])
+                        #column_moment_x = np.array(df["m_x"])
+                        #column_moment_y = np.array(df["m_y"])
+                        #column_moment_z = np.array(df["m_z"])
 
                         for i in range(len(column_data_x)):
                             c_x = column_data_x[i]
                             c_y = column_data_y[i]
                             c_z = column_data_z[i]
                             #todo load moment 
-                            current_sensor.add_data_point([c_x, c_y, c_z, 0, 0, 0],[])
+                            current_sensor.add_data_point([c_x, c_y, c_z, 0, 0, 0],[0,0,0,0,0,0,0,0])
 
             return sheets_dict
-        except Exception as e:
-            err_msg = f"Error opening Excel file: {e}"
-            print(err_msg)
-            self.statusbar.showMessage(err_msg)
-            return None
+
         
     def udpServerinit(self):
         self.worker_receiv = Worker_udp()

@@ -105,8 +105,8 @@ class ForcesData:
     
     def print_debug_data(self):
         print(f"len: {self.num_data_points}")
-        print(f"write idx {self.write_index}")
-        print(f"len slice : {len(self.forces_x[0:self.write_index])}")
+        #print(f"write idx {self.write_index}")
+        #print(f"len slice : {len(self.forces_x[0:self.write_index])}")
 
 class AnalogData:
     def __init__(self, frequency, num_channels):
@@ -637,8 +637,8 @@ class Wid(QMainWindow):
         
         #domo
         sensor_ids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
-        sensor_ids = [1]#, 2, 3]
-        add_platformes = False
+        #sensor_ids = [1]#, 2, 3]
+        add_platformes = True
         
         sensor_frequency = 200
         

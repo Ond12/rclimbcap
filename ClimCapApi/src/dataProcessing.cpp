@@ -452,7 +452,11 @@ void DataController::processNewDataPacketFromNi(const DataPacket& d)
         //flip z if sensor is corps d'epreuve flip side
         if ((*gp).getFlip())
         {
+
+            finalForce.dataValues[0] = -finalForce.dataValues[0];
+            finalForce.dataValues[1] = -finalForce.dataValues[1];
             finalForce.dataValues[2] = -finalForce.dataValues[2];
+
         }
 
         DataPacket analogData(6);

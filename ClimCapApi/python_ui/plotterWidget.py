@@ -12,25 +12,8 @@ from PyQt6.QtGui import *
 from PyQt6.QtCore import *
 
 from contact import *
+from colors import *
 
-color_x = (255, 0, 0)  # Red
-color_y = (0, 255, 0)  # Green
-color_z = (0, 0, 255)  # Blue
-color_chrono = (255, 255, 0) # Yellow
-
-colors_dict = {
-    0: (255, 255, 255),   # White
-    1: (255, 0, 0),       # Red
-    2: (0, 255, 0),       # Green
-    3: (0, 0, 255),       # Blue
-    4: (255, 255, 0),     # Yellow
-    5: (255, 0, 255),     # Magenta
-    6: (0, 255, 255),     # Cyan
-    7: (128, 0, 0),       # Maroon
-    8: (0, 128, 0),       # Green (dark)
-    9: (0, 0, 128),       # Navy
-    10: (128, 128, 128)   # Gray
-}
 
 class RecordWidget(QWidget):
     def __init__(self):
@@ -83,7 +66,7 @@ class SensorPlotItem:
         self.contacts:list = []
         self.plot_items:dict = {}
         self.is_visible:bool = True
-        print(f"create sensor plot item { sensor_id}")
+        #print(f"create sensor plot item { sensor_id}")
 
     def add_contact(self, contact:ContactInfo) -> None:
         self.contacts.append(contact)
@@ -91,7 +74,7 @@ class SensorPlotItem:
     def add_plot_item(self, axis_label:AxisLabel, plot_item) -> None:
         if not axis_label in self.plot_items: 
             self.plot_items[axis_label] = plot_item
-            print(f"create {axis_label} in  {self.sensor_id}")
+            #print(f"create {axis_label} in  {self.sensor_id}")
         else:
             print(f"plot item : {axis_label} already in sid : {self.sensor_id}")
     
@@ -195,21 +178,24 @@ class Plotter(pg.PlotWidget):
                 colors = ['b'] * len(self.data_container.sensors)
 
             for i, sensor in enumerate(self.data_container.sensors):
-                if sensor.get_forces_data().num_data_points > 0:
 
                     force_data = sensor.get_forces_data()
                     time_increments = force_data.get_time_increments()
 
                     force_x = force_data.forces_x
-                    plot_item_force_x = self.plot(time_increments, [0], pen=pg.mkPen(color_x, width=2, alpha=200), name=f"Sensor {sensor.sensor_id} - Force X")
+                    color_x_v = RED[sensor.sensor_id % 11]
+                    line_style = style_dict[sensor.sensor_id % 11]
+                    plot_item_force_x = self.plot([0], [0], pen=pg.mkPen(color_x_v, width=2, alpha=200, style=line_style), name=f"Sensor {sensor.sensor_id} - Force X")
                     self.plot_items.append(plot_item_force_x)
 
                     force_y = force_data.forces_y
-                    plot_item_force_y = self.plot(time_increments, [0], pen=pg.mkPen(color_y, width=2, alpha=200), name=f"Sensor {sensor.sensor_id} - Force Y")
+                    color_y_v = GREEN[sensor.sensor_id % 11]
+                    plot_item_force_y = self.plot([0], [0], pen=pg.mkPen(color_y_v, width=2, alpha=200,  style=line_style), name=f"Sensor {sensor.sensor_id} - Force Y")
                     self.plot_items.append(plot_item_force_y)
 
                     force_z = force_data.forces_z
-                    plot_item_force_z = self.plot(time_increments, [0], pen=pg.mkPen(color_z, width=2, alpha=200), name=f"Sensor {sensor.sensor_id} - Force Z")
+                    color_z_v = BLUE[sensor.sensor_id % 11]
+                    plot_item_force_z = self.plot([0], [0], pen=pg.mkPen(color_z_v, width=2, alpha=200,  style=line_style), name=f"Sensor {sensor.sensor_id} - Force Z")
                     self.plot_items.append(plot_item_force_z)
 
                     c_plot_sensor = SensorPlotItem(sensor.sensor_id)

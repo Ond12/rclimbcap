@@ -14,25 +14,7 @@ from PyQt6.QtGui import *
 
 from plotterWidget import *
 from contact import *
-
-color_x = (255, 0, 0)  # Red
-color_y = (0, 255, 0)  # Green
-color_z = (0, 0, 255)  # Blue
-color_chrono = (255, 255, 0) # Yellow
-
-colors_dict = {
-    0: (255, 255, 255),   # White
-    1: (255, 0, 0),       # Red
-    2: (0, 255, 0),       # Green
-    3: (0, 0, 255),       # Blue
-    4: (255, 255, 0),     # Yellow
-    5: (255, 0, 255),     # Magenta
-    6: (0, 255, 255),     # Cyan
-    7: (128, 0, 0),       # Maroon
-    8: (0, 128, 0),       # Green (dark)
-    9: (0, 0, 128),       # Navy
-    10: (128, 128, 128)   # Gray
-}
+from colors import *
 
 class RingBuffer:
     def __init__(self, capacity):
@@ -197,7 +179,7 @@ class DataContainer:
     def add_sensor(self, sensor):
         self.sensors.append(sensor)
         self.sensors_dict[sensor.sensor_id] = sensor
-        print(f"Adding sensor : {sensor.sensor_id} ")
+        #print(f"Adding sensor : {sensor.sensor_id} ")
         
     def dispatch_data(self, sensor_id, unf_data):
         #curr_sensor = self.get_sensor(sensor_id)
@@ -473,6 +455,19 @@ class DataContainer:
 
         return area
 
+    def switch_sign(self, signal):
+        for i in signal:
+            signal[i] = -signal[i]
+            
+    def switch_sign_off_sensors(self):
+        #flip des capteurs en compression
+        sensorid_to_switch = [2,3,5,6,10]
+        for id in sensorid_to_switch:
+            cur_sensor = self.find_sensor_by_id(id)
+            if cur_sensor:
+                self.switch_sign(cur_sensor.get_forces_data().forces_x)
+                self.switch_sign(cur_sensor.get_forces_data().forces_y)
+
     def generate_debug_chrono_data(self, duration=5, sample_rate=200, rising_edge_interval=1):
         total_samples = duration * sample_rate
         time = np.arange(0, duration, 1 / sample_rate)
@@ -646,7 +641,6 @@ class Wid(QMainWindow):
             current_sensor = Sensor(sensor_id, 6, sensor_frequency)
             self.data_container.add_sensor(current_sensor)       
             
-
         if add_platformes:
             current_sensor = Sensor(41, 8, sensor_frequency)
             self.data_container.add_sensor(current_sensor)         

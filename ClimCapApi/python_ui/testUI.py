@@ -16,6 +16,11 @@ from plotterWidget import *
 from contact import *
 from colors import *
 
+
+
+
+
+
 class RingBuffer:
     def __init__(self, capacity):
         self.capacity = capacity
@@ -452,11 +457,10 @@ class DataContainer:
     def calculate_area_under_signal(signal,time , star_time_idx, end_time_idx):
         signal_function = np.poly1d(signal)
         area, _ = quad(signal_function, time[star_time_idx], time[end_time_idx])
-
         return area
 
     def switch_sign(self, signal):
-        for i in signal:
+        for i in range(len(signal)):
             signal[i] = -signal[i]
             
     def switch_sign_off_sensors(self):
@@ -580,6 +584,10 @@ class Wid(QMainWindow):
         settings_action = QAction("&Settings", self)
         settings_action.setStatusTip("Settings")
         settings_action.triggered.connect(self.settings_action)
+        
+        flip_action = QAction("&Flip axis", self)
+        flip_action.setStatusTip("Flip axis")
+        flip_action.triggered.connect(self.flip_action)
 
         toolbar = self.addToolBar("Tools")
         toolbar.addAction(open_file_action)
@@ -591,7 +599,8 @@ class Wid(QMainWindow):
         toolbar.addAction(find_max_in_contact_action)
         toolbar.addAction(sum_force_action)
         toolbar.addAction(settings_action)
-
+        toolbar.addAction(flip_action)
+        
         toolbar.addAction(debug_data_action)
 
         self.statusbar = QStatusBar()
@@ -742,6 +751,10 @@ class Wid(QMainWindow):
         self.plotter.plot_resultant_force(data_result)
         print("calculate resultant_force for sensor")
 
+    def flip_action(self):
+        self.data_container.switch_sign_off_sensors()
+        self.plotter.plot_data()
+    
     def sum_force_action(self):
         self.data_container.sum_force_data()
         self.plotter.plot_sum_force()

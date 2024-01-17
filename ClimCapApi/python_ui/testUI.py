@@ -15,11 +15,7 @@ from PyQt6.QtGui import *
 from plotterWidget import *
 from contact import *
 from colors import *
-
-
-
-
-
+from osc_sender import*
 
 class RingBuffer:
     def __init__(self, capacity):
@@ -89,6 +85,9 @@ class ForcesData:
         }
         df = pd.DataFrame(data_dict)
         return df
+    
+    def get_x_y_z_array(self):
+        return np.column_stack((self.forces_x, self.forces_y, self.forces_z))
     
     def print_debug_data(self):
         print(f"len: {self.num_data_points}")
@@ -180,6 +179,34 @@ class DataContainer:
         force_data = self.sensors[0].get_forces_data()
         time_increments = force_data.get_time_increments()
         return time_increments
+    
+    def get_sensor_min_data_len(self):
+        if len(self.sensors) > 0:
+            min_data_len = self.sensors[0].data_size()
+            for sensor in self.sensors:
+                if sensor.data_size() < min_data_len:
+                    min_data_len = sensor.data_size()
+            return min_data_len
+        else:
+            return 0
+        
+    def concat_all_data(self):
+        data_row_per_sensor = 3
+        sensor_number = len(self.sensors)
+        
+        if sensor_number > 0:
+            row_size = self.get_sensor_min_data_len()
+            col_size = sensor_number * data_row_per_sensor
+            
+            data_arr = np.zeros((row_size, col_size), dtype=np.float64)
+
+            for sensor in self.sensors:
+                data_arr = np.column_stack([data_arr, sensor.force_data.get_x_y_z_array()[:row_size, :]])
+            
+            print(f"got col : {col_size}   :  row {row_size}")
+            return data_arr
+        else:
+            return None
     
     def add_sensor(self, sensor):
         self.sensors.append(sensor)
@@ -588,6 +615,10 @@ class Wid(QMainWindow):
         flip_action = QAction("&Flip axis", self)
         flip_action.setStatusTip("Flip axis")
         flip_action.triggered.connect(self.flip_action)
+        
+        oscstreaming_action = QAction("&Oscstreaming", self)
+        oscstreaming_action.setStatusTip("Oscstreaming")
+        oscstreaming_action.triggered.connect(self.oscstreaming_action)
 
         toolbar = self.addToolBar("Tools")
         toolbar.addAction(open_file_action)
@@ -600,6 +631,7 @@ class Wid(QMainWindow):
         toolbar.addAction(sum_force_action)
         toolbar.addAction(settings_action)
         toolbar.addAction(flip_action)
+        toolbar.addAction(oscstreaming_action)
         
         toolbar.addAction(debug_data_action)
 
@@ -632,6 +664,10 @@ class Wid(QMainWindow):
         main_grid.addWidget(self.plot_controller, 1, 0)
         main_grid.addWidget(self.plotter,2,0)
         main_grid.addWidget(record_widget, 3, 0)
+
+        self.osc_sender = OSCSender()
+        self.osc_play_pause_widget = PlayPauseWidget(self.osc_sender)
+        self.osc_sender.position_signal.connect(self.plotter.set_player_scroll_hline)
 
         self.show()
         
@@ -823,7 +859,6 @@ class Wid(QMainWindow):
 
             return sheets_dict
 
-        
     def udpServerinit(self):
         self.worker_receiv = Worker_udp()
         self.worker_receiv.newData.connect(self.update_plot_data)
@@ -837,6 +872,14 @@ class Wid(QMainWindow):
             self.data_container.add_chrono_data_point(  rdata["data"][0] )
         else:
             self.data_container.dispatch_data(sensor_id, rdata)
+            
+    def oscstreaming_action(self):
+        concatdata = self.data_container.concat_all_data()
+        if concatdata:
+            self.osc_sender.set_datas_to_stream()
+            self.osc_play_pause_widget.show()
+        else:
+            print("There is no data to stream back")
 
 # Thread pour la Reception des données par udp
 class Worker_udp(QObject):

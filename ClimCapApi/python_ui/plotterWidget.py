@@ -119,7 +119,10 @@ class Plotter(pg.PlotWidget):
         self.update_timer = QTimer()
         self.update_timer.setInterval( self.refresh_rate )
         self.update_timer.timeout.connect(self.update_plots)
+        
+        self.vertical_line = None
 
+    
     def update_plots(self):
         if self.data_container.sensors_dict:
             first_sensor  = list(self.data_container.sensors_dict.values())[0]
@@ -253,11 +256,20 @@ class Plotter(pg.PlotWidget):
               pen=(187, 26, 95), symbolBrush=(187, 26, 95),
               symbolPen='w', symbol='arrow_up', symbolSize=22, name="symbol='arrow_up'")
     
+    def set_player_scroll_hline(self, position):
+        
+        if not self.vertical_line:
+                self.vertical_line = pg.InfiniteLine(pos=position, angle=90, movable=False, pen='r')
+                self.addItem(self.vertical_line)
+                
+        self.vertical_line.setValue(position)
+
     def clear_plot(self):
         self.sensor_plot_map = {}
         self.plot_items.clear()
         self.clear_contacts()
         self.clear()
+        self.vertical_line = None
 
     def show_hide_lines(self, button, sensor_id):
         if sensor_id in self.sensor_plot_map:

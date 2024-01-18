@@ -148,8 +148,6 @@ class Sensor:
         self.force_data.add_data_point(forces_values[0], forces_values[1], forces_values[2])
         
         self.analog_data.add_data_point(analog_values)
-        
-        #print(f"adding {forces_values} to sensor {self.sensor_id}")
 
     def get_num_channels(self):
         return self.num_channels
@@ -174,6 +172,19 @@ class DataContainer:
         self.contacts = []
         self.chrono_freq = 200
 
+    def detect_chrono_bip(self):
+        slope_threshold_down = 1
+        down_edges_time_list = []
+        
+        if len(self.chrono_data) > 2:
+            for i in range(1, len(self.chrono_data)):
+                difference = self.chrono_data[i - 1] - self.chrono_data[i]
+                if difference > slope_threshold_down:
+                    time = i * (1/self.chrono_freq)
+                    down_edges_time_list.append(time)
+
+        return down_edges_time_list
+    
     def get_time_increments(self):
         #change this to do 
         force_data = self.sensors[0].get_forces_data()
@@ -216,7 +227,6 @@ class DataContainer:
         
     def dispatch_data(self, sensor_id, unf_data):
         #curr_sensor = self.get_sensor(sensor_id)
-
         data = unf_data["data"]
         data_analog = unf_data["analog"]
         self.sensors_dict[sensor_id].add_data_point(data, data_analog)
@@ -261,7 +271,7 @@ class DataContainer:
 
         #bug if not same shape
         for sensor in self.sensors:
-            if sensor.sensor_id <=11:
+            if sensor.sensor_id <=11: #to do
             
                 force_data = sensor.get_forces_data()
 
@@ -620,6 +630,10 @@ class Wid(QMainWindow):
         oscstreaming_action = QAction("&Oscstreaming", self)
         oscstreaming_action.setStatusTip("Oscstreaming")
         oscstreaming_action.triggered.connect(self.oscstreaming_action)
+        
+        oscstreaming_action = QAction("&Chrono_bip_detect", self)
+        oscstreaming_action.setStatusTip("Chrono bip detection")
+        oscstreaming_action.triggered.connect(self.chrono_bip_detection_action)
 
         toolbar = self.addToolBar("Tools")
         toolbar.addAction(open_file_action)
@@ -787,6 +801,10 @@ class Wid(QMainWindow):
         
         self.plotter.plot_resultant_force(data_result)
         print("calculate resultant_force for sensor")
+
+    def chrono_bip_detection_action(self):
+        times = self.data_container.detect_chrono_bip()
+        self.plotter.plot_chrono_bip_marker(times)
 
     def flip_action(self):
         self.data_container.switch_sign_off_sensors()

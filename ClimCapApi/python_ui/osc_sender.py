@@ -40,8 +40,7 @@ class PlayPauseWidget(QWidget):
         self.setGeometry(100, 100, 300, 200)
 
     def reset_index(self):
-        self.packet_idx = 0
-        self.position_signal.emit(0)
+        self.osc_sender.reset_packet_idx()
 
     def toggle_play_pause(self):
         # Toggle play/pause state
@@ -79,6 +78,10 @@ class OSCSender(QObject):
 
     def set_send_frequency(self, frequency):
         self.timer_interval = 1000/frequency
+    
+    def reset_packet_idx(self):
+        self.packet_idx = 0
+        self.position_signal.emit(0)
     
     def set_datas_to_stream(self, data_array):
         np.set_printoptions(suppress=True)

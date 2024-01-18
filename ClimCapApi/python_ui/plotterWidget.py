@@ -173,6 +173,11 @@ class Plotter(pg.PlotWidget):
         else:
             print(f"sensor {sensor_id} not in sensor plot map")      
              
+    def plot_chrono_bip_marker(self, times):
+        for time in times:
+            marker_time_line = pg.InfiniteLine(pos=time, angle=90, movable=False, pen='b')
+            self.addItem(marker_time_line)
+
     def plot_data(self, colors=None):
         if self.data_container.sensors:
             self.clear()
@@ -257,7 +262,6 @@ class Plotter(pg.PlotWidget):
               symbolPen='w', symbol='arrow_up', symbolSize=22, name="symbol='arrow_up'")
     
     def set_player_scroll_hline(self, position):
-        
         if not self.vertical_line:
                 self.vertical_line = pg.InfiniteLine(pos=position, angle=90, movable=False, pen='r')
                 self.addItem(self.vertical_line)

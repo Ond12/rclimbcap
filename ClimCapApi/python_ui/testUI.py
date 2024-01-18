@@ -198,12 +198,13 @@ class DataContainer:
             row_size = self.get_sensor_min_data_len()
             col_size = sensor_number * data_row_per_sensor
             
-            data_arr = np.zeros((row_size, col_size), dtype=np.float64)
+            data_arr = np.empty((row_size, 0), dtype=np.float64)
 
             for sensor in self.sensors:
-                data_arr = np.column_stack([data_arr, sensor.force_data.get_x_y_z_array()[:row_size, :]])
-            
-            print(f"got col : {col_size}   :  row {row_size}")
+                
+                sensor_data = sensor.force_data.get_x_y_z_array()[:row_size, :]
+                data_arr = np.concatenate((data_arr, sensor_data), axis=1)
+
             return data_arr
         else:
             return None
@@ -875,8 +876,8 @@ class Wid(QMainWindow):
             
     def oscstreaming_action(self):
         concatdata = self.data_container.concat_all_data()
-        if concatdata:
-            self.osc_sender.set_datas_to_stream()
+        if len(concatdata) > 0:
+            self.osc_sender.set_datas_to_stream(concatdata)
             self.osc_play_pause_widget.show()
         else:
             print("There is no data to stream back")

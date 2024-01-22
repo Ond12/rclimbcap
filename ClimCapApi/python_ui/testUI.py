@@ -139,14 +139,73 @@ class Sensor:
         self.frequency = frequency
         self.analog_data = AnalogData(frequency, num_channels)
         self.force_data = ForcesData(frequency)  
+        
+        self.isrotate = False
+        self.set_angles(0.0, 0.0, 0.0)
+        self.rotation_matrix = np.zeros((3,3))
+        
+        self.isCompressionFlip = False
 
+    def set_angles(self, x , y, z):
+        
+        if x!=0 :
+            self.angles['x'] = x
+            self.set_rotation_matrix('x')
+            self.isrotate = True
+        if y!=0 :
+            self.angles['y'] = y
+            self.set_rotation_matrix('y')
+            self.isrotate = True
+        if z!=0 :
+            self.angles['z'] = z
+            self.set_rotation_matrix('z')
+            self.isrotate = True
+        
+    def print_rotation_matrix(self):
+        print(self.rotation_matrix)
+        print(self.angles)
+        
+    def set_rotation_matrix(self, axis, angle):
+        
+        theta = (180.0 - angle) * np.pi / 180.0
+
+        cos_theta = np.cos(theta)
+        sin_theta = np.sin(theta)
+
+        if axis == 'z':
+            rot_matrix_z = np.array([
+                [cos_theta, -sin_theta, 0],
+                [sin_theta, cos_theta, 0],
+                [0, 0, 1]
+            ])
+
+            rotation_matrix = rot_matrix_z
+        elif axis == 'y':
+            rot_matrix_y = np.array([
+                [cos_theta, 0, sin_theta],
+                [0, 1, 0],
+                [-sin_theta, 0, cos_theta]
+            ])
+                    
+            rotation_matrix = rot_matrix_y
+        elif axis == 'x':
+            rot_matrix_x = np.array([
+                [1, 0, 0],
+                [0, cos_theta, -sin_theta],
+                [0, sin_theta, cos_theta]
+            ])
+            
+            rotation_matrix = rot_matrix_x
+        else:
+            raise ValueError("Invalid axis. Use 'x', 'y', or 'z'.")
+
+        self.rotation_matrix = np.dot(self.rotation_matrix, rotation_matrix)
+        
     def data_size(self):
         return self.force_data.num_data_points
         
     def add_data_point(self, forces_values, analog_values):
-    
         self.force_data.add_data_point(forces_values[0], forces_values[1], forces_values[2])
-        
         self.analog_data.add_data_point(analog_values)
 
     def get_num_channels(self):
@@ -492,6 +551,21 @@ class DataContainer:
         for sensor in self.sensors:
             self.create_debug_data(sensor)
 
+    def apply_rotation_to_vector(self, rotation_matrix, vector):
+        rotated_vector = np.dot(rotation_matrix, vector)
+        return rotated_vector
+
+    def apply_rotation_to_force(self):
+        for sensor in self.sensors:
+            if sensor.isrotate:
+                xyz_data = sensor.get_x_y_z_array()
+                rotation_matrix = sensor.rotation_matrix
+                rotated_array = np.apply_along_axis(self.apply_rotation_to_vector, axis=1, arr=xyz_data, rotation_matrix=rotation_matrix)
+                
+                sensor.get_forces_data().forces_x = rotated_array[:, 0]
+                sensor.get_forces_data().forces_y = rotated_array[:, 1]
+                sensor.get_forces_data().forces_z = rotated_array[:, 2]
+
     def calculate_area_under_signal(signal,time , star_time_idx, end_time_idx):
         signal_function = np.poly1d(signal)
         area, _ = quad(signal_function, time[star_time_idx], time[end_time_idx])
@@ -554,7 +628,7 @@ class DataContainer:
             sensor.add_data_point([signals[0][i] + white_noise[i],
                                    signals[1][i] + white_noise[i],
                                    signals[2][i] + white_noise[i],
-                                   0, 0, 0], [])
+                                   0, 0, 0], [0, 0, 0, 0, 0, 0])
 
         #self.generate_debug_chrono_data()
 
@@ -631,9 +705,13 @@ class Wid(QMainWindow):
         oscstreaming_action.setStatusTip("Oscstreaming")
         oscstreaming_action.triggered.connect(self.oscstreaming_action)
         
-        oscstreaming_action = QAction("&Chrono_bip_detect", self)
-        oscstreaming_action.setStatusTip("Chrono bip detection")
-        oscstreaming_action.triggered.connect(self.chrono_bip_detection_action)
+        chrono_detec_action = QAction("&Chrono_bip_detect", self)
+        chrono_detec_action.setStatusTip("Chrono bip detection")
+        chrono_detec_action.triggered.connect(self.chrono_bip_detection_action)
+        
+        apply_rotation_action = QAction("&Apply rotation", self)
+        apply_rotation_action.setStatusTip("Apply rotation")
+        apply_rotation_action.triggered.connect(self.apply_rotation_action)
 
         toolbar = self.addToolBar("Tools")
         toolbar.addAction(open_file_action)
@@ -647,6 +725,8 @@ class Wid(QMainWindow):
         toolbar.addAction(settings_action)
         toolbar.addAction(flip_action)
         toolbar.addAction(oscstreaming_action)
+        toolbar.addAction(chrono_detec_action)
+        toolbar.addAction(apply_rotation_action)
         
         toolbar.addAction(debug_data_action)
 
@@ -685,17 +765,22 @@ class Wid(QMainWindow):
         self.osc_sender.position_signal.connect(self.plotter.set_player_scroll_hline)
 
         self.show()
+    
+    def apply_rotation_action(self):
+        self.data_container.apply_rotation_to_force()
+        self.plotter.plot_data()
         
     def settings_action(self):
-        
-        #stop send data when calibration task 
-        
         #domo
-        sensor_ids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
-        #sensor_ids = [1]#, 2, 3]
-        add_platformes = True
+        #sensor_ids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+        sensor_ids = []#, 2, 3]
+        add_platformes = False
         
         sensor_frequency = 200
+        
+        current_sensor = Sensor(1, 6, sensor_frequency)
+        self.data_container.add_sensor(current_sensor)  
+        current_sensor.set_angles(0,0,0) 
         
         for sensor_id in sensor_ids:
             current_sensor = Sensor(sensor_id, 6, sensor_frequency)
@@ -770,9 +855,7 @@ class Wid(QMainWindow):
         self.data_container.clear_all_sensor_data()
         self.plotter.clear_plot()
         self.plot_controller.clean_widget()
-        self.plot_controller.set_up_widget() 
-        
-        self.settings_action()
+        self.plot_controller.set_up_widget()  
 
     def apply_filter_action(self):
         self.data_container.apply_filter_hcutoff_to_sensors()
@@ -819,9 +902,6 @@ class Wid(QMainWindow):
         self.plotter.plot_contacts()
 
     def debug_action(self):
-        current_sensor = Sensor(4, 6, 200)
-        self.data_container.add_sensor(current_sensor)
-
         self.data_container.fill_debug_data()
         self.plotter.plot_data()
         self.plot_controller.set_up_widget()

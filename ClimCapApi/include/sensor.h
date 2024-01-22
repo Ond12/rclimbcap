@@ -53,7 +53,7 @@ public:
     {
         constexpr int N = 3;
 
-        double theta = (180 - angle) * M_PI / 180.0;
+        double theta = (180.0 - angle) * M_PI / 180.0;
 
         // Calcul de la matrice de rotation
         double cos_theta = cos(theta);

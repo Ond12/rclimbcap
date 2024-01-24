@@ -6,65 +6,61 @@ from PyQt6.QtCore import *
 from PyQt6.QtWidgets import *
 from pythonosc.udp_client import SimpleUDPClient
 import numpy as np
+import time
 
 class PlayPauseWidget(QWidget):
     play_pause_signal = pyqtSignal(bool)
+    reset_idx = pyqtSignal()
 
-    def __init__(self, osc_sender):
+    def __init__(self):
         super().__init__()
 
-        self.playing = False  # Flag to track play/pause state
-        self.osc_sender = osc_sender
+        self.playing = False  
 
         self.init_ui()
-        self.play_pause_signal.connect(self.osc_sender.handle_play_pause_state)
+
 
     def init_ui(self):
-        # Create play/pause button
+
         self.play_pause_button = QPushButton('Play', self)
         self.play_pause_button.clicked.connect(self.toggle_play_pause)
         
         self.reset_button = QPushButton('Reset', self)
         self.reset_button.clicked.connect(self.reset_index)
 
-        # Create layout
         layout = QVBoxLayout()
         layout.addWidget(self.play_pause_button)
         layout.addWidget(self.reset_button)
 
-        # Set the layout for the widget
         self.setLayout(layout)
 
-        # Set window properties
         self.setWindowTitle('Play/Pause Widget')
         self.setGeometry(100, 100, 300, 200)
 
     def reset_index(self):
-        self.osc_sender.reset_packet_idx()
+        self.reset_idx.emit()
 
     def toggle_play_pause(self):
-        # Toggle play/pause state
         self.playing = not self.playing
 
-        # Update button text
         if self.playing:
             self.play_pause_button.setText('Pause')
         else:
             self.play_pause_button.setText('Play')
 
-        # Emit the custom signal with the current play/pause state
         self.play_pause_signal.emit(self.playing)
 
-class OSCSender(QObject):
+class OSCSender(QThread):
     
     position_signal = pyqtSignal(float)
     
     def __init__(self):
         super().__init__()
 
-        self.target_address = "127.0.0.1"  # Set your target IP address
-        self.target_port = 12345  # Set your target port
-        self.timer_interval = 1000  # 200Hz corresponds to 5ms interval
+        self.target_address = "192.168.62.114"  
+        #self.target_address = "127.0.0.1" 
+        self.target_port = 3001  
+        self.timer_interval = 5  # 200Hz corresponds to 5ms interval
 
         self.packet_idx = 0
         self.datas_array = None
@@ -72,12 +68,13 @@ class OSCSender(QObject):
         self.udp_socket = QUdpSocket()
         self.timer = QTimer()
         self.timer.timeout.connect(self.send_udp_data)
+        
         #self.timer.start(self.timer_interval)
 
         self.osc_client = SimpleUDPClient(self.target_address, self.target_port)
 
     def set_send_frequency(self, frequency):
-        self.timer_interval = 1000/frequency
+        self.timer_interval = 1000 / frequency
     
     def reset_packet_idx(self):
         self.packet_idx = 0
@@ -88,17 +85,31 @@ class OSCSender(QObject):
         self.datas_array = data_array
 
     def send_udp_data(self):
-        all_row_data = self.datas_array[self.packet_idx,:]
-        slice_array = all_row_data.reshape(-1,3)
+        start_time = time.time()
+        
+        all_row_data = self.datas_array[self.packet_idx,:] #get a row
+        slice_array = all_row_data.reshape(-1, 3) # slice the row into 2D with 3col
         
         for i, arr in enumerate(slice_array):
-            osc_address = f"/{i + 1}"
-            self.osc_client.send_message(osc_address, arr)
+            osc_address = f"/capteur{i + 1}/fx"
+            self.osc_client.send_message(osc_address, arr[0])
+            osc_address = f"/capteur{i + 1}/fy"
+            self.osc_client.send_message(osc_address, arr[1])
+            osc_address = f"/capteur{i + 1}/fz"
+            self.osc_client.send_message(osc_address, arr[2])
                 
-        packet_time = (self.packet_idx * self.timer_interval) / 1000
-        
         self.packet_idx += 1
-        self.position_signal.emit(packet_time)
+        
+        if self.packet_idx % 50 == 0:
+            self.position_signal.emit(self.packet_idx)
+        
+        # Record end time
+        end_time = time.time() 
+
+        # Calculate elapsed time
+        elapsed_time = (end_time - start_time ) * 1000
+
+        print(f"Elapsed Time: {elapsed_time} seconds")
         
     def handle_play_pause_state(self, playing):
         if playing:

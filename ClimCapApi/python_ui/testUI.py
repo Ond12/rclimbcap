@@ -141,7 +141,7 @@ class Sensor:
         self.force_data = ForcesData(frequency)  
         
         self.isrotate = False
-        self.set_angles(0.0, 0.0, 0.0)
+        self.angles = {'x':0,'y':0,'z':0}
         self.rotation_matrix = np.zeros((3,3))
         
         self.isCompressionFlip = False
@@ -150,15 +150,15 @@ class Sensor:
         
         if x!=0 :
             self.angles['x'] = x
-            self.set_rotation_matrix('x')
+            self.set_rotation_matrix('x', x)
             self.isrotate = True
         if y!=0 :
             self.angles['y'] = y
-            self.set_rotation_matrix('y')
+            self.set_rotation_matrix('y', y)
             self.isrotate = True
         if z!=0 :
             self.angles['z'] = z
-            self.set_rotation_matrix('z')
+            self.set_rotation_matrix('z', z)
             self.isrotate = True
         
     def print_rotation_matrix(self):
@@ -549,19 +549,18 @@ class DataContainer:
 
     def fill_debug_data(self):
         for sensor in self.sensors:
-            self.create_debug_data(sensor)
+            self.create_debug_data(sensor, False, True)
 
-    def apply_rotation_to_vector(self, rotation_matrix, vector):
+    def apply_rotation_to_vector(self, vector, rotation_matrix):
         rotated_vector = np.dot(rotation_matrix, vector)
         return rotated_vector
 
     def apply_rotation_to_force(self):
         for sensor in self.sensors:
             if sensor.isrotate:
-                xyz_data = sensor.get_x_y_z_array()
+                xyz_data = sensor.force_data.get_x_y_z_array()
                 rotation_matrix = sensor.rotation_matrix
-                rotated_array = np.apply_along_axis(self.apply_rotation_to_vector, axis=1, arr=xyz_data, rotation_matrix=rotation_matrix)
-                
+                rotated_array = np.apply_along_axis(self.apply_rotation_to_vector, 1, xyz_data, rotation_matrix=rotation_matrix)
                 sensor.get_forces_data().forces_x = rotated_array[:, 0]
                 sensor.get_forces_data().forces_y = rotated_array[:, 1]
                 sensor.get_forces_data().forces_z = rotated_array[:, 2]
@@ -598,7 +597,7 @@ class DataContainer:
 
         return time, signal
 
-    def create_debug_data(self, sensor=None):
+    def create_debug_data(self, sensor=None, addnoise=False, linear=False):
         if sensor==None:
             sensor = self.sensors[0]
             if sensor == None:
@@ -606,9 +605,9 @@ class DataContainer:
                 return None
 
         signal_parameters = [
-            {"amplitude": 100, "frequency": 2, "phase": 0.0},
-            {"amplitude": 400, "frequency": 0.5, "phase": np.pi / 4.0},
-            {"amplitude": 800, "frequency": 0.2, "phase": np.pi / 2.0},
+            {"amplitude": 100, "frequency": 2,   "phase": 0.0, "constant":100},
+            {"amplitude": 400, "frequency": 0.5, "phase": np.pi / 4.0, "constant":200},
+            {"amplitude": 800, "frequency": 0.2, "phase": np.pi / 2.0, "constant":300},
         ]
 
         duration = 5
@@ -616,19 +615,30 @@ class DataContainer:
         t = np.arange(0, duration, 1 / sampling_rate)
 
         signals = []
-        for params in signal_parameters:
-            signal = params["amplitude"] * np.sin(2 * np.pi * params["frequency"] * t + params["phase"])
-            signals.append(signal)
-        
-        noise_amplitude = 10
-        white_noise = np.random.normal(0, noise_amplitude, len(t))
 
+        if linear:
+            for params in signal_parameters:
+                constant_value = params["constant"]      
+                signal = constant_value * np.ones_like(t)
+                signals.append(signal)
+        else:
+            for params in signal_parameters:
+                signal = params["amplitude"] * np.sin(2 * np.pi * params["frequency"] * t + params["phase"])
+                signals.append(signal)
+                
+        if addnoise:
+            noise_amplitude = 10
+            white_noise = np.random.normal(0, noise_amplitude, len(t))
+        else:
+            noise_amplitude = 0
+            white_noise = np.random.normal(0, noise_amplitude, len(t))
+          
         for i in range(len(t)):
             # Combine signals with white noise
             sensor.add_data_point([signals[0][i] + white_noise[i],
-                                   signals[1][i] + white_noise[i],
-                                   signals[2][i] + white_noise[i],
-                                   0, 0, 0], [0, 0, 0, 0, 0, 0])
+                                signals[1][i] + white_noise[i],
+                                signals[2][i] + white_noise[i],
+                                0, 0, 0], [0, 0, 0, 0, 0, 0])
 
         #self.generate_debug_chrono_data()
 
@@ -758,10 +768,15 @@ class Wid(QMainWindow):
         
         main_grid.addWidget(self.plot_controller, 1, 0)
         main_grid.addWidget(self.plotter,2,0)
-        main_grid.addWidget(record_widget, 3, 0)
+        #main_grid.addWidget(record_widget, 3, 0)
+
+        self.osc_play_pause_widget = PlayPauseWidget()
 
         self.osc_sender = OSCSender()
-        self.osc_play_pause_widget = PlayPauseWidget(self.osc_sender)
+        self.osc_sender.start()
+                
+        self.osc_play_pause_widget.play_pause_signal.connect(self.osc_sender.handle_play_pause_state)
+        self.osc_play_pause_widget.reset_idx.connect(self.osc_sender.reset_packet_idx)
         self.osc_sender.position_signal.connect(self.plotter.set_player_scroll_hline)
 
         self.show()
@@ -780,7 +795,7 @@ class Wid(QMainWindow):
         
         current_sensor = Sensor(1, 6, sensor_frequency)
         self.data_container.add_sensor(current_sensor)  
-        current_sensor.set_angles(0,0,0) 
+        #current_sensor.set_angles(45,0,0) 
         
         for sensor_id in sensor_ids:
             current_sensor = Sensor(sensor_id, 6, sensor_frequency)

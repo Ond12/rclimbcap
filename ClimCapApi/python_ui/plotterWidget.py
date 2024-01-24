@@ -217,7 +217,7 @@ class Plotter(pg.PlotWidget):
                 cr_data = self.data_container.chrono_data
                 #print(f"cr len {len(cr_data)}")
                 if len(cr_data) > 0:
-                    time_increments_chrono_dummy = np.arange( len(cr_data) ) / 200 
+                    time_increments_chrono_dummy = np.arange( len(cr_data) ) / self.data_container.chrono_freq
                     plot_item_chrono_data = self.plot(time_increments_chrono_dummy, cr_data, pen=pg.mkPen(color_chrono, width=2, alpha=200), name=f"Chrono signal")
                     self.plot_items.append(plot_item_chrono_data)
                     
@@ -261,7 +261,9 @@ class Plotter(pg.PlotWidget):
               pen=(187, 26, 95), symbolBrush=(187, 26, 95),
               symbolPen='w', symbol='arrow_up', symbolSize=22, name="symbol='arrow_up'")
     
-    def set_player_scroll_hline(self, position):
+    def set_player_scroll_hline(self, packetidx):
+        time_interval = (1/200)
+        position = (packetidx * time_interval) / 1000 #in seconds
         if not self.vertical_line:
                 self.vertical_line = pg.InfiniteLine(pos=position, angle=90, movable=False, pen='r')
                 self.addItem(self.vertical_line)

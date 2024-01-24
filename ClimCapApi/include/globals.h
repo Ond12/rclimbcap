@@ -11,7 +11,7 @@ namespace globals
 	constexpr auto  DEFAULT_TRIGGER_SETTING = 0;
 	constexpr auto  DEFAULT_SAMPLE_CALIBRATION_NUMBER = 1000;
 
-	constexpr auto  ENABLE_PLATFORM = true;
+	constexpr auto  ENABLE_PLATFORM = false;
 	constexpr auto  ENABLE_SENSOR = true;
 
 	//NIDAQmx globals
@@ -19,9 +19,11 @@ namespace globals
 	constexpr auto IMPORT_START_TRIGGER_PIN = "PFI1";
 	constexpr auto EXPORT_SAMPLE_CLOCK_PIN = "PFI4";
 	constexpr auto EXPORT_START_TRIGGER_PIN = "PFI5";
-	constexpr auto CHRONO_PULSE_PIN = 72;
+	constexpr auto CHRONO_PULSE_PIN = 7;
 
-	constexpr auto SENSOR_ACQ_CARD_NAME = "Dev1";
+	//constexpr auto CHRONO_PULSE_PIN = 72; // pin number in acq card
+
+	constexpr auto SENSOR_ACQ_CARD_NAME = "Dev2";
 	constexpr auto PLATFORM_ACQ_CARD_NAME = "Dev3";
 
 	//Debug globals

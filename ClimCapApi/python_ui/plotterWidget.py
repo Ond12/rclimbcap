@@ -104,7 +104,7 @@ class Plotter(pg.PlotWidget):
         super(Plotter, self).__init__(parent=parent)
         self.data_container = data_container
         
-        self.refresh_rate = 2000
+        self.refresh_rate = 100
         
         self.plot_items:list = []
         self.contact_list:list = []
@@ -251,7 +251,7 @@ class Plotter(pg.PlotWidget):
         time_increments = force_result["time"]
         resultant_force = force_result["data"]
         sensor_id = force_result["sensor_id"]
-        plot_item_resultant_force = self.plot(time_increments, resultant_force, pen=pg.mkPen((255,105,180), width=2, alpha=200), name=f"Sensor {sensor_id} - Force Z")
+        plot_item_resultant_force = self.plot(time_increments, resultant_force, pen=pg.mkPen((255,105,180), width=2, alpha=200), name=f"Sensor {sensor_id} - Res")
         plot_item_resultant_force.setVisible(True)
         self.plot_items.append(plot_item_resultant_force)
         #self.sensor_plot_map[sensor_id].add_plot_item(plot_item_resultant_force)
@@ -262,7 +262,7 @@ class Plotter(pg.PlotWidget):
               symbolPen='w', symbol='arrow_up', symbolSize=22, name="symbol='arrow_up'")
     
     def set_player_scroll_hline(self, packetidx):
-        time_interval = (1/200)
+        time_interval = ( 1000/200 )
         position = (packetidx * time_interval) / 1000 #in seconds
         if not self.vertical_line:
                 self.vertical_line = pg.InfiniteLine(pos=position, angle=90, movable=False, pen='r')

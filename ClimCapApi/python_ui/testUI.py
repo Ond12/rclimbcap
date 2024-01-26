@@ -86,6 +86,15 @@ class ForcesData:
         df = pd.DataFrame(data_dict)
         return df
     
+    def get_forces_x(self):
+        return self.forces_x[:self.num_data_points]
+        
+    def get_forces_y(self):
+        return self.forces_y[:self.num_data_points]
+        
+    def get_forces_z(self):
+        return self.forces_z[:self.num_data_points]
+    
     def get_x_y_z_array(self):
         return np.column_stack((self.forces_x, self.forces_y, self.forces_z))
     
@@ -142,7 +151,7 @@ class Sensor:
         
         self.isrotate = False
         self.angles = {'x':0,'y':0,'z':0}
-        self.rotation_matrix = np.zeros((3,3))
+        self.rotation_matrix = np.identity(3)
         
         self.isCompressionFlip = False
 
@@ -171,6 +180,7 @@ class Sensor:
 
         cos_theta = np.cos(theta)
         sin_theta = np.sin(theta)
+        rot_matrix = np.identity(3)
 
         if axis == 'z':
             rot_matrix_z = np.array([
@@ -179,7 +189,7 @@ class Sensor:
                 [0, 0, 1]
             ])
 
-            rotation_matrix = rot_matrix_z
+            rot_matrix = rot_matrix_z
         elif axis == 'y':
             rot_matrix_y = np.array([
                 [cos_theta, 0, sin_theta],
@@ -187,7 +197,7 @@ class Sensor:
                 [-sin_theta, 0, cos_theta]
             ])
                     
-            rotation_matrix = rot_matrix_y
+            rot_matrix = rot_matrix_y
         elif axis == 'x':
             rot_matrix_x = np.array([
                 [1, 0, 0],
@@ -195,11 +205,11 @@ class Sensor:
                 [0, sin_theta, cos_theta]
             ])
             
-            rotation_matrix = rot_matrix_x
+            rot_matrix = rot_matrix_x
         else:
             raise ValueError("Invalid axis. Use 'x', 'y', or 'z'.")
 
-        self.rotation_matrix = np.dot(self.rotation_matrix, rotation_matrix)
+        self.rotation_matrix = np.dot(self.rotation_matrix, rot_matrix)
         
     def data_size(self):
         return self.force_data.num_data_points
@@ -301,7 +311,7 @@ class DataContainer:
         force_data = sensor.get_forces_data()
         time_increments = force_data.get_time_increments()
         
-        forces = np.array([force_data.forces_x, force_data.forces_y, force_data.forces_z])
+        forces = np.array([force_data.get_forces_x(), force_data.get_forces_y(), force_data.get_forces_z()])
         resultant_force = np.linalg.norm(forces, axis=0)
         
         result = {}
@@ -552,18 +562,27 @@ class DataContainer:
             self.create_debug_data(sensor, False, True)
 
     def apply_rotation_to_vector(self, vector, rotation_matrix):
-        rotated_vector = np.dot(rotation_matrix, vector)
+        rotated_vector = np.dot( vector, rotation_matrix)
+        #print(f"res{rotated_vector} vec{vector}")
         return rotated_vector
 
     def apply_rotation_to_force(self):
         for sensor in self.sensors:
+
             if sensor.isrotate:
-                xyz_data = sensor.force_data.get_x_y_z_array()
+                xyz_data = sensor.force_data.get_x_y_z_array()[0:sensor.data_size()]
                 rotation_matrix = sensor.rotation_matrix
-                rotated_array = np.apply_along_axis(self.apply_rotation_to_vector, 1, xyz_data, rotation_matrix=rotation_matrix)
-                sensor.get_forces_data().forces_x = rotated_array[:, 0]
-                sensor.get_forces_data().forces_y = rotated_array[:, 1]
-                sensor.get_forces_data().forces_z = rotated_array[:, 2]
+                print(rotation_matrix)
+                rotated_data = []
+                for row in xyz_data:
+                    rotated_row = self.apply_rotation_to_vector(row, rotation_matrix)
+                    rotated_data.append(rotated_row)
+                
+                result_array = np.array(rotated_data)
+                
+                sensor.get_forces_data().forces_x = result_array[:, 0]
+                sensor.get_forces_data().forces_y = result_array[:, 1]
+                sensor.get_forces_data().forces_z = result_array[:, 2]
 
     def calculate_area_under_signal(signal,time , star_time_idx, end_time_idx):
         signal_function = np.poly1d(signal)
@@ -605,9 +624,9 @@ class DataContainer:
                 return None
 
         signal_parameters = [
-            {"amplitude": 100, "frequency": 2,   "phase": 0.0, "constant":100},
-            {"amplitude": 400, "frequency": 0.5, "phase": np.pi / 4.0, "constant":200},
-            {"amplitude": 800, "frequency": 0.2, "phase": np.pi / 2.0, "constant":300},
+            {"amplitude": 100, "frequency": 2,   "phase": 0.0, "constant":0},
+            {"amplitude": 400, "frequency": 0.5, "phase": np.pi / 4.0, "constant":1000},
+            {"amplitude": 800, "frequency": 0.2, "phase": np.pi / 2.0, "constant":0},
         ]
 
         duration = 5
@@ -795,7 +814,7 @@ class Wid(QMainWindow):
         
         current_sensor = Sensor(1, 6, sensor_frequency)
         self.data_container.add_sensor(current_sensor)  
-        #current_sensor.set_angles(45,0,0) 
+        current_sensor.set_angles(45,0,0) 
         
         for sensor_id in sensor_ids:
             current_sensor = Sensor(sensor_id, 6, sensor_frequency)
@@ -919,7 +938,6 @@ class Wid(QMainWindow):
     def debug_action(self):
         self.data_container.fill_debug_data()
         self.plotter.plot_data()
-        self.plot_controller.set_up_widget()
 
     def open_file_action(self):
         file_path, _ = QFileDialog.getOpenFileName(self, "Open Excel File", "", "Excel Files (*.xlsx);;All Files (*)")

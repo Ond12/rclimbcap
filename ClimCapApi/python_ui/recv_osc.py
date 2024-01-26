@@ -7,7 +7,6 @@ from PyQt6.QtWidgets import *
 from pythonosc.udp_client import SimpleUDPClient
 import numpy as np
 
-
 class OSCSender(QObject):
     
     position_signal = pyqtSignal(float)

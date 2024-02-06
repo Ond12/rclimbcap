@@ -33,14 +33,14 @@ class RingBuffer:
 class ForcesData:
     def __init__(self, frequency):
         self.frequency = frequency
-        self.num_data_points = 1
+        self.num_data_points = 0
         
         self.write_index = 0
         self.capacity = 12000
         
-        self.forces_x = [0] * self.capacity
-        self.forces_y = [0] * self.capacity
-        self.forces_z = [0] * self.capacity
+        self.forces_x =  [0] * self.capacity
+        self.forces_y =  [0] * self.capacity
+        self.forces_z =  [0] * self.capacity
         self.moments_x = [0] * self.capacity
         self.moments_y = [0] * self.capacity
         self.moments_z = [0] * self.capacity
@@ -67,18 +67,21 @@ class ForcesData:
         #self.moments_y.append(moment_y)
         #self.moments_z.append(moment_z)
 
-        time_val = (1 / self.frequency) * self.write_index
-        self.write_or_append_data(self.x_time, self.write_index, time_val)
+        #time_val = (1 / self.frequency) * self.write_index
+        #self.write_or_append_data(self.x_time, self.write_index, time_val)
 
     def get_time_increments(self):
+        if self.num_data_points == 0:
+            return []
         time_increments = np.arange(self.num_data_points) / self.frequency
+
         return time_increments
     
     def to_dataframe(self):
         data_dict = {
-            'fx': self.forces_x[0:self.write_index],
-            'fy': self.forces_y[0:self.write_index],
-            'fz': self.forces_z[0:self.write_index],
+            'fx': self.forces_x[0:self.num_data_points],
+            'fy': self.forces_y[0:self.num_data_points],
+            'fz': self.forces_z[0:self.num_data_points],
             #'m_x': self.moments_x,
             #'m_y': self.moments_y,
             #'m_z': self.moments_z
@@ -95,6 +98,18 @@ class ForcesData:
     def get_forces_z(self):
         return self.forces_z[:self.num_data_points]
     
+    def set_force_x(self, data):
+        self.num_data_points = len(data)
+        self.forces_x = data
+        
+    def set_force_y(self, data):
+        self.num_data_points = len(data)
+        self.forces_y = data
+    
+    def set_force_z(self, data):
+        self.num_data_points = len(data)
+        self.forces_z = data
+    
     def get_x_y_z_array(self):
         return np.column_stack((self.forces_x, self.forces_y, self.forces_z))
     
@@ -106,7 +121,7 @@ class ForcesData:
 class AnalogData:
     def __init__(self, frequency, num_channels):
         self.frequency = frequency
-        self.num_data_points = 1
+        self.num_data_points = 0
         self.num_channels = num_channels
         self.capacity = 12000
         self.write_index = 0
@@ -134,7 +149,7 @@ class AnalogData:
 
     def to_dataframe(self):
         data_dict = {
-            f'analog_{i+1}': data[0:self.write_index] for i, data in enumerate(self.datas)
+            f'analog_{i+1}': data[0:self.num_data_points] for i, data in enumerate(self.datas)
         }
         df = pd.DataFrame(data_dict)
         return df
@@ -152,7 +167,7 @@ class Sensor:
         self.isrotate = False
         self.angles = {'x':0,'y':0,'z':0}
         self.rotation_matrix = np.identity(3)
-        
+                       
         self.isCompressionFlip = False
 
     def set_angles(self, x , y, z):
@@ -176,7 +191,7 @@ class Sensor:
         
     def set_rotation_matrix(self, axis, angle):
         
-        theta = (180.0 - angle) * np.pi / 180.0
+        theta = np.radians(angle)
 
         cos_theta = np.cos(theta)
         sin_theta = np.sin(theta)
@@ -210,6 +225,7 @@ class Sensor:
             raise ValueError("Invalid axis. Use 'x', 'y', or 'z'.")
 
         self.rotation_matrix = np.dot(self.rotation_matrix, rot_matrix)
+        print(self.rotation_matrix)
         
     def data_size(self):
         return self.force_data.num_data_points
@@ -232,6 +248,9 @@ class Sensor:
     
     def clear_data(self):
         self.force_data = ForcesData(self.frequency)  
+    
+    def set_is_compression_flip(self):
+        self.isCompressionFlip = True
 
 class DataContainer:
     def __init__(self):
@@ -295,10 +314,13 @@ class DataContainer:
         #print(f"Adding sensor : {sensor.sensor_id} ")
         
     def dispatch_data(self, sensor_id, unf_data):
-        #curr_sensor = self.get_sensor(sensor_id)
-        data = unf_data["data"]
-        data_analog = unf_data["analog"]
-        self.sensors_dict[sensor_id].add_data_point(data, data_analog)
+        try:
+            sensor = self.sensors_dict[sensor_id]
+            data = unf_data["data"]
+            data_analog = unf_data["analog"]
+            sensor.add_data_point(data, data_analog)
+        except KeyError:
+            pass
 
     def get_sensor(self, sensor_id):
         if sensor_id in self.sensors_dict:  
@@ -323,12 +345,7 @@ class DataContainer:
     
     def add_chrono_data_point(self, data_value):
         self.chrono_data.append(data_value)
-    
-    def cal_resultant_force_all_sensors(self):
-        for sensor in self.sensors:
-            resultant_force = self.cal_resultant_force(sensor.get_forces_data().forces_x, sensor.get_forces_data().forces_x, sensor.get_forces_data().forces_x)
-            sensor.get_forces_data().resultant = resultant_force["data"]
-            
+                
     def sum_force_data(self):
         force_data = self.sensors[0].get_forces_data()
         time_increments = force_data .get_time_increments()
@@ -562,27 +579,26 @@ class DataContainer:
             self.create_debug_data(sensor, False, True)
 
     def apply_rotation_to_vector(self, vector, rotation_matrix):
-        rotated_vector = np.dot( vector, rotation_matrix)
-        #print(f"res{rotated_vector} vec{vector}")
+        rotated_vector = np.dot(rotation_matrix,  vector)
         return rotated_vector
 
     def apply_rotation_to_force(self):
         for sensor in self.sensors:
 
-            if sensor.isrotate:
-                xyz_data = sensor.force_data.get_x_y_z_array()[0:sensor.data_size()]
-                rotation_matrix = sensor.rotation_matrix
-                print(rotation_matrix)
-                rotated_data = []
-                for row in xyz_data:
-                    rotated_row = self.apply_rotation_to_vector(row, rotation_matrix)
-                    rotated_data.append(rotated_row)
-                
-                result_array = np.array(rotated_data)
-                
-                sensor.get_forces_data().forces_x = result_array[:, 0]
-                sensor.get_forces_data().forces_y = result_array[:, 1]
-                sensor.get_forces_data().forces_z = result_array[:, 2]
+            #if sensor.isrotate:
+            xyz_data = sensor.force_data.get_x_y_z_array()#[0:sensor.data_size()]
+            rotation_matrix = sensor.rotation_matrix
+
+            rotated_data = []
+            for row in xyz_data:
+                rotated_row = self.apply_rotation_to_vector(row, rotation_matrix)
+                rotated_data.append(rotated_row)
+            
+            result_array = np.array(rotated_data)
+            
+            sensor.get_forces_data().set_force_x(result_array[:, 0])
+            sensor.get_forces_data().set_force_y(result_array[:, 1])
+            sensor.get_forces_data().set_force_z(result_array[:, 2])
 
     def calculate_area_under_signal(signal,time , star_time_idx, end_time_idx):
         signal_function = np.poly1d(signal)
@@ -592,6 +608,7 @@ class DataContainer:
     def switch_sign(self, signal):
         for i in range(len(signal)):
             signal[i] = -signal[i]
+        return signal
             
     def switch_sign_off_sensors(self):
         #flip des capteurs en compression
@@ -601,6 +618,7 @@ class DataContainer:
             if cur_sensor:
                 self.switch_sign(cur_sensor.get_forces_data().forces_x)
                 self.switch_sign(cur_sensor.get_forces_data().forces_y)
+                self.switch_sign(cur_sensor.get_forces_data().forces_z)
 
     def generate_debug_chrono_data(self, duration=5, sample_rate=200, rising_edge_interval=1):
         total_samples = duration * sample_rate
@@ -625,8 +643,8 @@ class DataContainer:
 
         signal_parameters = [
             {"amplitude": 100, "frequency": 2,   "phase": 0.0, "constant":0},
-            {"amplitude": 400, "frequency": 0.5, "phase": np.pi / 4.0, "constant":1000},
-            {"amplitude": 800, "frequency": 0.2, "phase": np.pi / 2.0, "constant":0},
+            {"amplitude": 400, "frequency": 0.5, "phase": np.pi / 4.0, "constant":-50},
+            {"amplitude": 800, "frequency": 0.2, "phase": np.pi / 2.0, "constant":250},
         ]
 
         duration = 5
@@ -679,6 +697,16 @@ class Wid(QMainWindow):
         self.apppfullpath = os.path.dirname(os.path.abspath(__file__))
         ic_path = os.path.join( self.apppfullpath, 'ClimbCap.png')
         self.setWindowIcon(QIcon(ic_path))
+
+        auto_delete = False
+        if(auto_delete):
+            self.timer = QTimer(self)
+            self.timer.timeout.connect(self.auto_delete)  
+            self.timer.start(30000) 
+
+    def auto_delete(self):
+        self.clear_data_action()
+        self.settings_action()
 
     def init_actions(self):
         open_file_action = QAction("&Open File", self)
@@ -780,14 +808,15 @@ class Wid(QMainWindow):
         self.data_container = DataContainer()
 
         self.plotter = Plotter(self.data_container)
-        self.plotter.toggle_plotter_update(True)
 
         self.plot_controller = PlotterController(self.plotter)
+        
         record_widget = RecordWidget()
+        record_widget.recording_toggled_signal.connect(self.plotter.toggle_plotter_update)
         
         main_grid.addWidget(self.plot_controller, 1, 0)
-        main_grid.addWidget(self.plotter,2,0)
-        #main_grid.addWidget(record_widget, 3, 0)
+        main_grid.addWidget(self.plotter, 2, 0)
+        main_grid.addWidget(record_widget, 3, 0)
 
         self.osc_play_pause_widget = PlayPauseWidget()
 
@@ -801,21 +830,22 @@ class Wid(QMainWindow):
         self.show()
     
     def apply_rotation_action(self):
+        for sensor in self.data_container.sensors:
+            #sensor.set_angles(0, 180, 0)
+            sensor.set_angles(5, 0, 0)
+            #ysensor.set_angles(0, )
+            
         self.data_container.apply_rotation_to_force()
         self.plotter.plot_data()
         
     def settings_action(self):
         #domo
         #sensor_ids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
-        sensor_ids = []#, 2, 3]
+        sensor_ids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
         add_platformes = False
         
         sensor_frequency = 200
-        
-        current_sensor = Sensor(1, 6, sensor_frequency)
-        self.data_container.add_sensor(current_sensor)  
-        current_sensor.set_angles(45,0,0) 
-        
+              
         for sensor_id in sensor_ids:
             current_sensor = Sensor(sensor_id, 6, sensor_frequency)
             self.data_container.add_sensor(current_sensor)       
@@ -912,11 +942,12 @@ class Wid(QMainWindow):
         print(f"Get contacts on resultante axis for sensor {sensor_id}")
 
     def calculate_resultant_force_action(self):
-        sensor = self.data_container.sensors[0]
-        data_result  = self.data_container.cal_resultant_force(sensor)
-        sensor.get_forces_data().resultant = data_result["data"]
-        
-        self.plotter.plot_resultant_force(data_result)
+        sensors = self.data_container.sensors
+        for sensor in sensors:
+            resultant_force = self.data_container.cal_resultant_force(sensor)
+            sensor.get_forces_data().resultant = resultant_force["data"]
+            self.plotter.plot_resultant_force(resultant_force)
+  
         print("calculate resultant_force for sensor")
 
     def chrono_bip_detection_action(self):
@@ -972,6 +1003,7 @@ class Wid(QMainWindow):
                     sensor_number = self.extract_sensor_id(sheet_name)
                     if sensor_number is not None:
                         current_sensor = Sensor(sensor_number, 6, frequency)
+                        
                         self.data_container.add_sensor(current_sensor)
 
                     #for column_name in df.columns:
@@ -1000,10 +1032,12 @@ class Wid(QMainWindow):
     def update_plot_data(self, rdata):
         sensor_id = rdata["sid"]
 
-        if sensor_id == 0:
-            self.data_container.add_chrono_data_point(  rdata["data"][0] )
+        if sensor_id != 0:
+            data = rdata["data"]
+            data_analog = rdata["analog"]
+            self.data_container.sensors_dict[sensor_id].add_data_point(data, data_analog)
         else:
-            self.data_container.dispatch_data(sensor_id, rdata)
+            self.data_container.chrono_data.append(rdata["data"][0])
             
     def oscstreaming_action(self):
         concatdata = self.data_container.concat_all_data()

@@ -85,14 +85,14 @@ uint DataController::loadPlatformToAnalogConfig()
     loadCalibrationMatriceOrdre2PLATFORM(platformL.getSensorId(), calibrationMatrixO2container);
     platformL.setCalibrationMatrice02platform(calibrationMatrixO2container);
     this->m_plaformsList.push_back(platformL);
-    platformL.toString(true);
+    //platformL.toString(true);
     qDebug() << "- Platforme L" << platformL.getSensorId() << " OK -";
 
     Platform platformR(41, 0, 0);
     loadCalibrationMatriceOrdre2PLATFORM(platformR.getSensorId(), calibrationMatrixO2container);
     platformR.setCalibrationMatrice02platform(calibrationMatrixO2container);
     this->m_plaformsList.push_back(platformR);
-    platformR.toString(true);
+    //platformR.toString(true);
     qDebug() << "- Platforme R" << platformR.getSensorId() << " OK -";
 
     return this->m_plaformsList.count();
@@ -289,7 +289,7 @@ void DataController::createThreadAvgZero(uint sensorID, uint sensorStartChannel,
         << "start channel: " << sensorStartChannel;
 
     QString name = "Calibration du capteur :" + sensorID;
-    QProgressDialog* progressDialog = new QProgressDialog("lol", "Stop", 0, nbSamples);
+    QProgressDialog* progressDialog = new QProgressDialog("Calibration", "Stop", 0, nbSamples);
     progressDialog->setWindowModality(Qt::WindowModal);
     progressDialog->setMinimumDuration(0);
     progressDialog->setValue(0);

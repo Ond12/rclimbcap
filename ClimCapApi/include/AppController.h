@@ -177,10 +177,10 @@ public:
 
 				if (dummySender != nullptr)
 				{
-					dummySender->setNbchan(totalNumberOfChannelsplat);
+					dummySender->setNbchan(totalNumberOfChannelssensor);
 				}
 
-				qDebug() << "set up dummy sender mode nbchan plat " << totalNumberOfChannelsplat;
+				qDebug() << "set up dummy sender mode nbchan plat " << totalNumberOfChannelssensor;
 			}
 			else
 			{
@@ -249,8 +249,8 @@ public:
 			dummySender = new DummySender();
 			errorFlag = this->reloadSensorConfiguration();
 			qDebug("init dummy senser");
-			//QObject::connect(dummySender, SIGNAL(newDataPacketNi(const DataPacket&)),
-			//	MyDataController, SLOT(processNewDataPacketFromNi(const DataPacket&)));
+			QObject::connect(dummySender, SIGNAL(newDataPacketNi(const DataPacket&)),
+				MyDataController, SLOT(processNewDataPacketFromNi(const DataPacket&)));
 			
 			//QObject::connect(dummySender, SIGNAL(newDataPacketNi(const DataPacket&)),
 			//	MyDataController, SLOT(processNewDataPacketPlatformFromNi(const DataPacket&)));

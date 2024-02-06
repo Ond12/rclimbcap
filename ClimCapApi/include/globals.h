@@ -12,7 +12,7 @@ namespace globals
 	constexpr auto  DEFAULT_SAMPLE_CALIBRATION_NUMBER = 1000;
 
 	constexpr auto  ENABLE_PLATFORM = false;
-	constexpr auto  ENABLE_SENSOR = true;
+	constexpr auto  ENABLE_SENSOR = false;
 
 	//NIDAQmx globals
 	constexpr auto IMPORT_SAMPLE_CLOCK_PIN = "PFI0";
@@ -31,7 +31,7 @@ namespace globals
 	constexpr auto DEBUG_MOD_PLATFORM = false;
 	constexpr auto DEBUG_MOD_SENSOR = false;
 
-	constexpr auto DUMMY_SENDER = false;
+	constexpr auto DUMMY_SENDER = true;
 
 
 	static uint nbpacketsend = 0;

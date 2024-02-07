@@ -173,7 +173,6 @@ class Plotter(pg.PlotWidget):
             for i, sensor in enumerate(self.data_container.sensors):
 
                     force_data = sensor.get_forces_data()
-                    time_increments = force_data.get_time_increments()
 
                     force_x = force_data.forces_x
                     color_x_v = RED[sensor.sensor_id % 11]

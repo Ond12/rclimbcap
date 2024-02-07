@@ -578,20 +578,15 @@ class DataContainer:
         for sensor in self.sensors:
             self.create_debug_data(sensor, False, True)
 
-    def apply_rotation_to_vector(self, vector, rotation_matrix):
-        rotated_vector = np.dot(rotation_matrix,  vector)
-        return rotated_vector
-
     def apply_rotation_to_force(self):
         for sensor in self.sensors:
-
             #if sensor.isrotate:
             xyz_data = sensor.force_data.get_x_y_z_array()#[0:sensor.data_size()]
             rotation_matrix = sensor.rotation_matrix
 
             rotated_data = []
             for row in xyz_data:
-                rotated_row = self.apply_rotation_to_vector(row, rotation_matrix)
+                rotated_row = np.dot(rotation_matrix,  row)
                 rotated_data.append(rotated_row)
             
             result_array = np.array(rotated_data)
@@ -709,64 +704,80 @@ class Wid(QMainWindow):
         self.settings_action()
 
     def init_actions(self):
-        open_file_action = QAction("&Open File", self)
+        current_folder = os.path.dirname(os.path.realpath(__file__))
+
+        parent_folder = os.path.dirname(current_folder)
+        
+        icon_folder = os.path.join(parent_folder,'forms/images/svg')
+        
+        icon_path = os.path.join(icon_folder, 'folder.svg')
+        open_file_action = QAction(QIcon(icon_path), "&Open File", self)
         open_file_action.setStatusTip("Open File")
         open_file_action.triggered.connect(self.open_file_action)
 
-        save_file_action = QAction("&Save File", self)
+        icon_path = os.path.join(icon_folder, 'document.svg')
+        save_file_action = QAction(QIcon(icon_path), "&Save File", self)
         save_file_action.setStatusTip("Save File")
         save_file_action.triggered.connect(self.file_save_action)
         save_file_action.setShortcut("Ctrl+S")
 
-        clear_data_action = QAction("&Clear Data", self)
+        icon_path = os.path.join(icon_folder, 'full_trash.svg')
+        clear_data_action = QAction(QIcon(icon_path), "&Clear Data", self)
         clear_data_action.setStatusTip("Clear Data")
         clear_data_action.triggered.connect(self.clear_data_action)
 
-        apply_filter_action = QAction("&Apply filter", self)
+        icon_path = os.path.join(icon_folder, 'electrical_threshold.svg')
+        apply_filter_action = QAction(QIcon(icon_path), "&Apply filter", self)
         apply_filter_action.setStatusTip("Apply filter")
         apply_filter_action.triggered.connect(self.apply_filter_action)
 
-        find_contacts_action = QAction("&Find contacts", self)
+        icon_path = os.path.join(icon_folder, 'electrical_threshold.svg')
+        find_contacts_action = QAction(QIcon(icon_path), "&Find contacts", self)
         find_contacts_action.setStatusTip("Find contacts")
         find_contacts_action.triggered.connect(self.find_contacts_action)
 
-        sum_force_action = QAction("&Sum forces", self)
+        icon_path = os.path.join(icon_folder, 'add_database.svg')
+        sum_force_action = QAction(QIcon(icon_path), "&Sum forces", self)
         sum_force_action.setStatusTip("Sum forces")
         sum_force_action.triggered.connect(self.sum_force_action)
 
-        clear_data_action = QAction("&Clear Data", self)
-        clear_data_action.setStatusTip("Clear Data")
-        clear_data_action.triggered.connect(self.clear_data_action)
-
-        debug_data_action = QAction("&Debug", self)
+        icon_path = os.path.join(icon_folder, 'add_database.svg')
+        debug_data_action = QAction(QIcon(icon_path), "&Debug", self)
         debug_data_action.setStatusTip("Debug")
         debug_data_action.triggered.connect(self.debug_action)
         
-        calculate_resultant_action = QAction("&Cal Resultant", self)
+        icon_path = os.path.join(icon_folder, 'add_database.svg')
+        calculate_resultant_action = QAction(QIcon(icon_path), "&Cal Resultant", self)
         calculate_resultant_action.setStatusTip("Cal Resultant")
         calculate_resultant_action.triggered.connect(self.calculate_resultant_force_action)
         
-        find_max_in_contact_action = QAction("&Find max", self)
+        icon_path = os.path.join(icon_folder, 'add_database.svg')
+        find_max_in_contact_action = QAction(QIcon(icon_path), "&Find max", self)
         find_max_in_contact_action.setStatusTip("Find max")
         find_max_in_contact_action.triggered.connect(self.find_max_in_contact_action)
         
-        settings_action = QAction("&Settings", self)
+        icon_path = os.path.join(icon_folder, 'add_database.svg')
+        settings_action = QAction(QIcon(icon_path), "&Settings", self)
         settings_action.setStatusTip("Settings")
         settings_action.triggered.connect(self.settings_action)
         
-        flip_action = QAction("&Flip axis", self)
+        icon_path = os.path.join(icon_folder, 'add_database.svg')
+        flip_action = QAction(QIcon(icon_path), "&Flip axis", self)
         flip_action.setStatusTip("Flip axis")
         flip_action.triggered.connect(self.flip_action)
         
-        oscstreaming_action = QAction("&Oscstreaming", self)
+        icon_path = os.path.join(icon_folder, 'speaker.svg')
+        oscstreaming_action = QAction(QIcon(icon_path), "&Oscstreaming", self)
         oscstreaming_action.setStatusTip("Oscstreaming")
         oscstreaming_action.triggered.connect(self.oscstreaming_action)
         
-        chrono_detec_action = QAction("&Chrono_bip_detect", self)
+        icon_path = os.path.join(icon_folder, 'add_database.svg')
+        chrono_detec_action = QAction(QIcon(icon_path), "&Chrono_bip_detect", self)
         chrono_detec_action.setStatusTip("Chrono bip detection")
         chrono_detec_action.triggered.connect(self.chrono_bip_detection_action)
         
-        apply_rotation_action = QAction("&Apply rotation", self)
+        icon_path = os.path.join(icon_folder, 'add_database.svg')
+        apply_rotation_action = QAction(QIcon(icon_path), "&Apply rotation", self)
         apply_rotation_action.setStatusTip("Apply rotation")
         apply_rotation_action.triggered.connect(self.apply_rotation_action)
 
@@ -841,7 +852,7 @@ class Wid(QMainWindow):
     def settings_action(self):
         #domo
         #sensor_ids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
-        sensor_ids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+        sensor_ids = [11]#, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
         add_platformes = False
         
         sensor_frequency = 200

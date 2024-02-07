@@ -4,6 +4,7 @@
 #include <QJsonObject>
 #include <QJsonArray>
 
+
 QJsonArray serialize(const QVector<double>* ar, int ar_size)
 {
     QJsonArray result;

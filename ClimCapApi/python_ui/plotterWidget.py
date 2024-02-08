@@ -27,7 +27,7 @@ class RecordWidget(QWidget):
 
         self.blink_timer = QTimer(self)
         self.blink_timer.timeout.connect(self.blink)
-        self.blink_timer.start(500)  
+        self.blink_timer.start(600)  
 
         self.is_recording = False
 
@@ -107,7 +107,7 @@ class Plotter(pg.PlotWidget):
         super(Plotter, self).__init__(parent=parent)
         self.data_container = data_container
         
-        self.refresh_rate = 1000
+        self.refresh_rate = 150
                 
         self.plot_items:list = []
         self.contact_list:list = []
@@ -177,17 +177,17 @@ class Plotter(pg.PlotWidget):
                     force_x = force_data.forces_x
                     color_x_v = RED[sensor.sensor_id % 11]
                     line_style = style_dict[sensor.sensor_id % 11]
-                    plot_item_force_x = self.plot([0], [0], pen=pg.mkPen(color_x_v, width=2, alpha=200, style=line_style), name=f"Sensor {sensor.sensor_id} - Force X")
+                    plot_item_force_x = self.plot([0], [0], pen=pg.mkPen(color_x_v, width=2, alpha=200, style=line_style), name=f"Sensor {sensor.sensor_id} - Force X",skipFiniteCheck=True)
                     self.plot_items.append(plot_item_force_x)
 
                     force_y = force_data.forces_y
                     color_y_v = GREEN[sensor.sensor_id % 11]
-                    plot_item_force_y = self.plot([0], [0], pen=pg.mkPen(color_y_v, width=2, alpha=200,  style=line_style), name=f"Sensor {sensor.sensor_id} - Force Y")
+                    plot_item_force_y = self.plot([0], [0], pen=pg.mkPen(color_y_v, width=2, alpha=200,  style=line_style), name=f"Sensor {sensor.sensor_id} - Force Y",skipFiniteCheck=True)
                     self.plot_items.append(plot_item_force_y)
 
                     force_z = force_data.forces_z
                     color_z_v = BLUE[sensor.sensor_id % 11]
-                    plot_item_force_z = self.plot([0], [0], pen=pg.mkPen(color_z_v, width=2, alpha=200,  style=line_style), name=f"Sensor {sensor.sensor_id} - Force Z")
+                    plot_item_force_z = self.plot([0], [0], pen=pg.mkPen(color_z_v, width=2, alpha=200,  style=line_style), name=f"Sensor {sensor.sensor_id} - Force Z",skipFiniteCheck=True)
                     self.plot_items.append(plot_item_force_z)
 
                     c_plot_sensor = SensorPlotItem(sensor.sensor_id)

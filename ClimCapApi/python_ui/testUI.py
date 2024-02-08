@@ -313,6 +313,13 @@ class DataContainer:
         self.sensors_dict[sensor.sensor_id] = sensor
         #print(f"Adding sensor : {sensor.sensor_id} ")
         
+    def merge_sensor(self, sensor1, sensor2):
+        tmpx = np.sum(sensor1.sensor.get_forces_data().get_forces_x(), sensor2.sensor.get_forces_data().get_forces_x())
+        tmpy = np.sum(sensor1.sensor.get_forces_data().get_forces_y(), sensor2.sensor.get_forces_data().get_forces_y())
+        tmpz = np.sum(sensor1.sensor.get_forces_data().get_forces_z(), sensor2.sensor.get_forces_data().get_forces_z())
+        
+        
+        
     def dispatch_data(self, sensor_id, unf_data):
         try:
             sensor = self.sensors_dict[sensor_id]
@@ -599,21 +606,40 @@ class DataContainer:
         signal_function = np.poly1d(signal)
         area, _ = quad(signal_function, time[star_time_idx], time[end_time_idx])
         return area
+    
+    def override_low_values_alls(self):
+        min_value = -0.4
+        max_value = 0.4
+        for sensor in self.sensors:
+            self.override_low_values(sensor.get_forces_data().forces_x, min_value, max_value, 0)
+            self.override_low_values(sensor.get_forces_data().forces_y, min_value, max_value, 0)
+            self.override_low_values(sensor.get_forces_data().forces_z, min_value, max_value, 0)
+
+    def override_low_values(self, array, min_value, max_value, override_value):
+        for i, value in enumerate(array):
+            if min_value <= value <= max_value:
+                array[i] = override_value
 
     def switch_sign(self, signal):
         for i in range(len(signal)):
             signal[i] = -signal[i]
         return signal
             
-    def switch_sign_off_sensors(self):
-        #flip des capteurs en compression
-        sensorid_to_switch = [2,3,5,6,10]
+    def switch_sign_off_sensors(self, sensorid_to_switch, set_up_type):
+        #when the sensor is trac mod flip y and x axis
+        #when the sensor is comp mod flip z axis
+            
         for id in sensorid_to_switch:
             cur_sensor = self.find_sensor_by_id(id)
             if cur_sensor:
-                self.switch_sign(cur_sensor.get_forces_data().forces_x)
-                self.switch_sign(cur_sensor.get_forces_data().forces_y)
-                self.switch_sign(cur_sensor.get_forces_data().forces_z)
+                if set_up_type == "comp":
+                    self.switch_sign(cur_sensor.get_forces_data().forces_z)
+                elif set_up_type == "trac":
+                    self.switch_sign(cur_sensor.get_forces_data().forces_x)
+                    self.switch_sign(cur_sensor.get_forces_data().forces_y)
+                else:
+                    print("error no adequate type")
+                    return
 
     def generate_debug_chrono_data(self, duration=5, sample_rate=200, rising_edge_interval=1):
         total_samples = duration * sample_rate
@@ -684,13 +710,18 @@ class DataContainer:
 class Wid(QMainWindow):
     def __init__(self):
         super().__init__()
+        
+        
+        current_folder = os.path.dirname(os.path.realpath(__file__))
+        parent_folder = os.path.dirname(current_folder)
+        
+        self.icon_folder = os.path.join(parent_folder,'forms/images/svg')
 
         self.udpServerinit()
         self.init_ui()
         self.init_actions()
 
-        self.apppfullpath = os.path.dirname(os.path.abspath(__file__))
-        ic_path = os.path.join( self.apppfullpath, 'ClimbCap.png')
+        ic_path = os.path.join( self.icon_folder, 'prise.png')
         self.setWindowIcon(QIcon(ic_path))
 
         auto_delete = False
@@ -704,83 +735,82 @@ class Wid(QMainWindow):
         self.settings_action()
 
     def init_actions(self):
-        current_folder = os.path.dirname(os.path.realpath(__file__))
-
-        parent_folder = os.path.dirname(current_folder)
-        
-        icon_folder = os.path.join(parent_folder,'forms/images/svg')
-        
-        icon_path = os.path.join(icon_folder, 'folder.svg')
+        icon_path = os.path.join(self.icon_folder, 'folder.svg')
         open_file_action = QAction(QIcon(icon_path), "&Open File", self)
         open_file_action.setStatusTip("Open File")
         open_file_action.triggered.connect(self.open_file_action)
 
-        icon_path = os.path.join(icon_folder, 'document.svg')
+        icon_path = os.path.join(self.icon_folder, 'document.svg')
         save_file_action = QAction(QIcon(icon_path), "&Save File", self)
         save_file_action.setStatusTip("Save File")
         save_file_action.triggered.connect(self.file_save_action)
         save_file_action.setShortcut("Ctrl+S")
 
-        icon_path = os.path.join(icon_folder, 'full_trash.svg')
+        icon_path = os.path.join(self.icon_folder, 'full_trash.svg')
         clear_data_action = QAction(QIcon(icon_path), "&Clear Data", self)
         clear_data_action.setStatusTip("Clear Data")
         clear_data_action.triggered.connect(self.clear_data_action)
 
-        icon_path = os.path.join(icon_folder, 'electrical_threshold.svg')
+        icon_path = os.path.join(self.icon_folder, 'electrical_threshold.svg')
         apply_filter_action = QAction(QIcon(icon_path), "&Apply filter", self)
         apply_filter_action.setStatusTip("Apply filter")
         apply_filter_action.triggered.connect(self.apply_filter_action)
 
-        icon_path = os.path.join(icon_folder, 'electrical_threshold.svg')
+        icon_path = os.path.join(self.icon_folder, 'heat_map.svg')
         find_contacts_action = QAction(QIcon(icon_path), "&Find contacts", self)
         find_contacts_action.setStatusTip("Find contacts")
         find_contacts_action.triggered.connect(self.find_contacts_action)
 
-        icon_path = os.path.join(icon_folder, 'add_database.svg')
+        icon_path = os.path.join(self.icon_folder, 'add_database.svg')
         sum_force_action = QAction(QIcon(icon_path), "&Sum forces", self)
         sum_force_action.setStatusTip("Sum forces")
         sum_force_action.triggered.connect(self.sum_force_action)
 
-        icon_path = os.path.join(icon_folder, 'add_database.svg')
+        icon_path = os.path.join(self.icon_folder, 'debugging.png')
         debug_data_action = QAction(QIcon(icon_path), "&Debug", self)
         debug_data_action.setStatusTip("Debug")
         debug_data_action.triggered.connect(self.debug_action)
         
-        icon_path = os.path.join(icon_folder, 'add_database.svg')
+        icon_path = os.path.join(self.icon_folder, 'add_database.svg')
         calculate_resultant_action = QAction(QIcon(icon_path), "&Cal Resultant", self)
         calculate_resultant_action.setStatusTip("Cal Resultant")
         calculate_resultant_action.triggered.connect(self.calculate_resultant_force_action)
         
-        icon_path = os.path.join(icon_folder, 'add_database.svg')
+        icon_path = os.path.join(self.icon_folder, 'bar_chart.svg')
         find_max_in_contact_action = QAction(QIcon(icon_path), "&Find max", self)
         find_max_in_contact_action.setStatusTip("Find max")
         find_max_in_contact_action.triggered.connect(self.find_max_in_contact_action)
         
-        icon_path = os.path.join(icon_folder, 'add_database.svg')
+        icon_path = os.path.join(self.icon_folder, 'settings.svg')
         settings_action = QAction(QIcon(icon_path), "&Settings", self)
         settings_action.setStatusTip("Settings")
         settings_action.triggered.connect(self.settings_action)
         
-        icon_path = os.path.join(icon_folder, 'add_database.svg')
+        icon_path = os.path.join(self.icon_folder, 'add_database.svg')
         flip_action = QAction(QIcon(icon_path), "&Flip axis", self)
         flip_action.setStatusTip("Flip axis")
         flip_action.triggered.connect(self.flip_action)
         
-        icon_path = os.path.join(icon_folder, 'speaker.svg')
+        icon_path = os.path.join(self.icon_folder, 'speaker.svg')
         oscstreaming_action = QAction(QIcon(icon_path), "&Oscstreaming", self)
         oscstreaming_action.setStatusTip("Oscstreaming")
         oscstreaming_action.triggered.connect(self.oscstreaming_action)
         
-        icon_path = os.path.join(icon_folder, 'add_database.svg')
-        chrono_detec_action = QAction(QIcon(icon_path), "&Chrono_bip_detect", self)
+        icon_path = os.path.join(self.icon_folder, 'clock.svg')
+        chrono_detec_action = QAction(QIcon(icon_path), "&Chrono bip detect", self)
         chrono_detec_action.setStatusTip("Chrono bip detection")
         chrono_detec_action.triggered.connect(self.chrono_bip_detection_action)
         
-        icon_path = os.path.join(icon_folder, 'add_database.svg')
+        icon_path = os.path.join(self.icon_folder, 'synchronize.svg')
         apply_rotation_action = QAction(QIcon(icon_path), "&Apply rotation", self)
         apply_rotation_action.setStatusTip("Apply rotation")
         apply_rotation_action.triggered.connect(self.apply_rotation_action)
-
+        
+        icon_path = os.path.join(self.icon_folder, 'tree_structure.svg')
+        merge_sensor_action = QAction(QIcon(icon_path), "&Merge sensor", self)
+        merge_sensor_action.setStatusTip("Merge sensor")
+        merge_sensor_action.triggered.connect(self.merge_sensor_action)
+        
         toolbar = self.addToolBar("Tools")
         toolbar.addAction(open_file_action)
         toolbar.addAction(save_file_action)
@@ -795,6 +825,7 @@ class Wid(QMainWindow):
         toolbar.addAction(oscstreaming_action)
         toolbar.addAction(chrono_detec_action)
         toolbar.addAction(apply_rotation_action)
+        toolbar.addAction(merge_sensor_action)
         
         toolbar.addAction(debug_data_action)
 
@@ -840,10 +871,13 @@ class Wid(QMainWindow):
 
         self.show()
     
+    def merge_sensor_action(self):
+        print("merging sensor")
+    
     def apply_rotation_action(self):
         for sensor in self.data_container.sensors:
-            #sensor.set_angles(0, 180, 0)
-            sensor.set_angles(5, 0, 0)
+            sensor.set_angles(0, 180, 0)
+            #sensor.set_angles(5, 0, 0)
             #ysensor.set_angles(0, )
             
         self.data_container.apply_rotation_to_force()
@@ -952,6 +986,10 @@ class Wid(QMainWindow):
         self.plotter.plot_contacts(all_contact_list)
         print(f"Get contacts on resultante axis for sensor {sensor_id}")
 
+    def override_low_values_action(self):
+        self.data_container.override_low_values_alls()
+        self.plotter.plot_data()
+
     def calculate_resultant_force_action(self):
         sensors = self.data_container.sensors
         for sensor in sensors:
@@ -966,7 +1004,10 @@ class Wid(QMainWindow):
         self.plotter.plot_chrono_bip_marker(times)
 
     def flip_action(self):
-        self.data_container.switch_sign_off_sensors()
+        sensorid_compression = [2,3,5,6,10]
+        sensorid_traction = [1,4,7,8,9,11]
+        self.data_container.switch_sign_off_sensors(sensorid_compression,"comp")
+        self.data_container.switch_sign_off_sensors(sensorid_traction,"trac")
         self.plotter.plot_data()
     
     def sum_force_action(self):
@@ -978,6 +1019,7 @@ class Wid(QMainWindow):
         self.plotter.plot_contacts()
 
     def debug_action(self):
+        #self.override_low_values_action()
         self.data_container.fill_debug_data()
         self.plotter.plot_data()
 

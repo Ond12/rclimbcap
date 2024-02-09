@@ -311,14 +311,37 @@ class DataContainer:
     def add_sensor(self, sensor):
         self.sensors.append(sensor)
         self.sensors_dict[sensor.sensor_id] = sensor
-        #print(f"Adding sensor : {sensor.sensor_id} ")
-        
+        print(f"Adding sensor : {sensor.sensor_id} ")
+       
     def merge_sensor(self, sensor1, sensor2):
-        tmpx = np.sum(sensor1.sensor.get_forces_data().get_forces_x(), sensor2.sensor.get_forces_data().get_forces_x())
-        tmpy = np.sum(sensor1.sensor.get_forces_data().get_forces_y(), sensor2.sensor.get_forces_data().get_forces_y())
-        tmpz = np.sum(sensor1.sensor.get_forces_data().get_forces_z(), sensor2.sensor.get_forces_data().get_forces_z())
+        forces_x_sensor1 = np.array(sensor1.get_forces_data().get_forces_x())
+        forces_y_sensor1 = np.array(sensor1.get_forces_data().get_forces_y())
+        forces_z_sensor1 = np.array(sensor1.get_forces_data().get_forces_z())
         
+        forces_x_sensor2 = np.array(sensor2.get_forces_data().get_forces_x())
+        forces_y_sensor2 = np.array(sensor2.get_forces_data().get_forces_y())
+        forces_z_sensor2 = np.array(sensor2.get_forces_data().get_forces_z())
         
+        max_length = max(len(forces_x_sensor1), len(forces_x_sensor2))
+        forces_x_sensor1 = np.pad(forces_x_sensor1, (0, max_length - len(forces_x_sensor1)), mode='constant')
+        forces_x_sensor2 = np.pad(forces_x_sensor2, (0, max_length - len(forces_x_sensor2)), mode='constant')
+        forces_y_sensor1 = np.pad(forces_y_sensor1, (0, max_length - len(forces_y_sensor1)), mode='constant')
+        forces_y_sensor2 = np.pad(forces_y_sensor2, (0, max_length - len(forces_y_sensor2)), mode='constant')
+        forces_z_sensor1 = np.pad(forces_z_sensor1, (0, max_length - len(forces_z_sensor1)), mode='constant')
+        forces_z_sensor2 = np.pad(forces_z_sensor2, (0, max_length - len(forces_z_sensor2)), mode='constant')
+
+        tmpx = np.sum([forces_x_sensor1, forces_x_sensor2], axis=0)
+        tmpy = np.sum([forces_y_sensor1, forces_y_sensor2], axis=0)
+        tmpz = np.sum([forces_z_sensor1, forces_z_sensor2], axis=0)
+        
+        mergeSensor = Sensor(30, 6, sensor1.frequency)
+        
+        mergeSensor.get_forces_data().set_force_x(tmpx)
+        mergeSensor.get_forces_data().set_force_y(tmpy)  
+        mergeSensor.get_forces_data().set_force_z(tmpz)  
+        
+        self.sensors.append(mergeSensor)
+        self.sensors_dict[mergeSensor.sensor_id] = mergeSensor
         
     def dispatch_data(self, sensor_id, unf_data):
         try:
@@ -711,7 +734,6 @@ class Wid(QMainWindow):
     def __init__(self):
         super().__init__()
         
-        
         current_folder = os.path.dirname(os.path.realpath(__file__))
         parent_folder = os.path.dirname(current_folder)
         
@@ -872,7 +894,14 @@ class Wid(QMainWindow):
         self.show()
     
     def merge_sensor_action(self):
-        print("merging sensor")
+        s1 = self.data_container.get_sensor(7)
+        s2 = self.data_container.get_sensor(8)
+        
+        if s1 and s2:
+            self.data_container.merge_sensor(s1, s2)
+            
+        self.plotter.plot_data()
+        self.plot_controller.set_up_widget()   
     
     def apply_rotation_action(self):
         for sensor in self.data_container.sensors:
@@ -886,7 +915,7 @@ class Wid(QMainWindow):
     def settings_action(self):
         #domo
         #sensor_ids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
-        sensor_ids = [11]#, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+        sensor_ids = [11]#7, 8]#, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
         add_platformes = False
         
         sensor_frequency = 200
@@ -902,6 +931,7 @@ class Wid(QMainWindow):
             self.data_container.add_sensor(current_sensor)    
             
         self.plotter.plot_data()
+        self.plot_controller.clean_widget()
         self.plot_controller.set_up_widget()          
 
     def file_save_action(self):
@@ -964,7 +994,6 @@ class Wid(QMainWindow):
         self.data_container.clear_all_sensor_data()
         self.plotter.clear_plot()
         self.plot_controller.clean_widget()
-        self.plot_controller.set_up_widget()  
 
     def apply_filter_action(self):
         self.data_container.apply_filter_hcutoff_to_sensors()

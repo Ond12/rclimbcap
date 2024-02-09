@@ -21,9 +21,16 @@ class RecordWidget(QWidget):
     def __init__(self):
         super().__init__()
 
+        current_folder = os.path.dirname(os.path.realpath(__file__))
+        parent_folder = os.path.dirname(current_folder)
+        
+        self.icon_folder = os.path.join(parent_folder,'forms/images/svg')
+        ic_path = os.path.join( self.icon_folder, 'record.png')
+
         self.record_button = QPushButton('Record', self)
         self.record_button.setCheckable(True)
         self.record_button.clicked.connect(self.toggle_recording)
+        self.record_button.setIcon(QIcon(ic_path))
 
         self.blink_timer = QTimer(self)
         self.blink_timer.timeout.connect(self.blink)
@@ -136,9 +143,9 @@ class Plotter(pg.PlotWidget):
 
     def update_chrono_plot_data(self):
         cr_data = self.data_container.chrono_data
-        time_increments_chrono_dummy = np.arange( len(cr_data) ) / self.data_container.chrono_freq
+        # time_increments_chrono_dummy = np.arange( len(cr_data) ) / self.data_container.chrono_freq
         if(self.chrono_plot_item):
-            self.chrono_plot_item.setData(time_increments_chrono_dummy, cr_data)
+            self.chrono_plot_item.setData(cr_data)
 
     def update_sensor_plot_data(self, sensor_id:int):
         cur_sensor = self.data_container.get_sensor(sensor_id)
@@ -201,8 +208,8 @@ class Plotter(pg.PlotWidget):
                 cr_data = self.data_container.chrono_data
                 #print(f"cr len {len(cr_data)}")
                 if len(cr_data) > 0:
-                    time_increments_chrono_dummy = np.arange( len(cr_data) ) / self.data_container.chrono_freq
-                    plot_item_chrono_data = self.plot(time_increments_chrono_dummy, cr_data, pen=pg.mkPen(color_chrono, width=2, alpha=200), name=f"Chrono signal")
+                    #time_increments_chrono_dummy = np.arange( len(cr_data) ) / self.data_container.chrono_freq
+                    plot_item_chrono_data = self.plot(cr_data, pen=pg.mkPen(color_chrono, width=2, alpha=200), name=f"Chrono signal")
                     self.plot_items.append(plot_item_chrono_data)
                     
                     self.chrono_plot_item = plot_item_chrono_data
@@ -307,6 +314,7 @@ class PlotterController(QWidget):
         self.show()
 
     def set_up_widget(self):
+        self.clean_widget()
         for i, sensor in enumerate(self.plotter.data_container.sensors):
             self.add_button(sensor.sensor_id)
 
@@ -320,5 +328,5 @@ class PlotterController(QWidget):
 
     def clean_widget(self):
         for button in self.toggle_buttons:
-            button.setParent(None) 
-        self.toggle_buttons = [] 
+            button.deleteLater()  # Delete the button widget
+        self.toggle_buttons = []  

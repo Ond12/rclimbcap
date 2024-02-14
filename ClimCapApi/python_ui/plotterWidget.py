@@ -103,11 +103,10 @@ class SensorPlotItem:
     def set_visible_plot(self, visible:bool) -> None:
         for plot_key, plot_item in self.plot_items.items():
             plot_item.setVisible(visible)
-        self.is_visible = visible
-    
+        
     def set_visible_contact(self, visible:bool) -> None:
         for contact_item in self.contacts:
-            contact_item.setVisible(visible)            
+            contact_item.contact_display.set_visible(visible)            
               
 class Plotter(pg.PlotWidget):
     def __init__(self, data_container, parent=None):
@@ -123,7 +122,8 @@ class Plotter(pg.PlotWidget):
         self.chrono_plot_item = None
         
         self.showGrid(x=False, y=True)
-        self.addLegend()
+        self.legend = self.addLegend()
+        self.legend.setColumnCount(3)
         
         self.update_is_started = False
         self.update_timer = QTimer()
@@ -184,17 +184,17 @@ class Plotter(pg.PlotWidget):
                     force_x = force_data.forces_x
                     color_x_v = RED[sensor.sensor_id % 11]
                     line_style = style_dict[sensor.sensor_id % 11]
-                    plot_item_force_x = self.plot([0], [0], pen=pg.mkPen(color_x_v, width=2, alpha=200, style=line_style), name=f"Sensor {sensor.sensor_id} - Force X",skipFiniteCheck=True)
+                    plot_item_force_x = self.plot([0], [0], pen=pg.mkPen(color_x_v, width=2, alpha=200, style=line_style), name=f"S{sensor.sensor_id}-FX",skipFiniteCheck=True)
                     self.plot_items.append(plot_item_force_x)
 
                     force_y = force_data.forces_y
                     color_y_v = GREEN[sensor.sensor_id % 11]
-                    plot_item_force_y = self.plot([0], [0], pen=pg.mkPen(color_y_v, width=2, alpha=200,  style=line_style), name=f"Sensor {sensor.sensor_id} - Force Y",skipFiniteCheck=True)
+                    plot_item_force_y = self.plot([0], [0], pen=pg.mkPen(color_y_v, width=2, alpha=200,  style=line_style), name=f"S{sensor.sensor_id}-FY",skipFiniteCheck=True)
                     self.plot_items.append(plot_item_force_y)
 
                     force_z = force_data.forces_z
                     color_z_v = BLUE[sensor.sensor_id % 11]
-                    plot_item_force_z = self.plot([0], [0], pen=pg.mkPen(color_z_v, width=2, alpha=200,  style=line_style), name=f"Sensor {sensor.sensor_id} - Force Z",skipFiniteCheck=True)
+                    plot_item_force_z = self.plot([0], [0], pen=pg.mkPen(color_z_v, width=2, alpha=200,  style=line_style), name=f"S{sensor.sensor_id}-FZ",skipFiniteCheck=True)
                     self.plot_items.append(plot_item_force_z)
 
                     c_plot_sensor = SensorPlotItem(sensor.sensor_id)
@@ -204,15 +204,18 @@ class Plotter(pg.PlotWidget):
 
                     self.sensor_plot_map[sensor.sensor_id] = c_plot_sensor
 
-            if self.data_container:
-                cr_data = self.data_container.chrono_data
-                #print(f"cr len {len(cr_data)}")
-                if len(cr_data) > 0:
-                    #time_increments_chrono_dummy = np.arange( len(cr_data) ) / self.data_container.chrono_freq
-                    plot_item_chrono_data = self.plot(cr_data, pen=pg.mkPen(color_chrono, width=2, alpha=200), name=f"Chrono signal")
-                    self.plot_items.append(plot_item_chrono_data)
+            # if self.data_container:
+            #     cr_data = self.data_container.chrono_data
+            #     #print(f"cr len {len(cr_data)}")
+            #     if len(cr_data) > 0:
+            #         #time_increments_chrono_dummy = np.arange( len(cr_data) ) / self.data_container.chrono_freq
+            #         plot_item_chrono_data = self.plot(cr_data, pen=pg.mkPen(color_chrono, width=2, alpha=200), name=f"Chrono signal")
+            #         self.plot_items.append(plot_item_chrono_data)
                     
-                    self.chrono_plot_item = plot_item_chrono_data
+            #         self.chrono_plot_item = plot_item_chrono_data
+                    
+            for item, label in self.legend.items:
+                label.setFont(QFont("Arial", 4))
 
             self.update_plots()
             self.update()
@@ -243,7 +246,7 @@ class Plotter(pg.PlotWidget):
         time_increments = force_result["time"]
         resultant_force = force_result["data"]
         sensor_id = force_result["sensor_id"]
-        plot_item_resultant_force = self.plot(time_increments, resultant_force, pen=pg.mkPen((255,105,180), width=2, alpha=200), name=f"Sensor {sensor_id} - Res")
+        plot_item_resultant_force = self.plot(resultant_force, pen=pg.mkPen((255,105,180), width=2, alpha=200), name=f"Sensor {sensor_id} - Res")
         plot_item_resultant_force.setVisible(True)
         self.plot_items.append(plot_item_resultant_force)
         #self.sensor_plot_map[sensor_id].add_plot_item(plot_item_resultant_force)
@@ -272,8 +275,13 @@ class Plotter(pg.PlotWidget):
     def show_hide_lines(self, button, sensor_id):
         if sensor_id in self.sensor_plot_map:
             sensor_plot = self.sensor_plot_map[sensor_id]
-            sensor_plot.set_visible_plot(not sensor_plot.is_visible)
+
             pastel_color = "background-color: #C1E1C1" if sensor_plot.is_visible else "background-color: #FAA0A0"
+            sensor_plot.set_visible_plot(not sensor_plot.is_visible)
+ 
+            sensor_plot.set_visible_contact(not sensor_plot.is_visible)
+            sensor_plot.is_visible = not sensor_plot.is_visible
+            
             button.setStyleSheet(pastel_color)
             
             self.update()
@@ -286,9 +294,10 @@ class Plotter(pg.PlotWidget):
     def plot_contacts(self, contact_info_list=None):
         if contact_info_list is None:
             contact_info_list = self.contact_list
+            
         for contact in contact_info_list:
             contact.add_into_plot(self)
-            contact.contact_display.set_visible(True)
+            self.sensor_plot_map[contact.sensor_id].add_contact(contact)
             if contact.max_value_time != 0:
                 self.plot_marker_max(contact.max_value_time, contact.max_value)
 
@@ -306,15 +315,27 @@ class PlotterController(QWidget):
         super().__init__()
         self.plotter = plotter
         self.initUI()
+        self.setContentsMargins(0, 0, 0, 0)
 
     def initUI(self):
         self.button_layout = QHBoxLayout()
         self.toggle_buttons = []
         self.setLayout(self.button_layout)
+        
+        set_all_visible_button = QPushButton(f"Hide", self)
+        self.button_layout.addWidget(set_all_visible_button)
+        
+        set_all_visible_button.clicked.connect(self.set_visible_all)
+        
         self.show()
+
+    def set_visible_all(self):
+        for button in self.toggle_buttons:
+            button.click()
 
     def set_up_widget(self):
         self.clean_widget()
+        
         for i, sensor in enumerate(self.plotter.data_container.sensors):
             self.add_button(sensor.sensor_id)
 
@@ -328,5 +349,5 @@ class PlotterController(QWidget):
 
     def clean_widget(self):
         for button in self.toggle_buttons:
-            button.deleteLater()  # Delete the button widget
+            button.deleteLater()  
         self.toggle_buttons = []  

@@ -269,7 +269,7 @@ class DataContainer:
                 difference = self.chrono_data[i - 1] - self.chrono_data[i]
                 if difference > slope_threshold_down:
                     time = i * (1/self.chrono_freq)
-                    down_edges_time_list.append(time)
+                    down_edges_time_list.append(i)
 
         return down_edges_time_list
     
@@ -311,7 +311,7 @@ class DataContainer:
     def add_sensor(self, sensor):
         self.sensors.append(sensor)
         self.sensors_dict[sensor.sensor_id] = sensor
-        print(f"Adding sensor : {sensor.sensor_id} ")
+        #print(f"Adding sensor : {sensor.sensor_id} ")
        
     def merge_sensor(self, sensor1, sensor2):
         forces_x_sensor1 = np.array(sensor1.get_forces_data().get_forces_x())
@@ -515,53 +515,47 @@ class DataContainer:
                 return sensor
         return None
 
-    def detect_contacts(self, signal, signal_name, sensor_id=0, slope_threshold_up=100, slope_threshold_down=100, use_crossing=True, crossing_threshold=0):
-        if not self.sensors[0]:
-            return []
+    def detect_contacts(self, signal, sensor_id=0, slope_threshold_up=100, slope_threshold_down=100, use_crossing=True, crossing_threshold=0):
         
-        force_data = self.sensors[0].get_forces_data()
-        time_increments = force_data.get_time_increments()
-
         slope_up_detected = False
         contacts = []
 
         for i in range(1, len(signal)):
             slope = signal[i] - signal[i - 1]
 
-            if slope > slope_threshold_up:
+            if slope > slope_threshold_up and not slope_up_detected:
                 slope_up_detected = True
-                start_time = time_increments[i]
+                start_time = i#time_increments[i]
         
             if use_crossing:
             # Use zero-crossing detection
-                if signal[i] < crossing_threshold and signal[i - 1] >= crossing_threshold and slope_up_detected:
+                if signal[i] < crossing_threshold and slope_up_detected:
                     slope_up_detected = False
-                    end_time = time_increments[i]
+                    end_time = i#time_increments[i]
                     cur_contact = ContactInfo(sensor_id, start_time, end_time)
-                    cur_contact.axis_name = signal_name
+
                     contacts.append(cur_contact)
 
             elif slope < -slope_threshold_down and slope_up_detected:
                 slope_up_detected = False
-                end_time = time_increments[i]
+                end_time = i# time_increments[i]
                 cur_contact = ContactInfo(sensor_id, start_time, end_time)
-                cur_contact.axis_name =  signal_name
+
                 contacts.append(cur_contact)
                 
         if slope_up_detected:
             # Assume the end time is the last time increment in the signal
-            end_time = time_increments[-1]
+            end_time = len(signal)#time_increments[-1]
             cur_contact = ContactInfo(sensor_id, start_time, end_time)
-            cur_contact.axis_name = signal_name
+
             contacts.append(cur_contact)
 
-        self.contacts = contacts
         return contacts
     
     def detect_contacts_on_sensors(self):
         detect_threshold_up = 10
-        detect_threshold_down = 10
-        crossing_threshold = 9
+        detect_threshold_down = 30
+        crossing_threshold = 20
         
         all_contacts_list = []
         
@@ -569,9 +563,9 @@ class DataContainer:
             sensor_id = sensor.sensor_id
             resultant_force_dic = self.cal_resultant_force(sensor)
             data = resultant_force_dic["data"]
-            cur_contacts_list = self.detect_contacts(data, f"resultant {sensor_id}", sensor_id, detect_threshold_up, detect_threshold_down, True, crossing_threshold )
-            for ccontact in cur_contacts_list:
-                all_contacts_list.append(ccontact)
+            cur_contacts_list = self.detect_contacts(data, sensor_id, detect_threshold_up, detect_threshold_down, True, crossing_threshold )
+            for contact in cur_contacts_list:
+                all_contacts_list.append(contact)
         
         return all_contacts_list
             
@@ -629,6 +623,10 @@ class DataContainer:
         signal_function = np.poly1d(signal)
         area, _ = quad(signal_function, time[star_time_idx], time[end_time_idx])
         return area
+    
+    def override_neg_z(self):
+        for sensor in self.sensors:
+            self.override_low_values(sensor.get_forces_data().forces_z, -50, 0, 0)
     
     def override_low_values_alls(self):
         min_value = -0.4
@@ -1000,23 +998,12 @@ class Wid(QMainWindow):
         self.plotter.plot_data()
 
     def find_contacts_action(self): 
-        detect_threshold_up = 10
-        detect_threshold_down = 10
-        crossing_threshold = 9
-        sensor_id = self.data_container.sensors[0].sensor_id
-        data = self.data_container.sensors[0].get_forces_data().resultant
-        
-        sensor = self.data_container.find_sensor_by_id(3)
-        #data = sensor.get_forces_data().resultant
-        
-        #if len(data) > 0:
-            #contact_info_list = self.data_container.detect_contacts(data, "resultant", sensor_id, detect_threshold_up, detect_threshold_down, True, crossing_threshold )
         all_contact_list = self.data_container.detect_contacts_on_sensors()
         self.plotter.plot_contacts(all_contact_list)
-        print(f"Get contacts on resultante axis for sensor {sensor_id}")
 
     def override_low_values_action(self):
-        self.data_container.override_low_values_alls()
+        self.data_container.override_neg_z()
+        #self.data_container.override_low_values_alls()
         self.plotter.plot_data()
 
     def calculate_resultant_force_action(self):
@@ -1048,8 +1035,8 @@ class Wid(QMainWindow):
         self.plotter.plot_contacts()
 
     def debug_action(self):
-        #self.override_low_values_action()
-        self.data_container.fill_debug_data()
+        self.override_low_values_action()
+        #self.data_container.fill_debug_data()
         self.plotter.plot_data()
 
     def open_file_action(self):

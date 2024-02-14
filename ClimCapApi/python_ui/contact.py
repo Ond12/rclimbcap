@@ -30,9 +30,12 @@ colors_dict = {
 
 class ContactInfo:
     class ContactDisplay:
-        def __init__(self, start_time=0, end_time=0):
-            self.start_vertical_line = pg.InfiniteLine(start_time, angle=90, movable=False)
-            self.end_vertical_line = pg.InfiniteLine(end_time, angle=90, movable=False)
+        def __init__(self, start_time=0, end_time=0, color= (0, 255, 0)):
+            pen = pg.mkPen(color)  
+            self.start_vertical_line = pg.InfiniteLine(start_time, angle=90, movable=False, pen=pen)
+            self.end_vertical_line = pg.InfiniteLine(end_time, angle=90, movable=False, pen=pen)
+
+            self.end_vertical_line.setPen(pen)
 
         def set_visible(self, visible):
             self.start_vertical_line.setVisible(visible)
@@ -63,7 +66,8 @@ class ContactInfo:
     
     def add_into_plot(self, plot):
         if plot != None:
-            self.contact_display = self.ContactDisplay(self.start_time, self.end_time)
+            color = colors_dict[self.sensor_id%11]
+            self.contact_display = self.ContactDisplay(self.start_time, self.end_time, color)
             self.contact_display.add_into_graphplot(plot)
     
     def remove_from_plot(self, plot):

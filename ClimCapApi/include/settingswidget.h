@@ -40,6 +40,8 @@ private:
 
     void addNewSensorToTable(uint sensorid, QString sensorname, uint sensorChannel, double sensorAngle, double sensorZRotation, bool isFlip);
 
+    bool loadConfing();
+
 signals:
     void newConfigFile();
 };

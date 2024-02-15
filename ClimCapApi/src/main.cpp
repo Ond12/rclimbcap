@@ -63,15 +63,6 @@ int main(int argc, char** argv)
     //QDir::setCurrent("..");
     qDebug() << "Dossier courant :" << QDir::currentPath();
    
-    if (!QDir("../data/").exists())
-    {
-        if (!QDir().mkdir("../data/"))
-        {
-            qDebug("Le dossier 'data' est manquant");
-            return 0;
-        }
-    }
-
     QFile file("../data/log.txt");
 
     log_file = &file;
@@ -80,6 +71,15 @@ int main(int argc, char** argv)
     {
         qInstallMessageHandler(nullptr);
         qDebug() << "Erreur fichier log";
+    }
+
+    if (!QDir("../data/").exists())
+    {
+        if (!QDir().mkdir("../data/"))
+        {
+            qDebug("Le dossier 'data' est manquant");
+            return 0;
+        }
     }
 
     QApplication a(argc, argv);

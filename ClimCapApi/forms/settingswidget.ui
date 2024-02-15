@@ -42,6 +42,61 @@
       </widget>
      </item>
      <item>
+      <widget class="QGroupBox" name="groupBox_5">
+       <property name="title">
+        <string>Cartes</string>
+       </property>
+       <layout class="QVBoxLayout" name="verticalLayout_4">
+        <item>
+         <layout class="QGridLayout" name="gridLayout">
+          <item row="2" column="2">
+           <widget class="QCheckBox" name="plat_enable_checkBox">
+            <property name="text">
+             <string>activer</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="QLabel" name="card_cap_label">
+            <property name="text">
+             <string>none</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="2">
+           <widget class="QCheckBox" name="sensor_enable_checkBox">
+            <property name="text">
+             <string>activer</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="label_12">
+            <property name="text">
+             <string>Carte Capteur</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_8">
+            <property name="text">
+             <string>Carte Platforme</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QLabel" name="card_plat_label">
+            <property name="text">
+             <string>none</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item>
       <widget class="QGroupBox" name="groupBox_2">
        <property name="title">
         <string>Déclenchement</string>

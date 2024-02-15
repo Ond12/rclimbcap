@@ -12,6 +12,7 @@ SettingsWidget::SettingsWidget(QWidget *parent) :
     this->ui->loadpushButton->hide();
     this->setUpComboBox();
     this->loadJson();
+    this->loadConfing();
     this->setWindowTitle(tr("Parametres"));
     this->setGeometry(QRect(0,0,800, 600));
     this->ui->sensorListWidget->hide();
@@ -35,6 +36,12 @@ SettingsWidget::SettingsWidget(QWidget *parent) :
 
     const auto sample_Calibration_Number = settings.value("sample_calibration_number").toInt();
     this->ui->CalibrationSampleSpinBox->setValue(sample_Calibration_Number);
+
+    const auto sensor_enable = settings.value("ENABLE_SENSOR").toBool();
+    this->ui->sensor_enable_checkBox->setChecked(sensor_enable);
+
+    const auto plat_enable = settings.value("ENABLE_PLATFORM").toBool();
+    this->ui->plat_enable_checkBox->setChecked(plat_enable);
 
 }
 
@@ -148,6 +155,45 @@ void SettingsWidget::addNewSensorToTable(uint sensorid, QString sensorname, uint
 
 }
 
+bool SettingsWidget::loadConfing() 
+{
+    QFile file("../data/config.json");
+
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        qDebug("Impossible d'ouvrir le fichier de config");
+        return false;
+    }
+
+    QTextStream stream(&file);
+    QString content = stream.readAll();
+    file.close();
+
+    QJsonParseError parseError;
+    QJsonDocument doc = QJsonDocument::fromJson(content.toUtf8(), &parseError);
+
+    if (parseError.error != QJsonParseError::NoError) {
+        qDebug() << "Parse error at " << parseError.offset << ":" << parseError.errorString();
+        return 1;
+    }
+
+    QJsonObject jsonObj = doc.object();
+    QString platform_card = jsonObj.value("platform_card").toString();
+    this->ui->card_plat_label->setText(platform_card);
+
+    QString sensor_card = jsonObj.value("sensor_card").toString();
+    this->ui->card_cap_label->setText(sensor_card);
+
+    QSettings settings(QSettings::IniFormat, QSettings::UserScope, "GIPSA-LAB", "ClimbCap");
+
+    const auto plat_card_name = this->ui->card_plat_label->text();
+    settings.setValue("plat_card_name", plat_card_name);
+
+    const auto sensor_card_name = this->ui->card_cap_label->text();
+    settings.setValue("sensor_card_name", sensor_card_name);
+
+}
+
 bool SettingsWidget::loadJson()
 {
     QFile file(m_saveFilePath);
@@ -258,6 +304,12 @@ void SettingsWidget::on_applyButton_clicked()
 
         const auto sample_Calibration_Number = this->ui->CalibrationSampleSpinBox->value();
         settings.setValue("sample_calibration_number", sample_Calibration_Number);
+
+        const auto sensor_enable = this->ui->sensor_enable_checkBox->isChecked();
+        settings.setValue("ENABLE_SENSOR", sensor_enable);
+
+        const auto plat_enable = this->ui->plat_enable_checkBox->isChecked();
+        settings.setValue("ENABLE_PLATFORM", plat_enable);
        
         settings.sync();
 
@@ -267,5 +319,6 @@ void SettingsWidget::on_applyButton_clicked()
 
 void SettingsWidget::on_loadpushButton_clicked()
 {
+    this->loadConfing();
     this->loadJson();
 }

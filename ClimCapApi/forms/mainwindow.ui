@@ -11,38 +11,14 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Simple Terminal</string>
+   <string>ClimbCap</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="terminal.qrc">
+    <normaloff>:/images/svg/prise.png</normaloff>:/images/svg/prise.png</iconset>
   </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QVBoxLayout" name="verticalLayout"/>
-  </widget>
-  <widget class="QMenuBar" name="menuBar">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>400</width>
-     <height>26</height>
-    </rect>
-   </property>
-   <widget class="QMenu" name="menuCalls">
-    <property name="title">
-     <string>Calls</string>
-    </property>
-    <addaction name="actionConnect"/>
-    <addaction name="actionDisconnect"/>
-    <addaction name="separator"/>
-    <addaction name="actionQuit"/>
-   </widget>
-   <widget class="QMenu" name="menuTools">
-    <property name="title">
-     <string>Tools</string>
-    </property>
-    <addaction name="actionConfigure"/>
-    <addaction name="actionClear"/>
-   </widget>
-   <addaction name="menuCalls"/>
-   <addaction name="menuTools"/>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
    <attribute name="toolBarArea">
@@ -134,7 +110,7 @@
   <action name="actionCalibration">
    <property name="icon">
     <iconset resource="terminal.qrc">
-     <normaloff>:/images/connect.png</normaloff>:/images/connect.png</iconset>
+     <normaloff>:/images/svg/marque-detalonnage.png</normaloff>:/images/svg/marque-detalonnage.png</iconset>
    </property>
    <property name="text">
     <string>Calibration</string>

@@ -15,6 +15,7 @@ from PyQt6.QtGui import *
 from plotterWidget import *
 from contact import *
 from colors import *
+from contactTableWidget import *
 from osc_sender import*
 
 class RingBuffer:
@@ -792,8 +793,8 @@ class Wid(QMainWindow):
         debug_data_action.triggered.connect(self.debug_action)
         
         icon_path = os.path.join(self.icon_folder, 'add_database.svg')
-        calculate_resultant_action = QAction(QIcon(icon_path), "&Cal Resultant", self)
-        calculate_resultant_action.setStatusTip("Cal Resultant")
+        calculate_resultant_action = QAction(QIcon(icon_path), "&Calculate Resultante", self)
+        calculate_resultant_action.setStatusTip("Calculate Resultante")
         calculate_resultant_action.triggered.connect(self.calculate_resultant_force_action)
         
         icon_path = os.path.join(self.icon_folder, 'bar_chart.svg')
@@ -806,7 +807,7 @@ class Wid(QMainWindow):
         settings_action.setStatusTip("Settings")
         settings_action.triggered.connect(self.settings_action)
         
-        icon_path = os.path.join(self.icon_folder, 'add_database.svg')
+        icon_path = os.path.join(self.icon_folder, 'flip.png')
         flip_action = QAction(QIcon(icon_path), "&Flip axis", self)
         flip_action.setStatusTip("Flip axis")
         flip_action.triggered.connect(self.flip_action)
@@ -817,9 +818,9 @@ class Wid(QMainWindow):
         oscstreaming_action.triggered.connect(self.oscstreaming_action)
         
         icon_path = os.path.join(self.icon_folder, 'clock.svg')
-        chrono_detec_action = QAction(QIcon(icon_path), "&Chrono bip detect", self)
-        chrono_detec_action.setStatusTip("Chrono bip detection")
-        chrono_detec_action.triggered.connect(self.chrono_bip_detection_action)
+        chrono_detect_action = QAction(QIcon(icon_path), "&Chrono bip detect", self)
+        chrono_detect_action.setStatusTip("Chrono bip detection")
+        chrono_detect_action.triggered.connect(self.chrono_bip_detection_action)
         
         icon_path = os.path.join(self.icon_folder, 'synchronize.svg')
         apply_rotation_action = QAction(QIcon(icon_path), "&Apply rotation", self)
@@ -835,23 +836,34 @@ class Wid(QMainWindow):
         toolbar.addAction(open_file_action)
         toolbar.addAction(save_file_action)
         toolbar.addAction(clear_data_action)
+        
+        separator = QAction(self)
+        separator.setSeparator(True)
+        toolbar.addAction(separator)
+        
         toolbar.addAction(apply_filter_action)
         toolbar.addAction(find_contacts_action)
+        toolbar.addAction(chrono_detect_action)
         toolbar.addAction(calculate_resultant_action)
         toolbar.addAction(find_max_in_contact_action)
         toolbar.addAction(sum_force_action)
         toolbar.addAction(settings_action)
         toolbar.addAction(flip_action)
-        toolbar.addAction(oscstreaming_action)
-        toolbar.addAction(chrono_detec_action)
+
         toolbar.addAction(apply_rotation_action)
         toolbar.addAction(merge_sensor_action)
         
+        separator = QAction(self)
+        separator.setSeparator(True)
+        toolbar.addAction(separator)
+        
         toolbar.addAction(debug_data_action)
+        toolbar.addAction(oscstreaming_action)
 
         self.statusbar = QStatusBar()
         self.setStatusBar(self.statusbar)
         self.statusbar.showMessage('Ready')
+        self.statusbar.hide()
 
     def init_ui(self):
         self.setWindowTitle('ClimbCap')
@@ -860,7 +872,7 @@ class Wid(QMainWindow):
         main_grid = QGridLayout()
         main_grid.setSpacing(0)
         main_grid.setContentsMargins(0, 0, 0, 0)
-
+        
         main_widget = QWidget()
         main_widget.setLayout(main_grid)
         main_widget.show()
@@ -879,6 +891,12 @@ class Wid(QMainWindow):
         main_grid.addWidget(self.plot_controller, 1, 0)
         main_grid.addWidget(self.plotter, 2, 0)
         main_grid.addWidget(record_widget, 3, 0)
+
+        self.contactTable_widget = ContactTableWidget()
+        
+        dock = QDockWidget('Contact infos')
+        dock.setFeatures(QDockWidget.DockWidgetFeature.NoDockWidgetFeatures)
+        self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, dock)
 
         self.osc_play_pause_widget = PlayPauseWidget()
 

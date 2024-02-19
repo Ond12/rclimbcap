@@ -183,13 +183,12 @@ public:
 					uint NplatformLoaded = MyDataController->loadPlatformToAnalogConfig();
 					if (NplatformLoaded == 0) { qCritical() << "Echec dans le chargement de la configuration platformes, vide"; return 0; };
 
-					int totalNumberOfChannels = NplatformLoaded * 8;
+					int totalNumberOfChannels = NplatformLoaded * globals::NUMBERANALOGCHANPLATFORM;
 
 					int numberOfSample = m_totalAcqTimeS * m_sampleRate; //used if acquisition have a define time else its infinity
 
 					MyNidaqmxConnectionThread->setUPPlatformTask(m_sampleRate, m_callbackrate, totalNumberOfChannels, m_triggerEnable, numberOfSample);
 					MyNidaqmxConnectionThread->setUpPlatformCalibrationTask(m_calibrationRate, m_callbackrate, totalNumberOfChannels, m_triggerEnable, m_calibrationNumberSample);
-
 				}
 				else 
 				{
@@ -203,12 +202,11 @@ public:
 					uint NsensorLoaded = MyDataController->loadSensorToAnalogConfig();
 					if (NsensorLoaded == 0) { qCritical() << "Echec dans le chargement de la configuration capteur, vide"; return 0; };
 
-					int totalNumberOfChannels = NsensorLoaded * 6;
+					int totalNumberOfChannels = NsensorLoaded * globals::NUMBERANALOGCHANSENSOR;
 					int numberOfSample = m_totalAcqTimeS * m_sampleRate;
 
 					MyNidaqmxConnectionThread->setUPTask(m_sampleRate, m_callbackrate, totalNumberOfChannels, m_triggerEnable, numberOfSample);
 					MyNidaqmxConnectionThread->setUpCalibrationTask(m_calibrationRate, m_callbackrate, totalNumberOfChannels, m_triggerEnable, m_calibrationNumberSample);
-
 				}
 				else
 				{
@@ -267,6 +265,11 @@ public:
 			if (!MyNidaqmxConnectionThread->HasError())
 			{
 				errorFlag = this->reloadSensorConfiguration();
+				
+			}
+			else 
+			{
+				qDebug("Start up : MyNidaqmxConnectionThread->HasError()");
 			}
 
 			if (MyNidaqmxConnectionThread != nullptr)

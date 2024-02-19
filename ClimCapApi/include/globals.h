@@ -26,6 +26,9 @@ namespace globals
 	constexpr auto SENSOR_ACQ_CARD_NAME = "Dev4";
 	constexpr auto PLATFORM_ACQ_CARD_NAME = "Dev3";
 
+	constexpr auto NUMBERANALOGCHANPLATFORM = 8;
+	constexpr auto NUMBERANALOGCHANSENSOR = 6;
+
 	//Debug globals
 
 	constexpr auto DEBUG_MOD_PLATFORM = false;

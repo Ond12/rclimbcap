@@ -24,6 +24,8 @@ class RecordWidget(QWidget):
         current_folder = os.path.dirname(os.path.realpath(__file__))
         parent_folder = os.path.dirname(current_folder)
         
+        self.setContentsMargins(0, 0, 0, 0)
+        
         self.icon_folder = os.path.join(parent_folder,'forms/images/svg')
         ic_path = os.path.join( self.icon_folder, 'record.png')
 
@@ -42,6 +44,7 @@ class RecordWidget(QWidget):
 
     def init_ui(self):
         layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(self.record_button)
 
     def toggle_recording(self):
@@ -123,6 +126,7 @@ class Plotter(pg.PlotWidget):
         
         self.showGrid(x=False, y=True)
         self.legend = self.addLegend()
+        self.legend.setPos(1, 1)
         self.legend.setColumnCount(3)
         
         self.update_is_started = False
@@ -132,6 +136,10 @@ class Plotter(pg.PlotWidget):
         
         self.vertical_line = None
 
+    def set_refresh_rate(self, refresh_rate_ms):
+        self.refresh_rate = refresh_rate_ms
+        self.update_timer.setInterval( self.refresh_rate )
+        
     def update_plots(self):
 
         for sensor_plot in self.sensor_plot_map.values():
@@ -321,6 +329,7 @@ class PlotterController(QWidget):
         self.button_layout = QHBoxLayout()
         self.toggle_buttons = []
         self.setLayout(self.button_layout)
+        self.button_layout.setContentsMargins(0, 0, 0, 0)
         
         set_all_visible_button = QPushButton(f"Hide", self)
         self.button_layout.addWidget(set_all_visible_button)

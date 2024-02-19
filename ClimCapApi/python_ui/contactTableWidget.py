@@ -3,19 +3,19 @@ from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QTableWidget, 
     QTableWidgetItem, QDockWidget, QFormLayout, 
     QLineEdit, QWidget, QPushButton, QSpinBox, 
-    QMessageBox, QToolBar, QMessageBox
+    QMessageBox, QToolBar, QMessageBox,QVBoxLayout
 )
 from PyQt6.QtCore import Qt,QSize
 from PyQt6.QtGui import QIcon, QAction
 
-
-class MainWindow(QMainWindow):
+class ContactTableWidget(QWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.setWindowTitle('Contacts')
-        self.setWindowIcon(QIcon('./assets/usergroup.png'))
-        self.setGeometry(100, 100, 600, 400)
-
+        
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        self.setLayout(layout) 
+        
         contacts = [
             {'start': 10, 'end': 20, 'time': 25},
             {'start': 20, 'end': 30, 'time': 25},
@@ -23,7 +23,6 @@ class MainWindow(QMainWindow):
         ]
 
         self.table = QTableWidget(self)
-        self.setCentralWidget(self.table)
 
         self.table.setColumnCount(3)
         self.table.setColumnWidth(0, 150)
@@ -39,30 +38,27 @@ class MainWindow(QMainWindow):
             self.table.setItem(row, 1, QTableWidgetItem(e['end']))
             self.table.setItem(row, 2, QTableWidgetItem(str(e['time'])))
             row += 1
+            
+        layout.addWidget(self.table)
 
-        dock = QDockWidget('Contact infos')
-        dock.setFeatures(QDockWidget.DockWidgetFeature.NoDockWidgetFeatures)
-        self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, dock)
+        # # create form
+        # form = QWidget()
+        # layout = QFormLayout(form)
+        # form.setLayout(layout)
 
-        # create form
-        form = QWidget()
-        layout = QFormLayout(form)
-        form.setLayout(layout)
-
-        btn_add = QPushButton('Add')
-        btn_add.clicked.connect(self.add_contact)
-        layout.addRow(btn_add)
+        # btn_add = QPushButton('Add')
+        # btn_add.clicked.connect(self.add_contact)
+        # layout.addRow(btn_add)
 
         # add delete & edit button
-        toolbar = QToolBar('main toolbar')
-        toolbar.setIconSize(QSize(16,16))
-        self.addToolBar(toolbar)
+        # toolbar = QToolBar('main toolbar')
+        # toolbar.setIconSize(QSize(16,16))
+        # self.addToolBar(toolbar)
 
-        delete_action = QAction(QIcon('./assets/remove.png'), '&Delete', self)
-        delete_action.triggered.connect(self.delete)
-        toolbar.addAction(delete_action)
-        dock.setWidget(form)
-
+        # delete_action = QAction(QIcon('./assets/remove.png'), '&Delete', self)
+        # delete_action.triggered.connect(self.delete)
+        # toolbar.addAction(delete_action)
+        # dock.setWidget(form)
 
     def delete(self):
         current_row = self.table.currentRow()
@@ -91,10 +87,4 @@ class MainWindow(QMainWindow):
         self.table.setItem(
             row, 2, QTableWidgetItem(10)
         )
-
-
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    window = MainWindow()
-    window.show()
-    sys.exit(app.exec())
+        

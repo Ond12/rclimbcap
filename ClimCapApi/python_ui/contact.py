@@ -73,3 +73,18 @@ class ContactInfo:
     def remove_from_plot(self, plot):
         if plot != None and self.contact_display != None:
             self.contact_display.remove_from_graphplot(plot)
+            
+    def to_dict(self):
+        return {
+            "sensor_id": self.sensor_id,
+            "axis_name": self.axis_name,
+            "max_value": self.max_value,
+            "max_value_time": self.max_value_time,
+            "max_values_axis": self.max_values_axis,
+            "max_values_axis_time": self.max_values_axis_time,
+            "start_time": self.start_time,
+            "end_time": self.end_time,
+            "period": self.period,
+            "area": self.area,
+        }
+    

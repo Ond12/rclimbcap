@@ -568,7 +568,7 @@ class DataContainer:
             for contact in cur_contacts_list:
                 all_contacts_list.append(contact)
         
-        return all_contacts_list
+        return sorted(all_contacts_list, key=lambda x: x.start_time)
             
     def butter_bandstop_filter(self, stop_band, sampling_rate):
         nyquist_freq = 0.5 * sampling_rate
@@ -897,6 +897,7 @@ class Wid(QMainWindow):
         dock = QDockWidget('Contact infos')
         dock.setFeatures(QDockWidget.DockWidgetFeature.NoDockWidgetFeatures)
         self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, dock)
+        dock.setWidget(self.contactTable_widget)
 
         self.osc_play_pause_widget = PlayPauseWidget()
 
@@ -1017,6 +1018,7 @@ class Wid(QMainWindow):
 
     def find_contacts_action(self): 
         all_contact_list = self.data_container.detect_contacts_on_sensors()
+        self.contactTable_widget.add_all_contacts(all_contact_list)
         self.plotter.plot_contacts(all_contact_list)
 
     def override_low_values_action(self):

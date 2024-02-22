@@ -23,8 +23,8 @@ namespace globals
 
 	//constexpr auto CHRONO_PULSE_PIN = 72; // pin number in acq card
 
-	constexpr auto SENSOR_ACQ_CARD_NAME = "Dev4";
-	constexpr auto PLATFORM_ACQ_CARD_NAME = "Dev3";
+	constexpr auto SENSOR_ACQ_CARD_NAME = "Dev1";  //NI 6211
+	constexpr auto PLATFORM_ACQ_CARD_NAME = "Dev3"; //NI 6255
 
 	constexpr auto NUMBERANALOGCHANPLATFORM = 8;
 	constexpr auto NUMBERANALOGCHANSENSOR = 6;

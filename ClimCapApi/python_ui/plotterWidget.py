@@ -116,7 +116,7 @@ class Plotter(pg.PlotWidget):
         super(Plotter, self).__init__(parent=parent)
         self.data_container = data_container
         
-        self.refresh_rate = 150
+        self.refresh_rate = 500
                 
         self.plot_items:list = []
         self.contact_list:list = []

@@ -37,7 +37,7 @@ class ForcesData:
         self.num_data_points = 0
         
         self.write_index = 0
-        self.capacity = 12000
+        self.capacity = 15000
         
         self.forces_x =  [0] * self.capacity
         self.forces_y =  [0] * self.capacity
@@ -56,13 +56,17 @@ class ForcesData:
         else:
             array.append(value)
 
-    def add_data_point(self, force_x_val, force_y_val, force_z_val):
+    def add_data_point(self, force_x_val, force_y_val, force_z_val, moment_x_val, moment_y_val, moment_z_val):
         self.num_data_points += 1
         self.write_index += 1
 
         self.write_or_append_data(self.forces_x, self.write_index, force_x_val)
         self.write_or_append_data(self.forces_y, self.write_index, force_y_val)
         self.write_or_append_data(self.forces_z, self.write_index, force_z_val)
+        
+        self.write_or_append_data(self.moments_x, self.write_index, moment_x_val)
+        self.write_or_append_data(self.moments_y, self.write_index, moment_y_val)
+        self.write_or_append_data(self.moments_z, self.write_index, moment_z_val)
         
         #self.moments_x.append(moment_x)
         #self.moments_y.append(moment_y)
@@ -80,12 +84,12 @@ class ForcesData:
     
     def to_dataframe(self):
         data_dict = {
-            'fx': self.forces_x[0:self.num_data_points],
-            'fy': self.forces_y[0:self.num_data_points],
-            'fz': self.forces_z[0:self.num_data_points],
-            #'m_x': self.moments_x,
-            #'m_y': self.moments_y,
-            #'m_z': self.moments_z
+            'fx':  self.forces_x [0:self.num_data_points],
+            'fy':  self.forces_y [0:self.num_data_points],
+            'fz':  self.forces_z [0:self.num_data_points],
+            'm_x': self.moments_x[0:self.num_data_points],
+            'm_y': self.moments_y[0:self.num_data_points],
+            'm_z': self.moments_z[0:self.num_data_points]
         }
         df = pd.DataFrame(data_dict)
         return df
@@ -232,7 +236,7 @@ class Sensor:
         return self.force_data.num_data_points
         
     def add_data_point(self, forces_values, analog_values):
-        self.force_data.add_data_point(forces_values[0], forces_values[1], forces_values[2])
+        self.force_data.add_data_point(forces_values[0], forces_values[1], forces_values[2], forces_values[3], forces_values[4], forces_values[5] )
         self.analog_data.add_data_point(analog_values)
 
     def get_num_channels(self):
@@ -648,15 +652,22 @@ class DataContainer:
         return signal
             
     def switch_sign_off_sensors(self, sensorid_to_switch, set_up_type):
-        #when the sensor is trac mod flip y and x axis
-        #when the sensor is comp mod flip z axis
-            
+
+        #when the sensor is comp flip it
+        #when platform flip x axis
+        
         for id in sensorid_to_switch:
             cur_sensor = self.find_sensor_by_id(id)
             if cur_sensor:
                 if set_up_type == "comp":
                     self.switch_sign(cur_sensor.get_forces_data().forces_z)
+                    self.switch_sign(cur_sensor.get_forces_data().forces_x)
+                    self.switch_sign(cur_sensor.get_forces_data().forces_y)
                 elif set_up_type == "trac":
+                    print("dd")
+                    #self.switch_sign(cur_sensor.get_forces_data().forces_x)
+                    #self.switch_sign(cur_sensor.get_forces_data().forces_y)
+                elif set_up_type == "plat":
                     self.switch_sign(cur_sensor.get_forces_data().forces_x)
                     self.switch_sign(cur_sensor.get_forces_data().forces_y)
                 else:
@@ -931,9 +942,9 @@ class Wid(QMainWindow):
         
     def settings_action(self):
         #domo
-        #sensor_ids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
-        sensor_ids = [11]#7, 8]#, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
-        add_platformes = False
+        sensor_ids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+        #sensor_ids = [] #7, 8, 9, 10, 11]
+        add_platformes = True
         
         sensor_frequency = 200
               
@@ -1042,8 +1053,11 @@ class Wid(QMainWindow):
     def flip_action(self):
         sensorid_compression = [2,3,5,6,10]
         sensorid_traction = [1,4,7,8,9,11]
+        platform = [40,41]
+        
         self.data_container.switch_sign_off_sensors(sensorid_compression,"comp")
         self.data_container.switch_sign_off_sensors(sensorid_traction,"trac")
+        self.data_container.switch_sign_off_sensors(platform,"plat")
         self.plotter.plot_data()
     
     def sum_force_action(self):

@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <QDebug>
 #include <string>
+#include "sensor.h"
 
 #define DAQmxErrChk(functionCall) if( DAQmxFailed(error=(functionCall)) ) goto Error; else
 
@@ -221,15 +222,15 @@ Error:
 	return 0;
 }
 
-void NidaqmxConnectionThread::setUPTask(float acquisitionRate, float callBackRate, uint nOfChannels, bool triggerEnable, uint numberOfSample)
+void NidaqmxConnectionThread::setUPTask(float acquisitionRate, float callBackRate, const QVector<Sensor>& sensorList, bool triggerEnable, uint numberOfSample)
 {
 	int32       error = 0;
 	char        errBuff[2048] = { '\0' };
 
 	NidaqmxConnectionThread::m_acqRate = acquisitionRate;
 	NidaqmxConnectionThread::m_callBackRate = callBackRate;
-	NidaqmxConnectionThread::m_numberOfChannels = nOfChannels + 1; // +1 for chrono pulse channel
-	NidaqmxConnectionThread::m_bufferSize = callBackRate * m_numberOfChannels;
+	NidaqmxConnectionThread::m_numberOfChannels = 0; // +1 for chrono pulse channel
+
 	NidaqmxConnectionThread::m_enableStartTrigger = triggerEnable;
 	NidaqmxConnectionThread::m_numberOfSample = numberOfSample;
 
@@ -239,13 +240,24 @@ void NidaqmxConnectionThread::setUPTask(float acquisitionRate, float callBackRat
 	QString channelNamePrefix = this->cardName + "/ai";
 
 	QDebug chd = qDebug();
-	chd << "- Initialisation des voies d'acquisition  ";
-	for (uint i = 0; i < nOfChannels; ++i)
+	chd << "- Initialisation des voies d'acquisition \n";
+
+	for (auto sensor : sensorList)
 	{
-		QString channelName = channelNamePrefix + QString::number(i);
-		std::string str = channelName.toStdString();
-		m_acquisitionTask->AddChannel(str, DAQmx_Val_RSE, -10.0, 10.0);
-		chd << channelName << " | ";
+		uint sensorFisrtChan = sensor.getfirstChannel();
+		uint nOfChannels = sensor.getNumberOfChan();
+		chd << "Sensor :" << sensor.getSensorId();
+		for (uint i = 0; i < nOfChannels; ++i)
+		{
+			uint currentChanNumber = sensorFisrtChan + i;
+			QString channelName = channelNamePrefix + QString::number(currentChanNumber);
+			std::string str = channelName.toStdString();
+			m_acquisitionTask->AddChannel(str, DAQmx_Val_RSE, -10.0, 10.0);
+
+			NidaqmxConnectionThread::m_numberOfChannels++;
+			chd << channelName << " | ";
+		}
+		chd << "\n";
 	}
 
 	//Ajout voie chrono
@@ -253,6 +265,9 @@ void NidaqmxConnectionThread::setUPTask(float acquisitionRate, float callBackRat
 	std::string str = channelName.toStdString();
 	m_acquisitionTask->AddChannel(str, DAQmx_Val_RSE, -10.0, 10.0);
 	chd << "|chrono: " << channelName << " | ";
+	NidaqmxConnectionThread::m_numberOfChannels++;
+
+	NidaqmxConnectionThread::m_bufferSize = callBackRate * m_numberOfChannels;
 
 	if (m_enableStartTrigger)
 	{
@@ -276,7 +291,7 @@ void NidaqmxConnectionThread::setUPTask(float acquisitionRate, float callBackRat
 		<< taskname.c_str()
 		<< " - Frequence: " << acquisitionRate << " hz"
 		<< " - Taille de trame " << callBackRate << " ech "
-		<< " - Nb voies: " << nOfChannels
+		<< " - Nb voies: " << NidaqmxConnectionThread::m_numberOfChannels
 		<< " - Taille buffer: " << m_bufferSize
 		<< " - Trigger: " << m_enableStartTrigger;
 
@@ -289,7 +304,7 @@ Error:
 
 }
 
-void NidaqmxConnectionThread::setUpCalibrationTask(float acquisitionRate, float callBackRate, uint nOfChannels, bool triggerEnable, uint numberOfSample)
+void NidaqmxConnectionThread::setUpCalibrationTask(float acquisitionRate, float callBackRate, const QVector<Sensor>& sensorList, bool triggerEnable, uint numberOfSample)
 {
 	int32       error = 0;
 	char        errBuff[2048] = { '\0' };
@@ -298,23 +313,33 @@ void NidaqmxConnectionThread::setUpCalibrationTask(float acquisitionRate, float 
 	m_calibrationTask = new NIDAQmx::Task(taskname);
 	QString channelNamePrefix = this->cardName + "/ai";
 
-	for (uint i = 0; i < nOfChannels; ++i)
+	uint chancpt = 0;
+
+	for (auto sensor : sensorList)
 	{
-		QString channelName = channelNamePrefix + QString::number(i);
-		std::string str = channelName.toStdString();
-		m_calibrationTask->AddChannel(str, DAQmx_Val_RSE, -10.0, 10.0);
+		uint sensorFisrtChan = sensor.getfirstChannel();
+		uint nOfChannels = sensor.getNumberOfChan();
+
+		for (uint i = 0; i < nOfChannels; ++i)
+		{
+			uint currentChanNumber = sensorFisrtChan + i;
+			QString channelName = channelNamePrefix + QString::number(currentChanNumber);
+			std::string str = channelName.toStdString();
+			m_acquisitionTask->AddChannel(str, DAQmx_Val_RSE, -10.0, 10.0);
+
+			chancpt++;
+		}
 	}
 
 	DAQmxErrChk(DAQmxCfgSampClkTiming(m_calibrationTask->m_handle, "", acquisitionRate, DAQmx_Val_Rising, DAQmx_Val_FiniteSamps, numberOfSample));
 	DAQmxErrChk(DAQmxRegisterEveryNSamplesEvent(m_calibrationTask->m_handle, DAQmx_Val_Acquired_Into_Buffer, callBackRate, 0, &NidaqmxConnectionThread::EveryNCallbackCalibration, NULL));
 	DAQmxErrChk(DAQmxRegisterDoneEvent(m_calibrationTask->m_handle, 0, DoneCallback, NULL));
 
-
 	qDebug() << "Tache calibration initialisee :"
 		<< taskname.c_str()
 		<< " - Frequence: " << acquisitionRate << " hz"
 		<< " - Taille de trame " << callBackRate << " ech "
-		<< " - Nb voies: " << nOfChannels;
+		<< " - Nb voies: " << chancpt;
 
 Error:
 

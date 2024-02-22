@@ -7,6 +7,7 @@
 
 #include <NIDAQmx.h>
 #include "globals.h"
+#include "sensor.h"
 #include "dataPacket.h"
 
 namespace NIDAQmx
@@ -243,8 +244,8 @@ public:
     void startSensorCalibration() const;
     void stopSensorCalibration() const;
 
-    void setUPTask(float acquisitionRate, float callBackRate, uint nOfChannels, bool triggerEnable, uint numberOfSample);
-    void setUpCalibrationTask(float acquisitionRate, float callBackRate, uint nOfChannels, bool triggerEnable, uint numberOfSample);
+    void setUPTask(float acquisitionRate, float callBackRate, const QVector<Sensor>& sensorList, bool triggerEnable, uint numberOfSample);
+    void setUpCalibrationTask(float acquisitionRate, float callBackRate, const QVector<Sensor>& sensorList, bool triggerEnable, uint numberOfSample);
 
     void startPlaformAcquisition() const;
     void stopPlaformAcquisition() const;

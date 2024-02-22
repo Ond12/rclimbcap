@@ -50,28 +50,27 @@ class ForcesData:
         
         self.x_time = [0] * self.capacity
 
-    def write_or_append_data(self, array, index, value):
-        if index < self.capacity:
-            array[index] = value
-        else:
-            array.append(value)
-
     def add_data_point(self, force_x_val, force_y_val, force_z_val, moment_x_val, moment_y_val, moment_z_val):
         self.num_data_points += 1
         self.write_index += 1
+        self.num_data_points += 1
+        self.write_index += 1
 
-        self.write_or_append_data(self.forces_x, self.write_index, force_x_val)
-        self.write_or_append_data(self.forces_y, self.write_index, force_y_val)
-        self.write_or_append_data(self.forces_z, self.write_index, force_z_val)
+        if self.write_index < self.capacity:
+            self.forces_x[self.write_index] = force_x_val
+            self.forces_y[self.write_index] = force_y_val
+            self.forces_z[self.write_index] = force_z_val
+            self.moments_x[self.write_index] = moment_x_val
+            self.moments_y[self.write_index] = moment_y_val
+            self.moments_z[self.write_index] = moment_z_val
+        else:
+            self.forces_x.append(force_x_val)
+            self.forces_y.append(force_y_val)
+            self.forces_z.append(force_z_val)
+            self.moments_x.append(moment_x_val)
+            self.moments_y.append(moment_y_val)
+            self.moments_z.append(moment_z_val)
         
-        self.write_or_append_data(self.moments_x, self.write_index, moment_x_val)
-        self.write_or_append_data(self.moments_y, self.write_index, moment_y_val)
-        self.write_or_append_data(self.moments_z, self.write_index, moment_z_val)
-        
-        #self.moments_x.append(moment_x)
-        #self.moments_y.append(moment_y)
-        #self.moments_z.append(moment_z)
-
         #time_val = (1 / self.frequency) * self.write_index
         #self.write_or_append_data(self.x_time, self.write_index, time_val)
 
@@ -347,15 +346,6 @@ class DataContainer:
         
         self.sensors.append(mergeSensor)
         self.sensors_dict[mergeSensor.sensor_id] = mergeSensor
-        
-    def dispatch_data(self, sensor_id, unf_data):
-        try:
-            sensor = self.sensors_dict[sensor_id]
-            data = unf_data["data"]
-            data_analog = unf_data["analog"]
-            sensor.add_data_point(data, data_analog)
-        except KeyError:
-            pass
 
     def get_sensor(self, sensor_id):
         if sensor_id in self.sensors_dict:  
@@ -739,6 +729,7 @@ class DataContainer:
         self.sensors = []
         self.chrono_data = [0] * 1 
 
+#region window
 #_________________________________________________________________________________________
 class Wid(QMainWindow):
     def __init__(self):
@@ -1202,13 +1193,13 @@ class Worker_udp(QObject):
                     self.newData.emit(tram)
         finally:
             UDPServerSocket.close()
-            self.finished.emit()    
-             
+            self.finished.emit()        
 def main():
     app =  QApplication(sys.argv)
     widm = Wid()
 
     sys.exit(app.exec())
-    
+
+#endregion    
 if __name__ == '__main__':
     main()

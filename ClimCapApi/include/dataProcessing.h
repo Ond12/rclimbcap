@@ -156,7 +156,7 @@ public:
 	void createThreadAvgZero(uint sensorID, uint sensorStartChannel, uint nbSamples, uint channelsNumber);
 
 	uint loadPlatformToAnalogConfig();
-	uint loadSensorToAnalogConfig();
+	const QVector<Sensor>& loadSensorToAnalogConfig();
 
 	bool loadCalibrationMatriceOrdre2(uint sensorNumber, SensorMatrice& matrice);
 

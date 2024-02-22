@@ -140,7 +140,7 @@ bool DataController::loadCalibrationMatriceOrdre2PLATFORM(uint sensorNumber, Pla
     return true;
 }
 
-uint DataController::loadSensorToAnalogConfig()
+const QVector<Sensor>& DataController::loadSensorToAnalogConfig()
 {
     QFile file(m_configFilePath);
     clearSensorConfiguration();
@@ -148,7 +148,6 @@ uint DataController::loadSensorToAnalogConfig()
     if (!file.open(QIODevice::ReadOnly))
     {
         qWarning() << "Impossible d'ouvrir le fichier de configuration " << m_configFilePath;
-        return 0;
     }
 
     QTextStream stream(&file);
@@ -161,7 +160,6 @@ uint DataController::loadSensorToAnalogConfig()
     if (parseError.error != QJsonParseError::NoError)
     {
         qWarning() << "Erreur de parsing " << parseError.offset << ":" << parseError.errorString();
-        return 1;
     }
 
     if (!doc.isEmpty())
@@ -195,7 +193,6 @@ uint DataController::loadSensorToAnalogConfig()
             if (!this->loadCalibrationMatriceOrdre2(tms.getSensorId(), calibrationMatrixO2container))
             {
                 qCritical("Matrice de calibration ordre2 non initialisee");
-                return 0;
             }
 
             tms.setCalibrationMatriceO2(calibrationMatrixO2container);
@@ -207,7 +204,7 @@ uint DataController::loadSensorToAnalogConfig()
         qDebug("______");
     }
 
-    return this->m_sensorsList.count();
+    return m_sensorsList;
 }
 
 bool DataController::loadCalibrationMatriceOrdre2(uint sensorNumber, SensorMatrice& matrice)

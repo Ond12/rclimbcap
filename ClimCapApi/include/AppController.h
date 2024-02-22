@@ -199,14 +199,14 @@ public:
 
 				if (m_ENABLE_SENSOR)
 				{
-					uint NsensorLoaded = MyDataController->loadSensorToAnalogConfig();
+					auto sensorList = MyDataController->loadSensorToAnalogConfig();
+					uint NsensorLoaded = sensorList.count();
 					if (NsensorLoaded == 0) { qCritical() << "Echec dans le chargement de la configuration capteur, vide"; return 0; };
 
-					int totalNumberOfChannels = NsensorLoaded * globals::NUMBERANALOGCHANSENSOR;
 					int numberOfSample = m_totalAcqTimeS * m_sampleRate;
 
-					MyNidaqmxConnectionThread->setUPTask(m_sampleRate, m_callbackrate, totalNumberOfChannels, m_triggerEnable, numberOfSample);
-					MyNidaqmxConnectionThread->setUpCalibrationTask(m_calibrationRate, m_callbackrate, totalNumberOfChannels, m_triggerEnable, m_calibrationNumberSample);
+					MyNidaqmxConnectionThread->setUPTask(m_sampleRate, m_callbackrate, sensorList, m_triggerEnable, numberOfSample);
+					MyNidaqmxConnectionThread->setUpCalibrationTask(m_calibrationRate, m_callbackrate, sensorList, m_triggerEnable, m_calibrationNumberSample);
 				}
 				else
 				{
@@ -217,7 +217,8 @@ public:
 			}
 			else if (globals::DUMMY_SENDER)
 			{
-				uint NsensorLoaded = MyDataController->loadSensorToAnalogConfig();
+				auto sensorList = MyDataController->loadSensorToAnalogConfig();
+				uint NsensorLoaded = sensorList.count();
 				if (NsensorLoaded == 0) { qCritical() << "Echec dans le chargement de la configuration capteur, vide"; return 0; };
 
 				int totalNumberOfChannelssensor = NsensorLoaded * 6;

@@ -45,15 +45,7 @@ class ContactTableWidget(QWidget):
         self.table.setColumnWidth(4, 50)
 
         self.table.setHorizontalHeaderLabels(contacts[0].keys())
-        self.table.setRowCount(len(contacts))
 
-        row = 0
-        for e in contacts:
-            self.table.setItem(row, 0, QTableWidgetItem(str(e['start'])))
-            self.table.setItem(row, 1, QTableWidgetItem(str(e['end'])))
-            self.table.setItem(row, 2, QTableWidgetItem(str(e['time'])))
-            row += 1
-            
         layout.addWidget(self.table)
 
     def delete(self):
@@ -74,4 +66,7 @@ class ContactTableWidget(QWidget):
         self.table.setItem(row, 0, QTableWidgetItem(str(contact.start_time)))
         self.table.setItem(row, 1, QTableWidgetItem(str(contact.end_time)))
         self.table.setItem(row, 2, QTableWidgetItem(str(contact.period)))
-        
+    
+    def handleCellClicked(self, row, column):
+        custom_object = self.custom_objects[row]
+        custom_object.clicked.emit()

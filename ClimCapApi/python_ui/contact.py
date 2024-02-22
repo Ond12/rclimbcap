@@ -8,6 +8,7 @@ from scipy.signal import butter, sosfilt
 import pyqtgraph as pg
 from PyQt6.QtWidgets import *
 from PyQt6.QtGui import *
+from PyQt6.QtCore import QObject, pyqtSignal
 
 color_x = (255, 0, 0)  # Red
 color_y = (0, 255, 0)  # Green
@@ -28,9 +29,10 @@ colors_dict = {
     10: (128, 128, 128)   # Gray
 }
 
-class ContactInfo:
+class ContactInfo(QObject):
     class ContactDisplay:
         def __init__(self, start_time=0, end_time=0, color= (0, 255, 0)):
+            super().__init__()
             pen = pg.mkPen(color)  
             self.start_vertical_line = pg.InfiniteLine(start_time, angle=90, movable=False, pen=pen)
             self.end_vertical_line = pg.InfiniteLine(end_time, angle=90, movable=False, pen=pen)

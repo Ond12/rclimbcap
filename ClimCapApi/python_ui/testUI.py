@@ -18,18 +18,7 @@ from colors import *
 from contactTableWidget import *
 from osc_sender import*
 
-class RingBuffer:
-    def __init__(self, capacity):
-        self.capacity = capacity
-        self.buffer = [None] * capacity
-        self.write_index = 0
-
-    def write(self, data):
-        self.buffer[self.write_index] = data
-        self.write_index = (self.write_index + 1) % self.capacity
-
-    def get_data(self):
-        return self.buffer
+from ForceDataContainer import *
 
 class ForcesData:
     def __init__(self, frequency):
@@ -37,7 +26,7 @@ class ForcesData:
         self.num_data_points = 0
         
         self.write_index = 0
-        self.capacity = 15000
+        self.capacity = 20000
         
         self.forces_x =  [0] * self.capacity
         self.forces_y =  [0] * self.capacity
@@ -51,8 +40,6 @@ class ForcesData:
         self.x_time = [0] * self.capacity
 
     def add_data_point(self, force_x_val, force_y_val, force_z_val, moment_x_val, moment_y_val, moment_z_val):
-        self.num_data_points += 1
-        self.write_index += 1
         self.num_data_points += 1
         self.write_index += 1
 
@@ -114,14 +101,12 @@ class ForcesData:
         self.num_data_points = len(data)
         self.forces_z = data
     
-    def get_x_y_z_array(self):
-        return np.column_stack((self.forces_x, self.forces_y, self.forces_z))
+def get_x_y_z_array(forcedata:ForcesDataC):
+    data = forcedata.get_forces_and_moments()
+    return np.column_stack((data[0], 
+                            data[1], 
+                            data[2])) 
     
-    def print_debug_data(self):
-        print(f"len: {self.num_data_points}")
-        #print(f"write idx {self.write_index}")
-        #print(f"len slice : {len(self.forces_x[0:self.write_index])}")
-
 class AnalogData:
     def __init__(self, frequency, num_channels):
         self.frequency = frequency
@@ -166,7 +151,7 @@ class Sensor:
         self.num_channels = num_channels
         self.frequency = frequency
         self.analog_data = AnalogData(frequency, num_channels)
-        self.force_data = ForcesData(frequency)  
+        self.force_data = ForcesDataC(frequency)  
         
         self.isrotate = False
         self.angles = {'x':0,'y':0,'z':0}
@@ -236,7 +221,7 @@ class Sensor:
         
     def add_data_point(self, forces_values, analog_values):
         self.force_data.add_data_point(forces_values[0], forces_values[1], forces_values[2], forces_values[3], forces_values[4], forces_values[5] )
-        self.analog_data.add_data_point(analog_values)
+        #self.analog_data.add_data_point(analog_values)
 
     def get_num_channels(self):
         return self.num_channels
@@ -251,7 +236,7 @@ class Sensor:
         return self.frequency
     
     def clear_data(self):
-        self.force_data = ForcesData(self.frequency)  
+        self.force_data = ForcesDataC(self.frequency)  
     
     def set_is_compression_flip(self):
         self.isCompressionFlip = True
@@ -276,13 +261,7 @@ class DataContainer:
                     down_edges_time_list.append(i)
 
         return down_edges_time_list
-    
-    def get_time_increments(self):
-        #change this to do 
-        force_data = self.sensors[0].get_forces_data()
-        time_increments = force_data.get_time_increments()
-        return time_increments
-    
+        
     def get_sensor_min_data_len(self):
         if len(self.sensors) > 0:
             min_data_len = self.sensors[0].data_size()
@@ -305,7 +284,7 @@ class DataContainer:
 
             for sensor in self.sensors:
                 
-                sensor_data = sensor.force_data.get_x_y_z_array()[:row_size, :]
+                sensor_data = get_x_y_z_array(sensor.force_data)[:row_size, :]
                 data_arr = np.concatenate((data_arr, sensor_data), axis=1)
 
             return data_arr
@@ -356,14 +335,12 @@ class DataContainer:
 
     def cal_resultant_force(self, sensor):
         force_data = sensor.get_forces_data()
-        time_increments = force_data.get_time_increments()
         
         forces = np.array([force_data.get_forces_x(), force_data.get_forces_y(), force_data.get_forces_z()])
         resultant_force = np.linalg.norm(forces, axis=0)
         
         result = {}
         result["sensor_id"] = sensor.sensor_id
-        result["time"] = time_increments
         result["data"] = resultant_force
 
         return result
@@ -373,7 +350,6 @@ class DataContainer:
                 
     def sum_force_data(self):
         force_data = self.sensors[0].get_forces_data()
-        time_increments = force_data .get_time_increments()
         num_points = force_data.num_data_points
 
         sum_x_data = np.zeros(num_points)
@@ -391,7 +367,6 @@ class DataContainer:
                 sum_z_data = np.add(sum_z_data, force_data.forces_z)  
 
         result = {}
-        result["time"] = time_increments
         result["sum_x"] = sum_x_data
         result["sum_y"] = sum_y_data
         result["sum_z"] = sum_z_data
@@ -399,15 +374,13 @@ class DataContainer:
         return result
     
     def find_max(self, signal, startidx = 0):
-        time_increments = self.get_time_increments()
         max_value = signal[0]  
-        time = time_increments[0]
 
         for i,value in enumerate(signal):
             if value > max_value:
                 max_value = value
                 print(max_value)
-                time = time_increments[startidx + i]
+                time = startidx + i
 
         return time, value
 
@@ -452,14 +425,12 @@ class DataContainer:
             contact.max_value_time = time
             
     def find_min(self, signal):
-        time_increments = self.get_time_increments()
         min_value = signal[0]  
-        time = time_increments[0]
 
         for i, value in enumerate(signal):
             if value < min_value:
                 min_value = value
-                time = time_increments[i]
+                time = i
 
         return time, min_value
 
@@ -600,7 +571,7 @@ class DataContainer:
     def apply_rotation_to_force(self):
         for sensor in self.sensors:
             #if sensor.isrotate:
-            xyz_data = sensor.force_data.get_x_y_z_array()#[0:sensor.data_size()]
+            xyz_data = get_x_y_z_array(sensor.force_data)#[0:sensor.data_size()]
             rotation_matrix = sensor.rotation_matrix
 
             rotated_data = []
@@ -650,9 +621,9 @@ class DataContainer:
             cur_sensor = self.find_sensor_by_id(id)
             if cur_sensor:
                 if set_up_type == "comp":
-                    self.switch_sign(cur_sensor.get_forces_data().forces_z)
                     self.switch_sign(cur_sensor.get_forces_data().forces_x)
                     self.switch_sign(cur_sensor.get_forces_data().forces_y)
+                    self.switch_sign(cur_sensor.get_forces_data().forces_z)
                 elif set_up_type == "trac":
                     print("dd")
                     #self.switch_sign(cur_sensor.get_forces_data().forces_x)

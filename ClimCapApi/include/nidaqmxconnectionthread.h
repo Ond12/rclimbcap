@@ -283,9 +283,6 @@ signals:
     void newDataPacketNiCalibration(const DataPacket&);
     void newDataPacketPlatformCalibration(const DataPacket&);
 
-
-
-
 };
 
 #endif // NIDAQMXCONNECTIONTHREAD_H

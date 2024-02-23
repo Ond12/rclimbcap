@@ -1512,6 +1512,9 @@ struct __pyx_vtabstruct_18ForceDataContainer_ForcesDataC {
   PyObject *(*get_forces_x)(struct __pyx_obj_18ForceDataContainer_ForcesDataC *, int __pyx_skip_dispatch);
   PyObject *(*get_forces_y)(struct __pyx_obj_18ForceDataContainer_ForcesDataC *, int __pyx_skip_dispatch);
   PyObject *(*get_forces_z)(struct __pyx_obj_18ForceDataContainer_ForcesDataC *, int __pyx_skip_dispatch);
+  PyObject *(*set_force_x)(struct __pyx_obj_18ForceDataContainer_ForcesDataC *, PyObject *, int __pyx_skip_dispatch);
+  PyObject *(*set_force_y)(struct __pyx_obj_18ForceDataContainer_ForcesDataC *, PyObject *, int __pyx_skip_dispatch);
+  PyObject *(*set_force_z)(struct __pyx_obj_18ForceDataContainer_ForcesDataC *, PyObject *, int __pyx_skip_dispatch);
 };
 static struct __pyx_vtabstruct_18ForceDataContainer_ForcesDataC *__pyx_vtabptr_18ForceDataContainer_ForcesDataC;
 /* #### Code section: utility_code_proto ### */
@@ -2170,6 +2173,9 @@ static PyObject *__pyx_f_18ForceDataContainer_11ForcesDataC_get_forces_and_momen
 static PyObject *__pyx_f_18ForceDataContainer_11ForcesDataC_get_forces_x(struct __pyx_obj_18ForceDataContainer_ForcesDataC *__pyx_v_self, int __pyx_skip_dispatch); /* proto*/
 static PyObject *__pyx_f_18ForceDataContainer_11ForcesDataC_get_forces_y(struct __pyx_obj_18ForceDataContainer_ForcesDataC *__pyx_v_self, int __pyx_skip_dispatch); /* proto*/
 static PyObject *__pyx_f_18ForceDataContainer_11ForcesDataC_get_forces_z(struct __pyx_obj_18ForceDataContainer_ForcesDataC *__pyx_v_self, int __pyx_skip_dispatch); /* proto*/
+static PyObject *__pyx_f_18ForceDataContainer_11ForcesDataC_set_force_x(struct __pyx_obj_18ForceDataContainer_ForcesDataC *__pyx_v_self, PyObject *__pyx_v_data, int __pyx_skip_dispatch); /* proto*/
+static PyObject *__pyx_f_18ForceDataContainer_11ForcesDataC_set_force_y(struct __pyx_obj_18ForceDataContainer_ForcesDataC *__pyx_v_self, PyObject *__pyx_v_data, int __pyx_skip_dispatch); /* proto*/
+static PyObject *__pyx_f_18ForceDataContainer_11ForcesDataC_set_force_z(struct __pyx_obj_18ForceDataContainer_ForcesDataC *__pyx_v_self, PyObject *__pyx_v_data, int __pyx_skip_dispatch); /* proto*/
 
 /* Module declarations from "libc.string" */
 
@@ -2190,7 +2196,8 @@ static PyObject *__pyx_builtin_TypeError;
 static const char __pyx_k_[] = "*";
 static const char __pyx_k_gc[] = "gc";
 static const char __pyx_k_np[] = "np";
-static const char __pyx_k__14[] = "?";
+static const char __pyx_k__18[] = "?";
+static const char __pyx_k_data[] = "data";
 static const char __pyx_k_main[] = "__main__";
 static const char __pyx_k_name[] = "__name__";
 static const char __pyx_k_self[] = "self";
@@ -2215,6 +2222,9 @@ static const char __pyx_k_ForcesDataC[] = "ForcesDataC";
 static const char __pyx_k_force_x_val[] = "force_x_val";
 static const char __pyx_k_force_y_val[] = "force_y_val";
 static const char __pyx_k_force_z_val[] = "force_z_val";
+static const char __pyx_k_set_force_x[] = "set_force_x";
+static const char __pyx_k_set_force_y[] = "set_force_y";
+static const char __pyx_k_set_force_z[] = "set_force_z";
 static const char __pyx_k_get_forces_x[] = "get_forces_x";
 static const char __pyx_k_get_forces_y[] = "get_forces_y";
 static const char __pyx_k_get_forces_z[] = "get_forces_z";
@@ -2233,6 +2243,9 @@ static const char __pyx_k_asyncio_coroutines[] = "asyncio.coroutines";
 static const char __pyx_k_cline_in_traceback[] = "cline_in_traceback";
 static const char __pyx_k_ForceDataContainer_pyx[] = "ForceDataContainer.pyx";
 static const char __pyx_k_get_forces_and_moments[] = "get_forces_and_moments";
+static const char __pyx_k_ForcesDataC_set_force_x[] = "ForcesDataC.set_force_x";
+static const char __pyx_k_ForcesDataC_set_force_y[] = "ForcesDataC.set_force_y";
+static const char __pyx_k_ForcesDataC_set_force_z[] = "ForcesDataC.set_force_z";
 static const char __pyx_k_ForcesDataC_get_forces_x[] = "ForcesDataC.get_forces_x";
 static const char __pyx_k_ForcesDataC_get_forces_y[] = "ForcesDataC.get_forces_y";
 static const char __pyx_k_ForcesDataC_get_forces_z[] = "ForcesDataC.get_forces_z";
@@ -2250,13 +2263,16 @@ static PyObject *__pyx_pf_18ForceDataContainer_11ForcesDataC_6get_forces_and_mom
 static PyObject *__pyx_pf_18ForceDataContainer_11ForcesDataC_8get_forces_x(struct __pyx_obj_18ForceDataContainer_ForcesDataC *__pyx_v_self); /* proto */
 static PyObject *__pyx_pf_18ForceDataContainer_11ForcesDataC_10get_forces_y(struct __pyx_obj_18ForceDataContainer_ForcesDataC *__pyx_v_self); /* proto */
 static PyObject *__pyx_pf_18ForceDataContainer_11ForcesDataC_12get_forces_z(struct __pyx_obj_18ForceDataContainer_ForcesDataC *__pyx_v_self); /* proto */
-static void __pyx_pf_18ForceDataContainer_11ForcesDataC_14__dealloc__(struct __pyx_obj_18ForceDataContainer_ForcesDataC *__pyx_v_self); /* proto */
+static PyObject *__pyx_pf_18ForceDataContainer_11ForcesDataC_14set_force_x(struct __pyx_obj_18ForceDataContainer_ForcesDataC *__pyx_v_self, PyObject *__pyx_v_data); /* proto */
+static PyObject *__pyx_pf_18ForceDataContainer_11ForcesDataC_16set_force_y(struct __pyx_obj_18ForceDataContainer_ForcesDataC *__pyx_v_self, PyObject *__pyx_v_data); /* proto */
+static PyObject *__pyx_pf_18ForceDataContainer_11ForcesDataC_18set_force_z(struct __pyx_obj_18ForceDataContainer_ForcesDataC *__pyx_v_self, PyObject *__pyx_v_data); /* proto */
+static void __pyx_pf_18ForceDataContainer_11ForcesDataC_20__dealloc__(struct __pyx_obj_18ForceDataContainer_ForcesDataC *__pyx_v_self); /* proto */
 static PyObject *__pyx_pf_18ForceDataContainer_11ForcesDataC_15num_data_points___get__(struct __pyx_obj_18ForceDataContainer_ForcesDataC *__pyx_v_self); /* proto */
 static int __pyx_pf_18ForceDataContainer_11ForcesDataC_15num_data_points_2__set__(struct __pyx_obj_18ForceDataContainer_ForcesDataC *__pyx_v_self, PyObject *__pyx_v_value); /* proto */
 static PyObject *__pyx_pf_18ForceDataContainer_11ForcesDataC_9frequency___get__(struct __pyx_obj_18ForceDataContainer_ForcesDataC *__pyx_v_self); /* proto */
 static int __pyx_pf_18ForceDataContainer_11ForcesDataC_9frequency_2__set__(struct __pyx_obj_18ForceDataContainer_ForcesDataC *__pyx_v_self, PyObject *__pyx_v_value); /* proto */
-static PyObject *__pyx_pf_18ForceDataContainer_11ForcesDataC_16__reduce_cython__(CYTHON_UNUSED struct __pyx_obj_18ForceDataContainer_ForcesDataC *__pyx_v_self); /* proto */
-static PyObject *__pyx_pf_18ForceDataContainer_11ForcesDataC_18__setstate_cython__(CYTHON_UNUSED struct __pyx_obj_18ForceDataContainer_ForcesDataC *__pyx_v_self, CYTHON_UNUSED PyObject *__pyx_v___pyx_state); /* proto */
+static PyObject *__pyx_pf_18ForceDataContainer_11ForcesDataC_22__reduce_cython__(CYTHON_UNUSED struct __pyx_obj_18ForceDataContainer_ForcesDataC *__pyx_v_self); /* proto */
+static PyObject *__pyx_pf_18ForceDataContainer_11ForcesDataC_24__setstate_cython__(CYTHON_UNUSED struct __pyx_obj_18ForceDataContainer_ForcesDataC *__pyx_v_self, CYTHON_UNUSED PyObject *__pyx_v___pyx_state); /* proto */
 static PyObject *__pyx_tp_new_18ForceDataContainer_ForcesDataC(PyTypeObject *t, PyObject *a, PyObject *k); /*proto*/
 /* #### Code section: late_includes ### */
 /* #### Code section: module_state ### */
@@ -2305,12 +2321,16 @@ typedef struct {
   PyObject *__pyx_n_s_ForcesDataC_get_forces_x;
   PyObject *__pyx_n_s_ForcesDataC_get_forces_y;
   PyObject *__pyx_n_s_ForcesDataC_get_forces_z;
+  PyObject *__pyx_n_s_ForcesDataC_set_force_x;
+  PyObject *__pyx_n_s_ForcesDataC_set_force_y;
+  PyObject *__pyx_n_s_ForcesDataC_set_force_z;
   PyObject *__pyx_n_s_TypeError;
-  PyObject *__pyx_n_s__14;
+  PyObject *__pyx_n_s__18;
   PyObject *__pyx_n_s_add_data_point;
   PyObject *__pyx_n_s_add_data_pointlist;
   PyObject *__pyx_n_s_asyncio_coroutines;
   PyObject *__pyx_n_s_cline_in_traceback;
+  PyObject *__pyx_n_s_data;
   PyObject *__pyx_kp_u_disable;
   PyObject *__pyx_kp_u_enable;
   PyObject *__pyx_n_s_force_vals;
@@ -2343,6 +2363,9 @@ typedef struct {
   PyObject *__pyx_n_s_reduce_cython;
   PyObject *__pyx_n_s_reduce_ex;
   PyObject *__pyx_n_s_self;
+  PyObject *__pyx_n_s_set_force_x;
+  PyObject *__pyx_n_s_set_force_y;
+  PyObject *__pyx_n_s_set_force_z;
   PyObject *__pyx_n_s_setstate;
   PyObject *__pyx_n_s_setstate_cython;
   PyObject *__pyx_n_s_spec;
@@ -2351,15 +2374,19 @@ typedef struct {
   PyObject *__pyx_tuple__2;
   PyObject *__pyx_tuple__4;
   PyObject *__pyx_tuple__6;
-  PyObject *__pyx_tuple__12;
+  PyObject *__pyx_tuple__11;
+  PyObject *__pyx_tuple__16;
   PyObject *__pyx_codeobj__3;
   PyObject *__pyx_codeobj__5;
   PyObject *__pyx_codeobj__7;
   PyObject *__pyx_codeobj__8;
   PyObject *__pyx_codeobj__9;
   PyObject *__pyx_codeobj__10;
-  PyObject *__pyx_codeobj__11;
+  PyObject *__pyx_codeobj__12;
   PyObject *__pyx_codeobj__13;
+  PyObject *__pyx_codeobj__14;
+  PyObject *__pyx_codeobj__15;
+  PyObject *__pyx_codeobj__17;
 } __pyx_mstate;
 
 #if CYTHON_USE_MODULE_STATE
@@ -2416,12 +2443,16 @@ static int __pyx_m_clear(PyObject *m) {
   Py_CLEAR(clear_module_state->__pyx_n_s_ForcesDataC_get_forces_x);
   Py_CLEAR(clear_module_state->__pyx_n_s_ForcesDataC_get_forces_y);
   Py_CLEAR(clear_module_state->__pyx_n_s_ForcesDataC_get_forces_z);
+  Py_CLEAR(clear_module_state->__pyx_n_s_ForcesDataC_set_force_x);
+  Py_CLEAR(clear_module_state->__pyx_n_s_ForcesDataC_set_force_y);
+  Py_CLEAR(clear_module_state->__pyx_n_s_ForcesDataC_set_force_z);
   Py_CLEAR(clear_module_state->__pyx_n_s_TypeError);
-  Py_CLEAR(clear_module_state->__pyx_n_s__14);
+  Py_CLEAR(clear_module_state->__pyx_n_s__18);
   Py_CLEAR(clear_module_state->__pyx_n_s_add_data_point);
   Py_CLEAR(clear_module_state->__pyx_n_s_add_data_pointlist);
   Py_CLEAR(clear_module_state->__pyx_n_s_asyncio_coroutines);
   Py_CLEAR(clear_module_state->__pyx_n_s_cline_in_traceback);
+  Py_CLEAR(clear_module_state->__pyx_n_s_data);
   Py_CLEAR(clear_module_state->__pyx_kp_u_disable);
   Py_CLEAR(clear_module_state->__pyx_kp_u_enable);
   Py_CLEAR(clear_module_state->__pyx_n_s_force_vals);
@@ -2454,6 +2485,9 @@ static int __pyx_m_clear(PyObject *m) {
   Py_CLEAR(clear_module_state->__pyx_n_s_reduce_cython);
   Py_CLEAR(clear_module_state->__pyx_n_s_reduce_ex);
   Py_CLEAR(clear_module_state->__pyx_n_s_self);
+  Py_CLEAR(clear_module_state->__pyx_n_s_set_force_x);
+  Py_CLEAR(clear_module_state->__pyx_n_s_set_force_y);
+  Py_CLEAR(clear_module_state->__pyx_n_s_set_force_z);
   Py_CLEAR(clear_module_state->__pyx_n_s_setstate);
   Py_CLEAR(clear_module_state->__pyx_n_s_setstate_cython);
   Py_CLEAR(clear_module_state->__pyx_n_s_spec);
@@ -2462,15 +2496,19 @@ static int __pyx_m_clear(PyObject *m) {
   Py_CLEAR(clear_module_state->__pyx_tuple__2);
   Py_CLEAR(clear_module_state->__pyx_tuple__4);
   Py_CLEAR(clear_module_state->__pyx_tuple__6);
-  Py_CLEAR(clear_module_state->__pyx_tuple__12);
+  Py_CLEAR(clear_module_state->__pyx_tuple__11);
+  Py_CLEAR(clear_module_state->__pyx_tuple__16);
   Py_CLEAR(clear_module_state->__pyx_codeobj__3);
   Py_CLEAR(clear_module_state->__pyx_codeobj__5);
   Py_CLEAR(clear_module_state->__pyx_codeobj__7);
   Py_CLEAR(clear_module_state->__pyx_codeobj__8);
   Py_CLEAR(clear_module_state->__pyx_codeobj__9);
   Py_CLEAR(clear_module_state->__pyx_codeobj__10);
-  Py_CLEAR(clear_module_state->__pyx_codeobj__11);
+  Py_CLEAR(clear_module_state->__pyx_codeobj__12);
   Py_CLEAR(clear_module_state->__pyx_codeobj__13);
+  Py_CLEAR(clear_module_state->__pyx_codeobj__14);
+  Py_CLEAR(clear_module_state->__pyx_codeobj__15);
+  Py_CLEAR(clear_module_state->__pyx_codeobj__17);
   return 0;
 }
 #endif
@@ -2505,12 +2543,16 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
   Py_VISIT(traverse_module_state->__pyx_n_s_ForcesDataC_get_forces_x);
   Py_VISIT(traverse_module_state->__pyx_n_s_ForcesDataC_get_forces_y);
   Py_VISIT(traverse_module_state->__pyx_n_s_ForcesDataC_get_forces_z);
+  Py_VISIT(traverse_module_state->__pyx_n_s_ForcesDataC_set_force_x);
+  Py_VISIT(traverse_module_state->__pyx_n_s_ForcesDataC_set_force_y);
+  Py_VISIT(traverse_module_state->__pyx_n_s_ForcesDataC_set_force_z);
   Py_VISIT(traverse_module_state->__pyx_n_s_TypeError);
-  Py_VISIT(traverse_module_state->__pyx_n_s__14);
+  Py_VISIT(traverse_module_state->__pyx_n_s__18);
   Py_VISIT(traverse_module_state->__pyx_n_s_add_data_point);
   Py_VISIT(traverse_module_state->__pyx_n_s_add_data_pointlist);
   Py_VISIT(traverse_module_state->__pyx_n_s_asyncio_coroutines);
   Py_VISIT(traverse_module_state->__pyx_n_s_cline_in_traceback);
+  Py_VISIT(traverse_module_state->__pyx_n_s_data);
   Py_VISIT(traverse_module_state->__pyx_kp_u_disable);
   Py_VISIT(traverse_module_state->__pyx_kp_u_enable);
   Py_VISIT(traverse_module_state->__pyx_n_s_force_vals);
@@ -2543,6 +2585,9 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
   Py_VISIT(traverse_module_state->__pyx_n_s_reduce_cython);
   Py_VISIT(traverse_module_state->__pyx_n_s_reduce_ex);
   Py_VISIT(traverse_module_state->__pyx_n_s_self);
+  Py_VISIT(traverse_module_state->__pyx_n_s_set_force_x);
+  Py_VISIT(traverse_module_state->__pyx_n_s_set_force_y);
+  Py_VISIT(traverse_module_state->__pyx_n_s_set_force_z);
   Py_VISIT(traverse_module_state->__pyx_n_s_setstate);
   Py_VISIT(traverse_module_state->__pyx_n_s_setstate_cython);
   Py_VISIT(traverse_module_state->__pyx_n_s_spec);
@@ -2551,15 +2596,19 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
   Py_VISIT(traverse_module_state->__pyx_tuple__2);
   Py_VISIT(traverse_module_state->__pyx_tuple__4);
   Py_VISIT(traverse_module_state->__pyx_tuple__6);
-  Py_VISIT(traverse_module_state->__pyx_tuple__12);
+  Py_VISIT(traverse_module_state->__pyx_tuple__11);
+  Py_VISIT(traverse_module_state->__pyx_tuple__16);
   Py_VISIT(traverse_module_state->__pyx_codeobj__3);
   Py_VISIT(traverse_module_state->__pyx_codeobj__5);
   Py_VISIT(traverse_module_state->__pyx_codeobj__7);
   Py_VISIT(traverse_module_state->__pyx_codeobj__8);
   Py_VISIT(traverse_module_state->__pyx_codeobj__9);
   Py_VISIT(traverse_module_state->__pyx_codeobj__10);
-  Py_VISIT(traverse_module_state->__pyx_codeobj__11);
+  Py_VISIT(traverse_module_state->__pyx_codeobj__12);
   Py_VISIT(traverse_module_state->__pyx_codeobj__13);
+  Py_VISIT(traverse_module_state->__pyx_codeobj__14);
+  Py_VISIT(traverse_module_state->__pyx_codeobj__15);
+  Py_VISIT(traverse_module_state->__pyx_codeobj__17);
   return 0;
 }
 #endif
@@ -2608,12 +2657,16 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
 #define __pyx_n_s_ForcesDataC_get_forces_x __pyx_mstate_global->__pyx_n_s_ForcesDataC_get_forces_x
 #define __pyx_n_s_ForcesDataC_get_forces_y __pyx_mstate_global->__pyx_n_s_ForcesDataC_get_forces_y
 #define __pyx_n_s_ForcesDataC_get_forces_z __pyx_mstate_global->__pyx_n_s_ForcesDataC_get_forces_z
+#define __pyx_n_s_ForcesDataC_set_force_x __pyx_mstate_global->__pyx_n_s_ForcesDataC_set_force_x
+#define __pyx_n_s_ForcesDataC_set_force_y __pyx_mstate_global->__pyx_n_s_ForcesDataC_set_force_y
+#define __pyx_n_s_ForcesDataC_set_force_z __pyx_mstate_global->__pyx_n_s_ForcesDataC_set_force_z
 #define __pyx_n_s_TypeError __pyx_mstate_global->__pyx_n_s_TypeError
-#define __pyx_n_s__14 __pyx_mstate_global->__pyx_n_s__14
+#define __pyx_n_s__18 __pyx_mstate_global->__pyx_n_s__18
 #define __pyx_n_s_add_data_point __pyx_mstate_global->__pyx_n_s_add_data_point
 #define __pyx_n_s_add_data_pointlist __pyx_mstate_global->__pyx_n_s_add_data_pointlist
 #define __pyx_n_s_asyncio_coroutines __pyx_mstate_global->__pyx_n_s_asyncio_coroutines
 #define __pyx_n_s_cline_in_traceback __pyx_mstate_global->__pyx_n_s_cline_in_traceback
+#define __pyx_n_s_data __pyx_mstate_global->__pyx_n_s_data
 #define __pyx_kp_u_disable __pyx_mstate_global->__pyx_kp_u_disable
 #define __pyx_kp_u_enable __pyx_mstate_global->__pyx_kp_u_enable
 #define __pyx_n_s_force_vals __pyx_mstate_global->__pyx_n_s_force_vals
@@ -2646,6 +2699,9 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
 #define __pyx_n_s_reduce_cython __pyx_mstate_global->__pyx_n_s_reduce_cython
 #define __pyx_n_s_reduce_ex __pyx_mstate_global->__pyx_n_s_reduce_ex
 #define __pyx_n_s_self __pyx_mstate_global->__pyx_n_s_self
+#define __pyx_n_s_set_force_x __pyx_mstate_global->__pyx_n_s_set_force_x
+#define __pyx_n_s_set_force_y __pyx_mstate_global->__pyx_n_s_set_force_y
+#define __pyx_n_s_set_force_z __pyx_mstate_global->__pyx_n_s_set_force_z
 #define __pyx_n_s_setstate __pyx_mstate_global->__pyx_n_s_setstate
 #define __pyx_n_s_setstate_cython __pyx_mstate_global->__pyx_n_s_setstate_cython
 #define __pyx_n_s_spec __pyx_mstate_global->__pyx_n_s_spec
@@ -2654,15 +2710,19 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
 #define __pyx_tuple__2 __pyx_mstate_global->__pyx_tuple__2
 #define __pyx_tuple__4 __pyx_mstate_global->__pyx_tuple__4
 #define __pyx_tuple__6 __pyx_mstate_global->__pyx_tuple__6
-#define __pyx_tuple__12 __pyx_mstate_global->__pyx_tuple__12
+#define __pyx_tuple__11 __pyx_mstate_global->__pyx_tuple__11
+#define __pyx_tuple__16 __pyx_mstate_global->__pyx_tuple__16
 #define __pyx_codeobj__3 __pyx_mstate_global->__pyx_codeobj__3
 #define __pyx_codeobj__5 __pyx_mstate_global->__pyx_codeobj__5
 #define __pyx_codeobj__7 __pyx_mstate_global->__pyx_codeobj__7
 #define __pyx_codeobj__8 __pyx_mstate_global->__pyx_codeobj__8
 #define __pyx_codeobj__9 __pyx_mstate_global->__pyx_codeobj__9
 #define __pyx_codeobj__10 __pyx_mstate_global->__pyx_codeobj__10
-#define __pyx_codeobj__11 __pyx_mstate_global->__pyx_codeobj__11
+#define __pyx_codeobj__12 __pyx_mstate_global->__pyx_codeobj__12
 #define __pyx_codeobj__13 __pyx_mstate_global->__pyx_codeobj__13
+#define __pyx_codeobj__14 __pyx_mstate_global->__pyx_codeobj__14
+#define __pyx_codeobj__15 __pyx_mstate_global->__pyx_codeobj__15
+#define __pyx_codeobj__17 __pyx_mstate_global->__pyx_codeobj__17
 /* #### Code section: module_code ### */
 
 /* "ForceDataContainer.pyx":19
@@ -4733,7 +4793,7 @@ static PyObject *__pyx_f_18ForceDataContainer_11ForcesDataC_get_forces_z(struct 
  *         forces_z_list =  [self.forces_z[i]  for i in range(self.num_data_points)]
  *         return forces_z_list             # <<<<<<<<<<<<<<
  * 
- *     def __dealloc__(self):
+ *     cpdef set_force_x(self, data):
  */
   __Pyx_XDECREF(__pyx_r);
   __Pyx_INCREF(__pyx_v_forces_z_list);
@@ -4833,27 +4893,981 @@ static PyObject *__pyx_pf_18ForceDataContainer_11ForcesDataC_12get_forces_z(stru
 /* "ForceDataContainer.pyx":98
  *         return forces_z_list
  * 
+ *     cpdef set_force_x(self, data):             # <<<<<<<<<<<<<<
+ *         num_elements = len(data)
+ *         if num_elements > self.capacity:
+ */
+
+static PyObject *__pyx_pw_18ForceDataContainer_11ForcesDataC_15set_force_x(PyObject *__pyx_v_self, 
+#if CYTHON_METH_FASTCALL
+PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
+#else
+PyObject *__pyx_args, PyObject *__pyx_kwds
+#endif
+); /*proto*/
+static PyObject *__pyx_f_18ForceDataContainer_11ForcesDataC_set_force_x(struct __pyx_obj_18ForceDataContainer_ForcesDataC *__pyx_v_self, PyObject *__pyx_v_data, int __pyx_skip_dispatch) {
+  Py_ssize_t __pyx_v_num_elements;
+  int __pyx_v_i;
+  PyObject *__pyx_r = NULL;
+  __Pyx_RefNannyDeclarations
+  PyObject *__pyx_t_1 = NULL;
+  PyObject *__pyx_t_2 = NULL;
+  PyObject *__pyx_t_3 = NULL;
+  PyObject *__pyx_t_4 = NULL;
+  int __pyx_t_5;
+  Py_ssize_t __pyx_t_6;
+  int __pyx_t_7;
+  int __pyx_t_8;
+  int __pyx_t_9;
+  double __pyx_t_10;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  __Pyx_RefNannySetupContext("set_force_x", 1);
+  /* Check if called by wrapper */
+  if (unlikely(__pyx_skip_dispatch)) ;
+  /* Check if overridden in Python */
+  else if (unlikely((Py_TYPE(((PyObject *)__pyx_v_self))->tp_dictoffset != 0) || __Pyx_PyType_HasFeature(Py_TYPE(((PyObject *)__pyx_v_self)), (Py_TPFLAGS_IS_ABSTRACT | Py_TPFLAGS_HEAPTYPE)))) {
+    #if CYTHON_USE_DICT_VERSIONS && CYTHON_USE_PYTYPE_LOOKUP && CYTHON_USE_TYPE_SLOTS
+    static PY_UINT64_T __pyx_tp_dict_version = __PYX_DICT_VERSION_INIT, __pyx_obj_dict_version = __PYX_DICT_VERSION_INIT;
+    if (unlikely(!__Pyx_object_dict_version_matches(((PyObject *)__pyx_v_self), __pyx_tp_dict_version, __pyx_obj_dict_version))) {
+      PY_UINT64_T __pyx_typedict_guard = __Pyx_get_tp_dict_version(((PyObject *)__pyx_v_self));
+      #endif
+      __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_set_force_x); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 98, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_1);
+      if (!__Pyx_IsSameCFunction(__pyx_t_1, (void*) __pyx_pw_18ForceDataContainer_11ForcesDataC_15set_force_x)) {
+        __Pyx_XDECREF(__pyx_r);
+        __Pyx_INCREF(__pyx_t_1);
+        __pyx_t_3 = __pyx_t_1; __pyx_t_4 = NULL;
+        __pyx_t_5 = 0;
+        #if CYTHON_UNPACK_METHODS
+        if (unlikely(PyMethod_Check(__pyx_t_3))) {
+          __pyx_t_4 = PyMethod_GET_SELF(__pyx_t_3);
+          if (likely(__pyx_t_4)) {
+            PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_3);
+            __Pyx_INCREF(__pyx_t_4);
+            __Pyx_INCREF(function);
+            __Pyx_DECREF_SET(__pyx_t_3, function);
+            __pyx_t_5 = 1;
+          }
+        }
+        #endif
+        {
+          PyObject *__pyx_callargs[2] = {__pyx_t_4, __pyx_v_data};
+          __pyx_t_2 = __Pyx_PyObject_FastCall(__pyx_t_3, __pyx_callargs+1-__pyx_t_5, 1+__pyx_t_5);
+          __Pyx_XDECREF(__pyx_t_4); __pyx_t_4 = 0;
+          if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 98, __pyx_L1_error)
+          __Pyx_GOTREF(__pyx_t_2);
+          __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+        }
+        __pyx_r = __pyx_t_2;
+        __pyx_t_2 = 0;
+        __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+        goto __pyx_L0;
+      }
+      #if CYTHON_USE_DICT_VERSIONS && CYTHON_USE_PYTYPE_LOOKUP && CYTHON_USE_TYPE_SLOTS
+      __pyx_tp_dict_version = __Pyx_get_tp_dict_version(((PyObject *)__pyx_v_self));
+      __pyx_obj_dict_version = __Pyx_get_object_dict_version(((PyObject *)__pyx_v_self));
+      if (unlikely(__pyx_typedict_guard != __pyx_tp_dict_version)) {
+        __pyx_tp_dict_version = __pyx_obj_dict_version = __PYX_DICT_VERSION_INIT;
+      }
+      #endif
+      __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+      #if CYTHON_USE_DICT_VERSIONS && CYTHON_USE_PYTYPE_LOOKUP && CYTHON_USE_TYPE_SLOTS
+    }
+    #endif
+  }
+
+  /* "ForceDataContainer.pyx":99
+ * 
+ *     cpdef set_force_x(self, data):
+ *         num_elements = len(data)             # <<<<<<<<<<<<<<
+ *         if num_elements > self.capacity:
+ *             self.capacity = num_elements
+ */
+  __pyx_t_6 = PyObject_Length(__pyx_v_data); if (unlikely(__pyx_t_6 == ((Py_ssize_t)-1))) __PYX_ERR(0, 99, __pyx_L1_error)
+  __pyx_v_num_elements = __pyx_t_6;
+
+  /* "ForceDataContainer.pyx":100
+ *     cpdef set_force_x(self, data):
+ *         num_elements = len(data)
+ *         if num_elements > self.capacity:             # <<<<<<<<<<<<<<
+ *             self.capacity = num_elements
+ *             self.reallocate_memory()
+ */
+  __pyx_t_7 = (__pyx_v_num_elements > __pyx_v_self->capacity);
+  if (__pyx_t_7) {
+
+    /* "ForceDataContainer.pyx":101
+ *         num_elements = len(data)
+ *         if num_elements > self.capacity:
+ *             self.capacity = num_elements             # <<<<<<<<<<<<<<
+ *             self.reallocate_memory()
+ *         self.num_data_points = num_elements
+ */
+    __pyx_v_self->capacity = __pyx_v_num_elements;
+
+    /* "ForceDataContainer.pyx":102
+ *         if num_elements > self.capacity:
+ *             self.capacity = num_elements
+ *             self.reallocate_memory()             # <<<<<<<<<<<<<<
+ *         self.num_data_points = num_elements
+ *         for i in range(self.num_data_points):
+ */
+    __pyx_t_1 = ((struct __pyx_vtabstruct_18ForceDataContainer_ForcesDataC *)__pyx_v_self->__pyx_vtab)->reallocate_memory(__pyx_v_self); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 102, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_1);
+    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+
+    /* "ForceDataContainer.pyx":100
+ *     cpdef set_force_x(self, data):
+ *         num_elements = len(data)
+ *         if num_elements > self.capacity:             # <<<<<<<<<<<<<<
+ *             self.capacity = num_elements
+ *             self.reallocate_memory()
+ */
+  }
+
+  /* "ForceDataContainer.pyx":103
+ *             self.capacity = num_elements
+ *             self.reallocate_memory()
+ *         self.num_data_points = num_elements             # <<<<<<<<<<<<<<
+ *         for i in range(self.num_data_points):
+ *             self.forces_x[i] = data[i]
+ */
+  __pyx_v_self->num_data_points = __pyx_v_num_elements;
+
+  /* "ForceDataContainer.pyx":104
+ *             self.reallocate_memory()
+ *         self.num_data_points = num_elements
+ *         for i in range(self.num_data_points):             # <<<<<<<<<<<<<<
+ *             self.forces_x[i] = data[i]
+ * 
+ */
+  __pyx_t_5 = __pyx_v_self->num_data_points;
+  __pyx_t_8 = __pyx_t_5;
+  for (__pyx_t_9 = 0; __pyx_t_9 < __pyx_t_8; __pyx_t_9+=1) {
+    __pyx_v_i = __pyx_t_9;
+
+    /* "ForceDataContainer.pyx":105
+ *         self.num_data_points = num_elements
+ *         for i in range(self.num_data_points):
+ *             self.forces_x[i] = data[i]             # <<<<<<<<<<<<<<
+ * 
+ *     # Method to set forces_y values
+ */
+    __pyx_t_1 = __Pyx_GetItemInt(__pyx_v_data, __pyx_v_i, int, 1, __Pyx_PyInt_From_int, 0, 1, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 105, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_1);
+    __pyx_t_10 = __pyx_PyFloat_AsDouble(__pyx_t_1); if (unlikely((__pyx_t_10 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 105, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+    (__pyx_v_self->forces_x[__pyx_v_i]) = __pyx_t_10;
+  }
+
+  /* "ForceDataContainer.pyx":98
+ *         return forces_z_list
+ * 
+ *     cpdef set_force_x(self, data):             # <<<<<<<<<<<<<<
+ *         num_elements = len(data)
+ *         if num_elements > self.capacity:
+ */
+
+  /* function exit code */
+  __pyx_r = Py_None; __Pyx_INCREF(Py_None);
+  goto __pyx_L0;
+  __pyx_L1_error:;
+  __Pyx_XDECREF(__pyx_t_1);
+  __Pyx_XDECREF(__pyx_t_2);
+  __Pyx_XDECREF(__pyx_t_3);
+  __Pyx_XDECREF(__pyx_t_4);
+  __Pyx_AddTraceback("ForceDataContainer.ForcesDataC.set_force_x", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __pyx_r = 0;
+  __pyx_L0:;
+  __Pyx_XGIVEREF(__pyx_r);
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* Python wrapper */
+static PyObject *__pyx_pw_18ForceDataContainer_11ForcesDataC_15set_force_x(PyObject *__pyx_v_self, 
+#if CYTHON_METH_FASTCALL
+PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
+#else
+PyObject *__pyx_args, PyObject *__pyx_kwds
+#endif
+); /*proto*/
+static PyMethodDef __pyx_mdef_18ForceDataContainer_11ForcesDataC_15set_force_x = {"set_force_x", (PyCFunction)(void*)(__Pyx_PyCFunction_FastCallWithKeywords)__pyx_pw_18ForceDataContainer_11ForcesDataC_15set_force_x, __Pyx_METH_FASTCALL|METH_KEYWORDS, 0};
+static PyObject *__pyx_pw_18ForceDataContainer_11ForcesDataC_15set_force_x(PyObject *__pyx_v_self, 
+#if CYTHON_METH_FASTCALL
+PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
+#else
+PyObject *__pyx_args, PyObject *__pyx_kwds
+#endif
+) {
+  PyObject *__pyx_v_data = 0;
+  #if !CYTHON_METH_FASTCALL
+  CYTHON_UNUSED Py_ssize_t __pyx_nargs;
+  #endif
+  CYTHON_UNUSED PyObject *const *__pyx_kwvalues;
+  PyObject* values[1] = {0};
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  PyObject *__pyx_r = 0;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("set_force_x (wrapper)", 0);
+  #if !CYTHON_METH_FASTCALL
+  #if CYTHON_ASSUME_SAFE_MACROS
+  __pyx_nargs = PyTuple_GET_SIZE(__pyx_args);
+  #else
+  __pyx_nargs = PyTuple_Size(__pyx_args); if (unlikely(__pyx_nargs < 0)) return NULL;
+  #endif
+  #endif
+  __pyx_kwvalues = __Pyx_KwValues_FASTCALL(__pyx_args, __pyx_nargs);
+  {
+    PyObject **__pyx_pyargnames[] = {&__pyx_n_s_data,0};
+    if (__pyx_kwds) {
+      Py_ssize_t kw_args;
+      switch (__pyx_nargs) {
+        case  1: values[0] = __Pyx_Arg_FASTCALL(__pyx_args, 0);
+        CYTHON_FALLTHROUGH;
+        case  0: break;
+        default: goto __pyx_L5_argtuple_error;
+      }
+      kw_args = __Pyx_NumKwargs_FASTCALL(__pyx_kwds);
+      switch (__pyx_nargs) {
+        case  0:
+        if (likely((values[0] = __Pyx_GetKwValue_FASTCALL(__pyx_kwds, __pyx_kwvalues, __pyx_n_s_data)) != 0)) {
+          (void)__Pyx_Arg_NewRef_FASTCALL(values[0]);
+          kw_args--;
+        }
+        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 98, __pyx_L3_error)
+        else goto __pyx_L5_argtuple_error;
+      }
+      if (unlikely(kw_args > 0)) {
+        const Py_ssize_t kwd_pos_args = __pyx_nargs;
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values + 0, kwd_pos_args, "set_force_x") < 0)) __PYX_ERR(0, 98, __pyx_L3_error)
+      }
+    } else if (unlikely(__pyx_nargs != 1)) {
+      goto __pyx_L5_argtuple_error;
+    } else {
+      values[0] = __Pyx_Arg_FASTCALL(__pyx_args, 0);
+    }
+    __pyx_v_data = values[0];
+  }
+  goto __pyx_L6_skip;
+  __pyx_L5_argtuple_error:;
+  __Pyx_RaiseArgtupleInvalid("set_force_x", 1, 1, 1, __pyx_nargs); __PYX_ERR(0, 98, __pyx_L3_error)
+  __pyx_L6_skip:;
+  goto __pyx_L4_argument_unpacking_done;
+  __pyx_L3_error:;
+  {
+    Py_ssize_t __pyx_temp;
+    for (__pyx_temp=0; __pyx_temp < (Py_ssize_t)(sizeof(values)/sizeof(values[0])); ++__pyx_temp) {
+      __Pyx_Arg_XDECREF_FASTCALL(values[__pyx_temp]);
+    }
+  }
+  __Pyx_AddTraceback("ForceDataContainer.ForcesDataC.set_force_x", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_RefNannyFinishContext();
+  return NULL;
+  __pyx_L4_argument_unpacking_done:;
+  __pyx_r = __pyx_pf_18ForceDataContainer_11ForcesDataC_14set_force_x(((struct __pyx_obj_18ForceDataContainer_ForcesDataC *)__pyx_v_self), __pyx_v_data);
+
+  /* function exit code */
+  {
+    Py_ssize_t __pyx_temp;
+    for (__pyx_temp=0; __pyx_temp < (Py_ssize_t)(sizeof(values)/sizeof(values[0])); ++__pyx_temp) {
+      __Pyx_Arg_XDECREF_FASTCALL(values[__pyx_temp]);
+    }
+  }
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+static PyObject *__pyx_pf_18ForceDataContainer_11ForcesDataC_14set_force_x(struct __pyx_obj_18ForceDataContainer_ForcesDataC *__pyx_v_self, PyObject *__pyx_v_data) {
+  PyObject *__pyx_r = NULL;
+  __Pyx_RefNannyDeclarations
+  PyObject *__pyx_t_1 = NULL;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  __Pyx_RefNannySetupContext("set_force_x", 1);
+  __Pyx_XDECREF(__pyx_r);
+  __pyx_t_1 = __pyx_f_18ForceDataContainer_11ForcesDataC_set_force_x(__pyx_v_self, __pyx_v_data, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 98, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_r = __pyx_t_1;
+  __pyx_t_1 = 0;
+  goto __pyx_L0;
+
+  /* function exit code */
+  __pyx_L1_error:;
+  __Pyx_XDECREF(__pyx_t_1);
+  __Pyx_AddTraceback("ForceDataContainer.ForcesDataC.set_force_x", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __pyx_r = NULL;
+  __pyx_L0:;
+  __Pyx_XGIVEREF(__pyx_r);
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* "ForceDataContainer.pyx":108
+ * 
+ *     # Method to set forces_y values
+ *     cpdef set_force_y(self, data):             # <<<<<<<<<<<<<<
+ *         num_elements = len(data)
+ *         if num_elements > self.capacity:
+ */
+
+static PyObject *__pyx_pw_18ForceDataContainer_11ForcesDataC_17set_force_y(PyObject *__pyx_v_self, 
+#if CYTHON_METH_FASTCALL
+PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
+#else
+PyObject *__pyx_args, PyObject *__pyx_kwds
+#endif
+); /*proto*/
+static PyObject *__pyx_f_18ForceDataContainer_11ForcesDataC_set_force_y(struct __pyx_obj_18ForceDataContainer_ForcesDataC *__pyx_v_self, PyObject *__pyx_v_data, int __pyx_skip_dispatch) {
+  Py_ssize_t __pyx_v_num_elements;
+  int __pyx_v_i;
+  PyObject *__pyx_r = NULL;
+  __Pyx_RefNannyDeclarations
+  PyObject *__pyx_t_1 = NULL;
+  PyObject *__pyx_t_2 = NULL;
+  PyObject *__pyx_t_3 = NULL;
+  PyObject *__pyx_t_4 = NULL;
+  int __pyx_t_5;
+  Py_ssize_t __pyx_t_6;
+  int __pyx_t_7;
+  int __pyx_t_8;
+  int __pyx_t_9;
+  double __pyx_t_10;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  __Pyx_RefNannySetupContext("set_force_y", 1);
+  /* Check if called by wrapper */
+  if (unlikely(__pyx_skip_dispatch)) ;
+  /* Check if overridden in Python */
+  else if (unlikely((Py_TYPE(((PyObject *)__pyx_v_self))->tp_dictoffset != 0) || __Pyx_PyType_HasFeature(Py_TYPE(((PyObject *)__pyx_v_self)), (Py_TPFLAGS_IS_ABSTRACT | Py_TPFLAGS_HEAPTYPE)))) {
+    #if CYTHON_USE_DICT_VERSIONS && CYTHON_USE_PYTYPE_LOOKUP && CYTHON_USE_TYPE_SLOTS
+    static PY_UINT64_T __pyx_tp_dict_version = __PYX_DICT_VERSION_INIT, __pyx_obj_dict_version = __PYX_DICT_VERSION_INIT;
+    if (unlikely(!__Pyx_object_dict_version_matches(((PyObject *)__pyx_v_self), __pyx_tp_dict_version, __pyx_obj_dict_version))) {
+      PY_UINT64_T __pyx_typedict_guard = __Pyx_get_tp_dict_version(((PyObject *)__pyx_v_self));
+      #endif
+      __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_set_force_y); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 108, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_1);
+      if (!__Pyx_IsSameCFunction(__pyx_t_1, (void*) __pyx_pw_18ForceDataContainer_11ForcesDataC_17set_force_y)) {
+        __Pyx_XDECREF(__pyx_r);
+        __Pyx_INCREF(__pyx_t_1);
+        __pyx_t_3 = __pyx_t_1; __pyx_t_4 = NULL;
+        __pyx_t_5 = 0;
+        #if CYTHON_UNPACK_METHODS
+        if (unlikely(PyMethod_Check(__pyx_t_3))) {
+          __pyx_t_4 = PyMethod_GET_SELF(__pyx_t_3);
+          if (likely(__pyx_t_4)) {
+            PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_3);
+            __Pyx_INCREF(__pyx_t_4);
+            __Pyx_INCREF(function);
+            __Pyx_DECREF_SET(__pyx_t_3, function);
+            __pyx_t_5 = 1;
+          }
+        }
+        #endif
+        {
+          PyObject *__pyx_callargs[2] = {__pyx_t_4, __pyx_v_data};
+          __pyx_t_2 = __Pyx_PyObject_FastCall(__pyx_t_3, __pyx_callargs+1-__pyx_t_5, 1+__pyx_t_5);
+          __Pyx_XDECREF(__pyx_t_4); __pyx_t_4 = 0;
+          if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 108, __pyx_L1_error)
+          __Pyx_GOTREF(__pyx_t_2);
+          __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+        }
+        __pyx_r = __pyx_t_2;
+        __pyx_t_2 = 0;
+        __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+        goto __pyx_L0;
+      }
+      #if CYTHON_USE_DICT_VERSIONS && CYTHON_USE_PYTYPE_LOOKUP && CYTHON_USE_TYPE_SLOTS
+      __pyx_tp_dict_version = __Pyx_get_tp_dict_version(((PyObject *)__pyx_v_self));
+      __pyx_obj_dict_version = __Pyx_get_object_dict_version(((PyObject *)__pyx_v_self));
+      if (unlikely(__pyx_typedict_guard != __pyx_tp_dict_version)) {
+        __pyx_tp_dict_version = __pyx_obj_dict_version = __PYX_DICT_VERSION_INIT;
+      }
+      #endif
+      __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+      #if CYTHON_USE_DICT_VERSIONS && CYTHON_USE_PYTYPE_LOOKUP && CYTHON_USE_TYPE_SLOTS
+    }
+    #endif
+  }
+
+  /* "ForceDataContainer.pyx":109
+ *     # Method to set forces_y values
+ *     cpdef set_force_y(self, data):
+ *         num_elements = len(data)             # <<<<<<<<<<<<<<
+ *         if num_elements > self.capacity:
+ *             self.capacity = num_elements
+ */
+  __pyx_t_6 = PyObject_Length(__pyx_v_data); if (unlikely(__pyx_t_6 == ((Py_ssize_t)-1))) __PYX_ERR(0, 109, __pyx_L1_error)
+  __pyx_v_num_elements = __pyx_t_6;
+
+  /* "ForceDataContainer.pyx":110
+ *     cpdef set_force_y(self, data):
+ *         num_elements = len(data)
+ *         if num_elements > self.capacity:             # <<<<<<<<<<<<<<
+ *             self.capacity = num_elements
+ *             self.reallocate_memory()
+ */
+  __pyx_t_7 = (__pyx_v_num_elements > __pyx_v_self->capacity);
+  if (__pyx_t_7) {
+
+    /* "ForceDataContainer.pyx":111
+ *         num_elements = len(data)
+ *         if num_elements > self.capacity:
+ *             self.capacity = num_elements             # <<<<<<<<<<<<<<
+ *             self.reallocate_memory()
+ *         self.num_data_points = num_elements
+ */
+    __pyx_v_self->capacity = __pyx_v_num_elements;
+
+    /* "ForceDataContainer.pyx":112
+ *         if num_elements > self.capacity:
+ *             self.capacity = num_elements
+ *             self.reallocate_memory()             # <<<<<<<<<<<<<<
+ *         self.num_data_points = num_elements
+ *         for i in range(self.num_data_points):
+ */
+    __pyx_t_1 = ((struct __pyx_vtabstruct_18ForceDataContainer_ForcesDataC *)__pyx_v_self->__pyx_vtab)->reallocate_memory(__pyx_v_self); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 112, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_1);
+    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+
+    /* "ForceDataContainer.pyx":110
+ *     cpdef set_force_y(self, data):
+ *         num_elements = len(data)
+ *         if num_elements > self.capacity:             # <<<<<<<<<<<<<<
+ *             self.capacity = num_elements
+ *             self.reallocate_memory()
+ */
+  }
+
+  /* "ForceDataContainer.pyx":113
+ *             self.capacity = num_elements
+ *             self.reallocate_memory()
+ *         self.num_data_points = num_elements             # <<<<<<<<<<<<<<
+ *         for i in range(self.num_data_points):
+ *             self.forces_y[i] = data[i]
+ */
+  __pyx_v_self->num_data_points = __pyx_v_num_elements;
+
+  /* "ForceDataContainer.pyx":114
+ *             self.reallocate_memory()
+ *         self.num_data_points = num_elements
+ *         for i in range(self.num_data_points):             # <<<<<<<<<<<<<<
+ *             self.forces_y[i] = data[i]
+ * 
+ */
+  __pyx_t_5 = __pyx_v_self->num_data_points;
+  __pyx_t_8 = __pyx_t_5;
+  for (__pyx_t_9 = 0; __pyx_t_9 < __pyx_t_8; __pyx_t_9+=1) {
+    __pyx_v_i = __pyx_t_9;
+
+    /* "ForceDataContainer.pyx":115
+ *         self.num_data_points = num_elements
+ *         for i in range(self.num_data_points):
+ *             self.forces_y[i] = data[i]             # <<<<<<<<<<<<<<
+ * 
+ *     # Method to set forces_z values
+ */
+    __pyx_t_1 = __Pyx_GetItemInt(__pyx_v_data, __pyx_v_i, int, 1, __Pyx_PyInt_From_int, 0, 1, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 115, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_1);
+    __pyx_t_10 = __pyx_PyFloat_AsDouble(__pyx_t_1); if (unlikely((__pyx_t_10 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 115, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+    (__pyx_v_self->forces_y[__pyx_v_i]) = __pyx_t_10;
+  }
+
+  /* "ForceDataContainer.pyx":108
+ * 
+ *     # Method to set forces_y values
+ *     cpdef set_force_y(self, data):             # <<<<<<<<<<<<<<
+ *         num_elements = len(data)
+ *         if num_elements > self.capacity:
+ */
+
+  /* function exit code */
+  __pyx_r = Py_None; __Pyx_INCREF(Py_None);
+  goto __pyx_L0;
+  __pyx_L1_error:;
+  __Pyx_XDECREF(__pyx_t_1);
+  __Pyx_XDECREF(__pyx_t_2);
+  __Pyx_XDECREF(__pyx_t_3);
+  __Pyx_XDECREF(__pyx_t_4);
+  __Pyx_AddTraceback("ForceDataContainer.ForcesDataC.set_force_y", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __pyx_r = 0;
+  __pyx_L0:;
+  __Pyx_XGIVEREF(__pyx_r);
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* Python wrapper */
+static PyObject *__pyx_pw_18ForceDataContainer_11ForcesDataC_17set_force_y(PyObject *__pyx_v_self, 
+#if CYTHON_METH_FASTCALL
+PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
+#else
+PyObject *__pyx_args, PyObject *__pyx_kwds
+#endif
+); /*proto*/
+static PyMethodDef __pyx_mdef_18ForceDataContainer_11ForcesDataC_17set_force_y = {"set_force_y", (PyCFunction)(void*)(__Pyx_PyCFunction_FastCallWithKeywords)__pyx_pw_18ForceDataContainer_11ForcesDataC_17set_force_y, __Pyx_METH_FASTCALL|METH_KEYWORDS, 0};
+static PyObject *__pyx_pw_18ForceDataContainer_11ForcesDataC_17set_force_y(PyObject *__pyx_v_self, 
+#if CYTHON_METH_FASTCALL
+PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
+#else
+PyObject *__pyx_args, PyObject *__pyx_kwds
+#endif
+) {
+  PyObject *__pyx_v_data = 0;
+  #if !CYTHON_METH_FASTCALL
+  CYTHON_UNUSED Py_ssize_t __pyx_nargs;
+  #endif
+  CYTHON_UNUSED PyObject *const *__pyx_kwvalues;
+  PyObject* values[1] = {0};
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  PyObject *__pyx_r = 0;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("set_force_y (wrapper)", 0);
+  #if !CYTHON_METH_FASTCALL
+  #if CYTHON_ASSUME_SAFE_MACROS
+  __pyx_nargs = PyTuple_GET_SIZE(__pyx_args);
+  #else
+  __pyx_nargs = PyTuple_Size(__pyx_args); if (unlikely(__pyx_nargs < 0)) return NULL;
+  #endif
+  #endif
+  __pyx_kwvalues = __Pyx_KwValues_FASTCALL(__pyx_args, __pyx_nargs);
+  {
+    PyObject **__pyx_pyargnames[] = {&__pyx_n_s_data,0};
+    if (__pyx_kwds) {
+      Py_ssize_t kw_args;
+      switch (__pyx_nargs) {
+        case  1: values[0] = __Pyx_Arg_FASTCALL(__pyx_args, 0);
+        CYTHON_FALLTHROUGH;
+        case  0: break;
+        default: goto __pyx_L5_argtuple_error;
+      }
+      kw_args = __Pyx_NumKwargs_FASTCALL(__pyx_kwds);
+      switch (__pyx_nargs) {
+        case  0:
+        if (likely((values[0] = __Pyx_GetKwValue_FASTCALL(__pyx_kwds, __pyx_kwvalues, __pyx_n_s_data)) != 0)) {
+          (void)__Pyx_Arg_NewRef_FASTCALL(values[0]);
+          kw_args--;
+        }
+        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 108, __pyx_L3_error)
+        else goto __pyx_L5_argtuple_error;
+      }
+      if (unlikely(kw_args > 0)) {
+        const Py_ssize_t kwd_pos_args = __pyx_nargs;
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values + 0, kwd_pos_args, "set_force_y") < 0)) __PYX_ERR(0, 108, __pyx_L3_error)
+      }
+    } else if (unlikely(__pyx_nargs != 1)) {
+      goto __pyx_L5_argtuple_error;
+    } else {
+      values[0] = __Pyx_Arg_FASTCALL(__pyx_args, 0);
+    }
+    __pyx_v_data = values[0];
+  }
+  goto __pyx_L6_skip;
+  __pyx_L5_argtuple_error:;
+  __Pyx_RaiseArgtupleInvalid("set_force_y", 1, 1, 1, __pyx_nargs); __PYX_ERR(0, 108, __pyx_L3_error)
+  __pyx_L6_skip:;
+  goto __pyx_L4_argument_unpacking_done;
+  __pyx_L3_error:;
+  {
+    Py_ssize_t __pyx_temp;
+    for (__pyx_temp=0; __pyx_temp < (Py_ssize_t)(sizeof(values)/sizeof(values[0])); ++__pyx_temp) {
+      __Pyx_Arg_XDECREF_FASTCALL(values[__pyx_temp]);
+    }
+  }
+  __Pyx_AddTraceback("ForceDataContainer.ForcesDataC.set_force_y", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_RefNannyFinishContext();
+  return NULL;
+  __pyx_L4_argument_unpacking_done:;
+  __pyx_r = __pyx_pf_18ForceDataContainer_11ForcesDataC_16set_force_y(((struct __pyx_obj_18ForceDataContainer_ForcesDataC *)__pyx_v_self), __pyx_v_data);
+
+  /* function exit code */
+  {
+    Py_ssize_t __pyx_temp;
+    for (__pyx_temp=0; __pyx_temp < (Py_ssize_t)(sizeof(values)/sizeof(values[0])); ++__pyx_temp) {
+      __Pyx_Arg_XDECREF_FASTCALL(values[__pyx_temp]);
+    }
+  }
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+static PyObject *__pyx_pf_18ForceDataContainer_11ForcesDataC_16set_force_y(struct __pyx_obj_18ForceDataContainer_ForcesDataC *__pyx_v_self, PyObject *__pyx_v_data) {
+  PyObject *__pyx_r = NULL;
+  __Pyx_RefNannyDeclarations
+  PyObject *__pyx_t_1 = NULL;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  __Pyx_RefNannySetupContext("set_force_y", 1);
+  __Pyx_XDECREF(__pyx_r);
+  __pyx_t_1 = __pyx_f_18ForceDataContainer_11ForcesDataC_set_force_y(__pyx_v_self, __pyx_v_data, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 108, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_r = __pyx_t_1;
+  __pyx_t_1 = 0;
+  goto __pyx_L0;
+
+  /* function exit code */
+  __pyx_L1_error:;
+  __Pyx_XDECREF(__pyx_t_1);
+  __Pyx_AddTraceback("ForceDataContainer.ForcesDataC.set_force_y", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __pyx_r = NULL;
+  __pyx_L0:;
+  __Pyx_XGIVEREF(__pyx_r);
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* "ForceDataContainer.pyx":118
+ * 
+ *     # Method to set forces_z values
+ *     cpdef set_force_z(self, data):             # <<<<<<<<<<<<<<
+ *         num_elements = len(data)
+ *         if num_elements > self.capacity:
+ */
+
+static PyObject *__pyx_pw_18ForceDataContainer_11ForcesDataC_19set_force_z(PyObject *__pyx_v_self, 
+#if CYTHON_METH_FASTCALL
+PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
+#else
+PyObject *__pyx_args, PyObject *__pyx_kwds
+#endif
+); /*proto*/
+static PyObject *__pyx_f_18ForceDataContainer_11ForcesDataC_set_force_z(struct __pyx_obj_18ForceDataContainer_ForcesDataC *__pyx_v_self, PyObject *__pyx_v_data, int __pyx_skip_dispatch) {
+  Py_ssize_t __pyx_v_num_elements;
+  int __pyx_v_i;
+  PyObject *__pyx_r = NULL;
+  __Pyx_RefNannyDeclarations
+  PyObject *__pyx_t_1 = NULL;
+  PyObject *__pyx_t_2 = NULL;
+  PyObject *__pyx_t_3 = NULL;
+  PyObject *__pyx_t_4 = NULL;
+  int __pyx_t_5;
+  Py_ssize_t __pyx_t_6;
+  int __pyx_t_7;
+  int __pyx_t_8;
+  int __pyx_t_9;
+  double __pyx_t_10;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  __Pyx_RefNannySetupContext("set_force_z", 1);
+  /* Check if called by wrapper */
+  if (unlikely(__pyx_skip_dispatch)) ;
+  /* Check if overridden in Python */
+  else if (unlikely((Py_TYPE(((PyObject *)__pyx_v_self))->tp_dictoffset != 0) || __Pyx_PyType_HasFeature(Py_TYPE(((PyObject *)__pyx_v_self)), (Py_TPFLAGS_IS_ABSTRACT | Py_TPFLAGS_HEAPTYPE)))) {
+    #if CYTHON_USE_DICT_VERSIONS && CYTHON_USE_PYTYPE_LOOKUP && CYTHON_USE_TYPE_SLOTS
+    static PY_UINT64_T __pyx_tp_dict_version = __PYX_DICT_VERSION_INIT, __pyx_obj_dict_version = __PYX_DICT_VERSION_INIT;
+    if (unlikely(!__Pyx_object_dict_version_matches(((PyObject *)__pyx_v_self), __pyx_tp_dict_version, __pyx_obj_dict_version))) {
+      PY_UINT64_T __pyx_typedict_guard = __Pyx_get_tp_dict_version(((PyObject *)__pyx_v_self));
+      #endif
+      __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_set_force_z); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 118, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_1);
+      if (!__Pyx_IsSameCFunction(__pyx_t_1, (void*) __pyx_pw_18ForceDataContainer_11ForcesDataC_19set_force_z)) {
+        __Pyx_XDECREF(__pyx_r);
+        __Pyx_INCREF(__pyx_t_1);
+        __pyx_t_3 = __pyx_t_1; __pyx_t_4 = NULL;
+        __pyx_t_5 = 0;
+        #if CYTHON_UNPACK_METHODS
+        if (unlikely(PyMethod_Check(__pyx_t_3))) {
+          __pyx_t_4 = PyMethod_GET_SELF(__pyx_t_3);
+          if (likely(__pyx_t_4)) {
+            PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_3);
+            __Pyx_INCREF(__pyx_t_4);
+            __Pyx_INCREF(function);
+            __Pyx_DECREF_SET(__pyx_t_3, function);
+            __pyx_t_5 = 1;
+          }
+        }
+        #endif
+        {
+          PyObject *__pyx_callargs[2] = {__pyx_t_4, __pyx_v_data};
+          __pyx_t_2 = __Pyx_PyObject_FastCall(__pyx_t_3, __pyx_callargs+1-__pyx_t_5, 1+__pyx_t_5);
+          __Pyx_XDECREF(__pyx_t_4); __pyx_t_4 = 0;
+          if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 118, __pyx_L1_error)
+          __Pyx_GOTREF(__pyx_t_2);
+          __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+        }
+        __pyx_r = __pyx_t_2;
+        __pyx_t_2 = 0;
+        __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+        goto __pyx_L0;
+      }
+      #if CYTHON_USE_DICT_VERSIONS && CYTHON_USE_PYTYPE_LOOKUP && CYTHON_USE_TYPE_SLOTS
+      __pyx_tp_dict_version = __Pyx_get_tp_dict_version(((PyObject *)__pyx_v_self));
+      __pyx_obj_dict_version = __Pyx_get_object_dict_version(((PyObject *)__pyx_v_self));
+      if (unlikely(__pyx_typedict_guard != __pyx_tp_dict_version)) {
+        __pyx_tp_dict_version = __pyx_obj_dict_version = __PYX_DICT_VERSION_INIT;
+      }
+      #endif
+      __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+      #if CYTHON_USE_DICT_VERSIONS && CYTHON_USE_PYTYPE_LOOKUP && CYTHON_USE_TYPE_SLOTS
+    }
+    #endif
+  }
+
+  /* "ForceDataContainer.pyx":119
+ *     # Method to set forces_z values
+ *     cpdef set_force_z(self, data):
+ *         num_elements = len(data)             # <<<<<<<<<<<<<<
+ *         if num_elements > self.capacity:
+ *             self.capacity = num_elements
+ */
+  __pyx_t_6 = PyObject_Length(__pyx_v_data); if (unlikely(__pyx_t_6 == ((Py_ssize_t)-1))) __PYX_ERR(0, 119, __pyx_L1_error)
+  __pyx_v_num_elements = __pyx_t_6;
+
+  /* "ForceDataContainer.pyx":120
+ *     cpdef set_force_z(self, data):
+ *         num_elements = len(data)
+ *         if num_elements > self.capacity:             # <<<<<<<<<<<<<<
+ *             self.capacity = num_elements
+ *             self.reallocate_memory()
+ */
+  __pyx_t_7 = (__pyx_v_num_elements > __pyx_v_self->capacity);
+  if (__pyx_t_7) {
+
+    /* "ForceDataContainer.pyx":121
+ *         num_elements = len(data)
+ *         if num_elements > self.capacity:
+ *             self.capacity = num_elements             # <<<<<<<<<<<<<<
+ *             self.reallocate_memory()
+ *         self.num_data_points = num_elements
+ */
+    __pyx_v_self->capacity = __pyx_v_num_elements;
+
+    /* "ForceDataContainer.pyx":122
+ *         if num_elements > self.capacity:
+ *             self.capacity = num_elements
+ *             self.reallocate_memory()             # <<<<<<<<<<<<<<
+ *         self.num_data_points = num_elements
+ *         for i in range(self.num_data_points):
+ */
+    __pyx_t_1 = ((struct __pyx_vtabstruct_18ForceDataContainer_ForcesDataC *)__pyx_v_self->__pyx_vtab)->reallocate_memory(__pyx_v_self); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 122, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_1);
+    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+
+    /* "ForceDataContainer.pyx":120
+ *     cpdef set_force_z(self, data):
+ *         num_elements = len(data)
+ *         if num_elements > self.capacity:             # <<<<<<<<<<<<<<
+ *             self.capacity = num_elements
+ *             self.reallocate_memory()
+ */
+  }
+
+  /* "ForceDataContainer.pyx":123
+ *             self.capacity = num_elements
+ *             self.reallocate_memory()
+ *         self.num_data_points = num_elements             # <<<<<<<<<<<<<<
+ *         for i in range(self.num_data_points):
+ *             self.forces_z[i] = data[i]
+ */
+  __pyx_v_self->num_data_points = __pyx_v_num_elements;
+
+  /* "ForceDataContainer.pyx":124
+ *             self.reallocate_memory()
+ *         self.num_data_points = num_elements
+ *         for i in range(self.num_data_points):             # <<<<<<<<<<<<<<
+ *             self.forces_z[i] = data[i]
+ * 
+ */
+  __pyx_t_5 = __pyx_v_self->num_data_points;
+  __pyx_t_8 = __pyx_t_5;
+  for (__pyx_t_9 = 0; __pyx_t_9 < __pyx_t_8; __pyx_t_9+=1) {
+    __pyx_v_i = __pyx_t_9;
+
+    /* "ForceDataContainer.pyx":125
+ *         self.num_data_points = num_elements
+ *         for i in range(self.num_data_points):
+ *             self.forces_z[i] = data[i]             # <<<<<<<<<<<<<<
+ * 
+ * 
+ */
+    __pyx_t_1 = __Pyx_GetItemInt(__pyx_v_data, __pyx_v_i, int, 1, __Pyx_PyInt_From_int, 0, 1, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 125, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_1);
+    __pyx_t_10 = __pyx_PyFloat_AsDouble(__pyx_t_1); if (unlikely((__pyx_t_10 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 125, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+    (__pyx_v_self->forces_z[__pyx_v_i]) = __pyx_t_10;
+  }
+
+  /* "ForceDataContainer.pyx":118
+ * 
+ *     # Method to set forces_z values
+ *     cpdef set_force_z(self, data):             # <<<<<<<<<<<<<<
+ *         num_elements = len(data)
+ *         if num_elements > self.capacity:
+ */
+
+  /* function exit code */
+  __pyx_r = Py_None; __Pyx_INCREF(Py_None);
+  goto __pyx_L0;
+  __pyx_L1_error:;
+  __Pyx_XDECREF(__pyx_t_1);
+  __Pyx_XDECREF(__pyx_t_2);
+  __Pyx_XDECREF(__pyx_t_3);
+  __Pyx_XDECREF(__pyx_t_4);
+  __Pyx_AddTraceback("ForceDataContainer.ForcesDataC.set_force_z", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __pyx_r = 0;
+  __pyx_L0:;
+  __Pyx_XGIVEREF(__pyx_r);
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* Python wrapper */
+static PyObject *__pyx_pw_18ForceDataContainer_11ForcesDataC_19set_force_z(PyObject *__pyx_v_self, 
+#if CYTHON_METH_FASTCALL
+PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
+#else
+PyObject *__pyx_args, PyObject *__pyx_kwds
+#endif
+); /*proto*/
+static PyMethodDef __pyx_mdef_18ForceDataContainer_11ForcesDataC_19set_force_z = {"set_force_z", (PyCFunction)(void*)(__Pyx_PyCFunction_FastCallWithKeywords)__pyx_pw_18ForceDataContainer_11ForcesDataC_19set_force_z, __Pyx_METH_FASTCALL|METH_KEYWORDS, 0};
+static PyObject *__pyx_pw_18ForceDataContainer_11ForcesDataC_19set_force_z(PyObject *__pyx_v_self, 
+#if CYTHON_METH_FASTCALL
+PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
+#else
+PyObject *__pyx_args, PyObject *__pyx_kwds
+#endif
+) {
+  PyObject *__pyx_v_data = 0;
+  #if !CYTHON_METH_FASTCALL
+  CYTHON_UNUSED Py_ssize_t __pyx_nargs;
+  #endif
+  CYTHON_UNUSED PyObject *const *__pyx_kwvalues;
+  PyObject* values[1] = {0};
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  PyObject *__pyx_r = 0;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("set_force_z (wrapper)", 0);
+  #if !CYTHON_METH_FASTCALL
+  #if CYTHON_ASSUME_SAFE_MACROS
+  __pyx_nargs = PyTuple_GET_SIZE(__pyx_args);
+  #else
+  __pyx_nargs = PyTuple_Size(__pyx_args); if (unlikely(__pyx_nargs < 0)) return NULL;
+  #endif
+  #endif
+  __pyx_kwvalues = __Pyx_KwValues_FASTCALL(__pyx_args, __pyx_nargs);
+  {
+    PyObject **__pyx_pyargnames[] = {&__pyx_n_s_data,0};
+    if (__pyx_kwds) {
+      Py_ssize_t kw_args;
+      switch (__pyx_nargs) {
+        case  1: values[0] = __Pyx_Arg_FASTCALL(__pyx_args, 0);
+        CYTHON_FALLTHROUGH;
+        case  0: break;
+        default: goto __pyx_L5_argtuple_error;
+      }
+      kw_args = __Pyx_NumKwargs_FASTCALL(__pyx_kwds);
+      switch (__pyx_nargs) {
+        case  0:
+        if (likely((values[0] = __Pyx_GetKwValue_FASTCALL(__pyx_kwds, __pyx_kwvalues, __pyx_n_s_data)) != 0)) {
+          (void)__Pyx_Arg_NewRef_FASTCALL(values[0]);
+          kw_args--;
+        }
+        else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 118, __pyx_L3_error)
+        else goto __pyx_L5_argtuple_error;
+      }
+      if (unlikely(kw_args > 0)) {
+        const Py_ssize_t kwd_pos_args = __pyx_nargs;
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values + 0, kwd_pos_args, "set_force_z") < 0)) __PYX_ERR(0, 118, __pyx_L3_error)
+      }
+    } else if (unlikely(__pyx_nargs != 1)) {
+      goto __pyx_L5_argtuple_error;
+    } else {
+      values[0] = __Pyx_Arg_FASTCALL(__pyx_args, 0);
+    }
+    __pyx_v_data = values[0];
+  }
+  goto __pyx_L6_skip;
+  __pyx_L5_argtuple_error:;
+  __Pyx_RaiseArgtupleInvalid("set_force_z", 1, 1, 1, __pyx_nargs); __PYX_ERR(0, 118, __pyx_L3_error)
+  __pyx_L6_skip:;
+  goto __pyx_L4_argument_unpacking_done;
+  __pyx_L3_error:;
+  {
+    Py_ssize_t __pyx_temp;
+    for (__pyx_temp=0; __pyx_temp < (Py_ssize_t)(sizeof(values)/sizeof(values[0])); ++__pyx_temp) {
+      __Pyx_Arg_XDECREF_FASTCALL(values[__pyx_temp]);
+    }
+  }
+  __Pyx_AddTraceback("ForceDataContainer.ForcesDataC.set_force_z", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_RefNannyFinishContext();
+  return NULL;
+  __pyx_L4_argument_unpacking_done:;
+  __pyx_r = __pyx_pf_18ForceDataContainer_11ForcesDataC_18set_force_z(((struct __pyx_obj_18ForceDataContainer_ForcesDataC *)__pyx_v_self), __pyx_v_data);
+
+  /* function exit code */
+  {
+    Py_ssize_t __pyx_temp;
+    for (__pyx_temp=0; __pyx_temp < (Py_ssize_t)(sizeof(values)/sizeof(values[0])); ++__pyx_temp) {
+      __Pyx_Arg_XDECREF_FASTCALL(values[__pyx_temp]);
+    }
+  }
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+static PyObject *__pyx_pf_18ForceDataContainer_11ForcesDataC_18set_force_z(struct __pyx_obj_18ForceDataContainer_ForcesDataC *__pyx_v_self, PyObject *__pyx_v_data) {
+  PyObject *__pyx_r = NULL;
+  __Pyx_RefNannyDeclarations
+  PyObject *__pyx_t_1 = NULL;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  __Pyx_RefNannySetupContext("set_force_z", 1);
+  __Pyx_XDECREF(__pyx_r);
+  __pyx_t_1 = __pyx_f_18ForceDataContainer_11ForcesDataC_set_force_z(__pyx_v_self, __pyx_v_data, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 118, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_r = __pyx_t_1;
+  __pyx_t_1 = 0;
+  goto __pyx_L0;
+
+  /* function exit code */
+  __pyx_L1_error:;
+  __Pyx_XDECREF(__pyx_t_1);
+  __Pyx_AddTraceback("ForceDataContainer.ForcesDataC.set_force_z", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __pyx_r = NULL;
+  __pyx_L0:;
+  __Pyx_XGIVEREF(__pyx_r);
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* "ForceDataContainer.pyx":128
+ * 
+ * 
  *     def __dealloc__(self):             # <<<<<<<<<<<<<<
  *         free(self.forces_x)
  *         free(self.forces_y)
  */
 
 /* Python wrapper */
-static void __pyx_pw_18ForceDataContainer_11ForcesDataC_15__dealloc__(PyObject *__pyx_v_self); /*proto*/
-static void __pyx_pw_18ForceDataContainer_11ForcesDataC_15__dealloc__(PyObject *__pyx_v_self) {
+static void __pyx_pw_18ForceDataContainer_11ForcesDataC_21__dealloc__(PyObject *__pyx_v_self); /*proto*/
+static void __pyx_pw_18ForceDataContainer_11ForcesDataC_21__dealloc__(PyObject *__pyx_v_self) {
   CYTHON_UNUSED PyObject *const *__pyx_kwvalues;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__dealloc__ (wrapper)", 0);
   __pyx_kwvalues = __Pyx_KwValues_VARARGS(__pyx_args, __pyx_nargs);
-  __pyx_pf_18ForceDataContainer_11ForcesDataC_14__dealloc__(((struct __pyx_obj_18ForceDataContainer_ForcesDataC *)__pyx_v_self));
+  __pyx_pf_18ForceDataContainer_11ForcesDataC_20__dealloc__(((struct __pyx_obj_18ForceDataContainer_ForcesDataC *)__pyx_v_self));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
 }
 
-static void __pyx_pf_18ForceDataContainer_11ForcesDataC_14__dealloc__(struct __pyx_obj_18ForceDataContainer_ForcesDataC *__pyx_v_self) {
+static void __pyx_pf_18ForceDataContainer_11ForcesDataC_20__dealloc__(struct __pyx_obj_18ForceDataContainer_ForcesDataC *__pyx_v_self) {
 
-  /* "ForceDataContainer.pyx":99
+  /* "ForceDataContainer.pyx":129
  * 
  *     def __dealloc__(self):
  *         free(self.forces_x)             # <<<<<<<<<<<<<<
@@ -4862,7 +5876,7 @@ static void __pyx_pf_18ForceDataContainer_11ForcesDataC_14__dealloc__(struct __p
  */
   free(__pyx_v_self->forces_x);
 
-  /* "ForceDataContainer.pyx":100
+  /* "ForceDataContainer.pyx":130
  *     def __dealloc__(self):
  *         free(self.forces_x)
  *         free(self.forces_y)             # <<<<<<<<<<<<<<
@@ -4871,7 +5885,7 @@ static void __pyx_pf_18ForceDataContainer_11ForcesDataC_14__dealloc__(struct __p
  */
   free(__pyx_v_self->forces_y);
 
-  /* "ForceDataContainer.pyx":101
+  /* "ForceDataContainer.pyx":131
  *         free(self.forces_x)
  *         free(self.forces_y)
  *         free(self.forces_z)             # <<<<<<<<<<<<<<
@@ -4880,7 +5894,7 @@ static void __pyx_pf_18ForceDataContainer_11ForcesDataC_14__dealloc__(struct __p
  */
   free(__pyx_v_self->forces_z);
 
-  /* "ForceDataContainer.pyx":102
+  /* "ForceDataContainer.pyx":132
  *         free(self.forces_y)
  *         free(self.forces_z)
  *         free(self.moments_x)             # <<<<<<<<<<<<<<
@@ -4889,7 +5903,7 @@ static void __pyx_pf_18ForceDataContainer_11ForcesDataC_14__dealloc__(struct __p
  */
   free(__pyx_v_self->moments_x);
 
-  /* "ForceDataContainer.pyx":103
+  /* "ForceDataContainer.pyx":133
  *         free(self.forces_z)
  *         free(self.moments_x)
  *         free(self.moments_y)             # <<<<<<<<<<<<<<
@@ -4897,15 +5911,15 @@ static void __pyx_pf_18ForceDataContainer_11ForcesDataC_14__dealloc__(struct __p
  */
   free(__pyx_v_self->moments_y);
 
-  /* "ForceDataContainer.pyx":104
+  /* "ForceDataContainer.pyx":134
  *         free(self.moments_x)
  *         free(self.moments_y)
  *         free(self.moments_z)             # <<<<<<<<<<<<<<
  */
   free(__pyx_v_self->moments_z);
 
-  /* "ForceDataContainer.pyx":98
- *         return forces_z_list
+  /* "ForceDataContainer.pyx":128
+ * 
  * 
  *     def __dealloc__(self):             # <<<<<<<<<<<<<<
  *         free(self.forces_x)
@@ -5088,15 +6102,15 @@ static int __pyx_pf_18ForceDataContainer_11ForcesDataC_9frequency_2__set__(struc
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_18ForceDataContainer_11ForcesDataC_17__reduce_cython__(PyObject *__pyx_v_self, 
+static PyObject *__pyx_pw_18ForceDataContainer_11ForcesDataC_23__reduce_cython__(PyObject *__pyx_v_self, 
 #if CYTHON_METH_FASTCALL
 PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
 #else
 PyObject *__pyx_args, PyObject *__pyx_kwds
 #endif
 ); /*proto*/
-static PyMethodDef __pyx_mdef_18ForceDataContainer_11ForcesDataC_17__reduce_cython__ = {"__reduce_cython__", (PyCFunction)(void*)(__Pyx_PyCFunction_FastCallWithKeywords)__pyx_pw_18ForceDataContainer_11ForcesDataC_17__reduce_cython__, __Pyx_METH_FASTCALL|METH_KEYWORDS, 0};
-static PyObject *__pyx_pw_18ForceDataContainer_11ForcesDataC_17__reduce_cython__(PyObject *__pyx_v_self, 
+static PyMethodDef __pyx_mdef_18ForceDataContainer_11ForcesDataC_23__reduce_cython__ = {"__reduce_cython__", (PyCFunction)(void*)(__Pyx_PyCFunction_FastCallWithKeywords)__pyx_pw_18ForceDataContainer_11ForcesDataC_23__reduce_cython__, __Pyx_METH_FASTCALL|METH_KEYWORDS, 0};
+static PyObject *__pyx_pw_18ForceDataContainer_11ForcesDataC_23__reduce_cython__(PyObject *__pyx_v_self, 
 #if CYTHON_METH_FASTCALL
 PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
 #else
@@ -5121,14 +6135,14 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   if (unlikely(__pyx_nargs > 0)) {
     __Pyx_RaiseArgtupleInvalid("__reduce_cython__", 1, 0, 0, __pyx_nargs); return NULL;}
   if (unlikely(__pyx_kwds) && __Pyx_NumKwargs_FASTCALL(__pyx_kwds) && unlikely(!__Pyx_CheckKeywordStrings(__pyx_kwds, "__reduce_cython__", 0))) return NULL;
-  __pyx_r = __pyx_pf_18ForceDataContainer_11ForcesDataC_16__reduce_cython__(((struct __pyx_obj_18ForceDataContainer_ForcesDataC *)__pyx_v_self));
+  __pyx_r = __pyx_pf_18ForceDataContainer_11ForcesDataC_22__reduce_cython__(((struct __pyx_obj_18ForceDataContainer_ForcesDataC *)__pyx_v_self));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_18ForceDataContainer_11ForcesDataC_16__reduce_cython__(CYTHON_UNUSED struct __pyx_obj_18ForceDataContainer_ForcesDataC *__pyx_v_self) {
+static PyObject *__pyx_pf_18ForceDataContainer_11ForcesDataC_22__reduce_cython__(CYTHON_UNUSED struct __pyx_obj_18ForceDataContainer_ForcesDataC *__pyx_v_self) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   int __pyx_lineno = 0;
@@ -5168,15 +6182,15 @@ static PyObject *__pyx_pf_18ForceDataContainer_11ForcesDataC_16__reduce_cython__
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_18ForceDataContainer_11ForcesDataC_19__setstate_cython__(PyObject *__pyx_v_self, 
+static PyObject *__pyx_pw_18ForceDataContainer_11ForcesDataC_25__setstate_cython__(PyObject *__pyx_v_self, 
 #if CYTHON_METH_FASTCALL
 PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
 #else
 PyObject *__pyx_args, PyObject *__pyx_kwds
 #endif
 ); /*proto*/
-static PyMethodDef __pyx_mdef_18ForceDataContainer_11ForcesDataC_19__setstate_cython__ = {"__setstate_cython__", (PyCFunction)(void*)(__Pyx_PyCFunction_FastCallWithKeywords)__pyx_pw_18ForceDataContainer_11ForcesDataC_19__setstate_cython__, __Pyx_METH_FASTCALL|METH_KEYWORDS, 0};
-static PyObject *__pyx_pw_18ForceDataContainer_11ForcesDataC_19__setstate_cython__(PyObject *__pyx_v_self, 
+static PyMethodDef __pyx_mdef_18ForceDataContainer_11ForcesDataC_25__setstate_cython__ = {"__setstate_cython__", (PyCFunction)(void*)(__Pyx_PyCFunction_FastCallWithKeywords)__pyx_pw_18ForceDataContainer_11ForcesDataC_25__setstate_cython__, __Pyx_METH_FASTCALL|METH_KEYWORDS, 0};
+static PyObject *__pyx_pw_18ForceDataContainer_11ForcesDataC_25__setstate_cython__(PyObject *__pyx_v_self, 
 #if CYTHON_METH_FASTCALL
 PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
 #else
@@ -5250,7 +6264,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_18ForceDataContainer_11ForcesDataC_18__setstate_cython__(((struct __pyx_obj_18ForceDataContainer_ForcesDataC *)__pyx_v_self), __pyx_v___pyx_state);
+  __pyx_r = __pyx_pf_18ForceDataContainer_11ForcesDataC_24__setstate_cython__(((struct __pyx_obj_18ForceDataContainer_ForcesDataC *)__pyx_v_self), __pyx_v___pyx_state);
 
   /* function exit code */
   {
@@ -5263,7 +6277,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_18ForceDataContainer_11ForcesDataC_18__setstate_cython__(CYTHON_UNUSED struct __pyx_obj_18ForceDataContainer_ForcesDataC *__pyx_v_self, CYTHON_UNUSED PyObject *__pyx_v___pyx_state) {
+static PyObject *__pyx_pf_18ForceDataContainer_11ForcesDataC_24__setstate_cython__(CYTHON_UNUSED struct __pyx_obj_18ForceDataContainer_ForcesDataC *__pyx_v_self, CYTHON_UNUSED PyObject *__pyx_v___pyx_state) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   int __pyx_lineno = 0;
@@ -5331,7 +6345,7 @@ static void __pyx_tp_dealloc_18ForceDataContainer_ForcesDataC(PyObject *o) {
     PyObject *etype, *eval, *etb;
     PyErr_Fetch(&etype, &eval, &etb);
     __Pyx_SET_REFCNT(o, Py_REFCNT(o) + 1);
-    __pyx_pw_18ForceDataContainer_11ForcesDataC_15__dealloc__(o);
+    __pyx_pw_18ForceDataContainer_11ForcesDataC_21__dealloc__(o);
     __Pyx_SET_REFCNT(o, Py_REFCNT(o) - 1);
     PyErr_Restore(etype, eval, etb);
   }
@@ -5374,8 +6388,8 @@ static int __pyx_setprop_18ForceDataContainer_11ForcesDataC_frequency(PyObject *
 }
 
 static PyMethodDef __pyx_methods_18ForceDataContainer_ForcesDataC[] = {
-  {"__reduce_cython__", (PyCFunction)(void*)(__Pyx_PyCFunction_FastCallWithKeywords)__pyx_pw_18ForceDataContainer_11ForcesDataC_17__reduce_cython__, __Pyx_METH_FASTCALL|METH_KEYWORDS, 0},
-  {"__setstate_cython__", (PyCFunction)(void*)(__Pyx_PyCFunction_FastCallWithKeywords)__pyx_pw_18ForceDataContainer_11ForcesDataC_19__setstate_cython__, __Pyx_METH_FASTCALL|METH_KEYWORDS, 0},
+  {"__reduce_cython__", (PyCFunction)(void*)(__Pyx_PyCFunction_FastCallWithKeywords)__pyx_pw_18ForceDataContainer_11ForcesDataC_23__reduce_cython__, __Pyx_METH_FASTCALL|METH_KEYWORDS, 0},
+  {"__setstate_cython__", (PyCFunction)(void*)(__Pyx_PyCFunction_FastCallWithKeywords)__pyx_pw_18ForceDataContainer_11ForcesDataC_25__setstate_cython__, __Pyx_METH_FASTCALL|METH_KEYWORDS, 0},
   {0, 0, 0, 0}
 };
 
@@ -5511,12 +6525,16 @@ static int __Pyx_CreateStringTabAndInitStrings(void) {
     {&__pyx_n_s_ForcesDataC_get_forces_x, __pyx_k_ForcesDataC_get_forces_x, sizeof(__pyx_k_ForcesDataC_get_forces_x), 0, 0, 1, 1},
     {&__pyx_n_s_ForcesDataC_get_forces_y, __pyx_k_ForcesDataC_get_forces_y, sizeof(__pyx_k_ForcesDataC_get_forces_y), 0, 0, 1, 1},
     {&__pyx_n_s_ForcesDataC_get_forces_z, __pyx_k_ForcesDataC_get_forces_z, sizeof(__pyx_k_ForcesDataC_get_forces_z), 0, 0, 1, 1},
+    {&__pyx_n_s_ForcesDataC_set_force_x, __pyx_k_ForcesDataC_set_force_x, sizeof(__pyx_k_ForcesDataC_set_force_x), 0, 0, 1, 1},
+    {&__pyx_n_s_ForcesDataC_set_force_y, __pyx_k_ForcesDataC_set_force_y, sizeof(__pyx_k_ForcesDataC_set_force_y), 0, 0, 1, 1},
+    {&__pyx_n_s_ForcesDataC_set_force_z, __pyx_k_ForcesDataC_set_force_z, sizeof(__pyx_k_ForcesDataC_set_force_z), 0, 0, 1, 1},
     {&__pyx_n_s_TypeError, __pyx_k_TypeError, sizeof(__pyx_k_TypeError), 0, 0, 1, 1},
-    {&__pyx_n_s__14, __pyx_k__14, sizeof(__pyx_k__14), 0, 0, 1, 1},
+    {&__pyx_n_s__18, __pyx_k__18, sizeof(__pyx_k__18), 0, 0, 1, 1},
     {&__pyx_n_s_add_data_point, __pyx_k_add_data_point, sizeof(__pyx_k_add_data_point), 0, 0, 1, 1},
     {&__pyx_n_s_add_data_pointlist, __pyx_k_add_data_pointlist, sizeof(__pyx_k_add_data_pointlist), 0, 0, 1, 1},
     {&__pyx_n_s_asyncio_coroutines, __pyx_k_asyncio_coroutines, sizeof(__pyx_k_asyncio_coroutines), 0, 0, 1, 1},
     {&__pyx_n_s_cline_in_traceback, __pyx_k_cline_in_traceback, sizeof(__pyx_k_cline_in_traceback), 0, 0, 1, 1},
+    {&__pyx_n_s_data, __pyx_k_data, sizeof(__pyx_k_data), 0, 0, 1, 1},
     {&__pyx_kp_u_disable, __pyx_k_disable, sizeof(__pyx_k_disable), 0, 1, 0, 0},
     {&__pyx_kp_u_enable, __pyx_k_enable, sizeof(__pyx_k_enable), 0, 1, 0, 0},
     {&__pyx_n_s_force_vals, __pyx_k_force_vals, sizeof(__pyx_k_force_vals), 0, 0, 1, 1},
@@ -5549,6 +6567,9 @@ static int __Pyx_CreateStringTabAndInitStrings(void) {
     {&__pyx_n_s_reduce_cython, __pyx_k_reduce_cython, sizeof(__pyx_k_reduce_cython), 0, 0, 1, 1},
     {&__pyx_n_s_reduce_ex, __pyx_k_reduce_ex, sizeof(__pyx_k_reduce_ex), 0, 0, 1, 1},
     {&__pyx_n_s_self, __pyx_k_self, sizeof(__pyx_k_self), 0, 0, 1, 1},
+    {&__pyx_n_s_set_force_x, __pyx_k_set_force_x, sizeof(__pyx_k_set_force_x), 0, 0, 1, 1},
+    {&__pyx_n_s_set_force_y, __pyx_k_set_force_y, sizeof(__pyx_k_set_force_y), 0, 0, 1, 1},
+    {&__pyx_n_s_set_force_z, __pyx_k_set_force_z, sizeof(__pyx_k_set_force_z), 0, 0, 1, 1},
     {&__pyx_n_s_setstate, __pyx_k_setstate, sizeof(__pyx_k_setstate), 0, 0, 1, 1},
     {&__pyx_n_s_setstate_cython, __pyx_k_setstate_cython, sizeof(__pyx_k_setstate_cython), 0, 0, 1, 1},
     {&__pyx_n_s_spec, __pyx_k_spec, sizeof(__pyx_k_spec), 0, 0, 1, 1},
@@ -5635,12 +6656,42 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
  */
   __pyx_codeobj__10 = (PyObject*)__Pyx_PyCode_New(1, 0, 0, 1, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__6, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_ForceDataContainer_pyx, __pyx_n_s_get_forces_z, 94, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__10)) __PYX_ERR(0, 94, __pyx_L1_error)
 
+  /* "ForceDataContainer.pyx":98
+ *         return forces_z_list
+ * 
+ *     cpdef set_force_x(self, data):             # <<<<<<<<<<<<<<
+ *         num_elements = len(data)
+ *         if num_elements > self.capacity:
+ */
+  __pyx_tuple__11 = PyTuple_Pack(2, __pyx_n_s_self, __pyx_n_s_data); if (unlikely(!__pyx_tuple__11)) __PYX_ERR(0, 98, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__11);
+  __Pyx_GIVEREF(__pyx_tuple__11);
+  __pyx_codeobj__12 = (PyObject*)__Pyx_PyCode_New(2, 0, 0, 2, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__11, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_ForceDataContainer_pyx, __pyx_n_s_set_force_x, 98, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__12)) __PYX_ERR(0, 98, __pyx_L1_error)
+
+  /* "ForceDataContainer.pyx":108
+ * 
+ *     # Method to set forces_y values
+ *     cpdef set_force_y(self, data):             # <<<<<<<<<<<<<<
+ *         num_elements = len(data)
+ *         if num_elements > self.capacity:
+ */
+  __pyx_codeobj__13 = (PyObject*)__Pyx_PyCode_New(2, 0, 0, 2, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__11, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_ForceDataContainer_pyx, __pyx_n_s_set_force_y, 108, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__13)) __PYX_ERR(0, 108, __pyx_L1_error)
+
+  /* "ForceDataContainer.pyx":118
+ * 
+ *     # Method to set forces_z values
+ *     cpdef set_force_z(self, data):             # <<<<<<<<<<<<<<
+ *         num_elements = len(data)
+ *         if num_elements > self.capacity:
+ */
+  __pyx_codeobj__14 = (PyObject*)__Pyx_PyCode_New(2, 0, 0, 2, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__11, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_ForceDataContainer_pyx, __pyx_n_s_set_force_z, 118, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__14)) __PYX_ERR(0, 118, __pyx_L1_error)
+
   /* "(tree fragment)":1
  * def __reduce_cython__(self):             # <<<<<<<<<<<<<<
  *     raise TypeError, "no default __reduce__ due to non-trivial __cinit__"
  * def __setstate_cython__(self, __pyx_state):
  */
-  __pyx_codeobj__11 = (PyObject*)__Pyx_PyCode_New(1, 0, 0, 1, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__6, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_stringsource, __pyx_n_s_reduce_cython, 1, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__11)) __PYX_ERR(1, 1, __pyx_L1_error)
+  __pyx_codeobj__15 = (PyObject*)__Pyx_PyCode_New(1, 0, 0, 1, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__6, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_stringsource, __pyx_n_s_reduce_cython, 1, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__15)) __PYX_ERR(1, 1, __pyx_L1_error)
 
   /* "(tree fragment)":3
  * def __reduce_cython__(self):
@@ -5648,10 +6699,10 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
  * def __setstate_cython__(self, __pyx_state):             # <<<<<<<<<<<<<<
  *     raise TypeError, "no default __reduce__ due to non-trivial __cinit__"
  */
-  __pyx_tuple__12 = PyTuple_Pack(2, __pyx_n_s_self, __pyx_n_s_pyx_state); if (unlikely(!__pyx_tuple__12)) __PYX_ERR(1, 3, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__12);
-  __Pyx_GIVEREF(__pyx_tuple__12);
-  __pyx_codeobj__13 = (PyObject*)__Pyx_PyCode_New(2, 0, 0, 2, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__12, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_stringsource, __pyx_n_s_setstate_cython, 3, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__13)) __PYX_ERR(1, 3, __pyx_L1_error)
+  __pyx_tuple__16 = PyTuple_Pack(2, __pyx_n_s_self, __pyx_n_s_pyx_state); if (unlikely(!__pyx_tuple__16)) __PYX_ERR(1, 3, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__16);
+  __Pyx_GIVEREF(__pyx_tuple__16);
+  __pyx_codeobj__17 = (PyObject*)__Pyx_PyCode_New(2, 0, 0, 2, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__16, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_stringsource, __pyx_n_s_setstate_cython, 3, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__17)) __PYX_ERR(1, 3, __pyx_L1_error)
   __Pyx_RefNannyFinishContext();
   return 0;
   __pyx_L1_error:;
@@ -5721,6 +6772,9 @@ static int __Pyx_modinit_type_init_code(void) {
   __pyx_vtable_18ForceDataContainer_ForcesDataC.get_forces_x = (PyObject *(*)(struct __pyx_obj_18ForceDataContainer_ForcesDataC *, int __pyx_skip_dispatch))__pyx_f_18ForceDataContainer_11ForcesDataC_get_forces_x;
   __pyx_vtable_18ForceDataContainer_ForcesDataC.get_forces_y = (PyObject *(*)(struct __pyx_obj_18ForceDataContainer_ForcesDataC *, int __pyx_skip_dispatch))__pyx_f_18ForceDataContainer_11ForcesDataC_get_forces_y;
   __pyx_vtable_18ForceDataContainer_ForcesDataC.get_forces_z = (PyObject *(*)(struct __pyx_obj_18ForceDataContainer_ForcesDataC *, int __pyx_skip_dispatch))__pyx_f_18ForceDataContainer_11ForcesDataC_get_forces_z;
+  __pyx_vtable_18ForceDataContainer_ForcesDataC.set_force_x = (PyObject *(*)(struct __pyx_obj_18ForceDataContainer_ForcesDataC *, PyObject *, int __pyx_skip_dispatch))__pyx_f_18ForceDataContainer_11ForcesDataC_set_force_x;
+  __pyx_vtable_18ForceDataContainer_ForcesDataC.set_force_y = (PyObject *(*)(struct __pyx_obj_18ForceDataContainer_ForcesDataC *, PyObject *, int __pyx_skip_dispatch))__pyx_f_18ForceDataContainer_11ForcesDataC_set_force_y;
+  __pyx_vtable_18ForceDataContainer_ForcesDataC.set_force_z = (PyObject *(*)(struct __pyx_obj_18ForceDataContainer_ForcesDataC *, PyObject *, int __pyx_skip_dispatch))__pyx_f_18ForceDataContainer_11ForcesDataC_set_force_z;
   #if CYTHON_USE_TYPE_SPECS
   __pyx_ptype_18ForceDataContainer_ForcesDataC = (PyTypeObject *) __Pyx_PyType_FromModuleAndSpec(__pyx_m, &__pyx_type_18ForceDataContainer_ForcesDataC_spec, NULL); if (unlikely(!__pyx_ptype_18ForceDataContainer_ForcesDataC)) __PYX_ERR(0, 6, __pyx_L1_error)
   if (__Pyx_fix_up_extension_type_from_spec(&__pyx_type_18ForceDataContainer_ForcesDataC_spec, __pyx_ptype_18ForceDataContainer_ForcesDataC) < 0) __PYX_ERR(0, 6, __pyx_L1_error)
@@ -6146,12 +7200,51 @@ if (!__Pyx_RefNanny) {
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   PyType_Modified(__pyx_ptype_18ForceDataContainer_ForcesDataC);
 
+  /* "ForceDataContainer.pyx":98
+ *         return forces_z_list
+ * 
+ *     cpdef set_force_x(self, data):             # <<<<<<<<<<<<<<
+ *         num_elements = len(data)
+ *         if num_elements > self.capacity:
+ */
+  __pyx_t_2 = __Pyx_CyFunction_New(&__pyx_mdef_18ForceDataContainer_11ForcesDataC_15set_force_x, __Pyx_CYFUNCTION_CCLASS, __pyx_n_s_ForcesDataC_set_force_x, NULL, __pyx_n_s_ForceDataContainer, __pyx_d, ((PyObject *)__pyx_codeobj__12)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 98, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  if (__Pyx_SetItemOnTypeDict((PyObject *)__pyx_ptype_18ForceDataContainer_ForcesDataC, __pyx_n_s_set_force_x, __pyx_t_2) < 0) __PYX_ERR(0, 98, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  PyType_Modified(__pyx_ptype_18ForceDataContainer_ForcesDataC);
+
+  /* "ForceDataContainer.pyx":108
+ * 
+ *     # Method to set forces_y values
+ *     cpdef set_force_y(self, data):             # <<<<<<<<<<<<<<
+ *         num_elements = len(data)
+ *         if num_elements > self.capacity:
+ */
+  __pyx_t_2 = __Pyx_CyFunction_New(&__pyx_mdef_18ForceDataContainer_11ForcesDataC_17set_force_y, __Pyx_CYFUNCTION_CCLASS, __pyx_n_s_ForcesDataC_set_force_y, NULL, __pyx_n_s_ForceDataContainer, __pyx_d, ((PyObject *)__pyx_codeobj__13)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 108, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  if (__Pyx_SetItemOnTypeDict((PyObject *)__pyx_ptype_18ForceDataContainer_ForcesDataC, __pyx_n_s_set_force_y, __pyx_t_2) < 0) __PYX_ERR(0, 108, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  PyType_Modified(__pyx_ptype_18ForceDataContainer_ForcesDataC);
+
+  /* "ForceDataContainer.pyx":118
+ * 
+ *     # Method to set forces_z values
+ *     cpdef set_force_z(self, data):             # <<<<<<<<<<<<<<
+ *         num_elements = len(data)
+ *         if num_elements > self.capacity:
+ */
+  __pyx_t_2 = __Pyx_CyFunction_New(&__pyx_mdef_18ForceDataContainer_11ForcesDataC_19set_force_z, __Pyx_CYFUNCTION_CCLASS, __pyx_n_s_ForcesDataC_set_force_z, NULL, __pyx_n_s_ForceDataContainer, __pyx_d, ((PyObject *)__pyx_codeobj__14)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 118, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  if (__Pyx_SetItemOnTypeDict((PyObject *)__pyx_ptype_18ForceDataContainer_ForcesDataC, __pyx_n_s_set_force_z, __pyx_t_2) < 0) __PYX_ERR(0, 118, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  PyType_Modified(__pyx_ptype_18ForceDataContainer_ForcesDataC);
+
   /* "(tree fragment)":1
  * def __reduce_cython__(self):             # <<<<<<<<<<<<<<
  *     raise TypeError, "no default __reduce__ due to non-trivial __cinit__"
  * def __setstate_cython__(self, __pyx_state):
  */
-  __pyx_t_2 = __Pyx_CyFunction_New(&__pyx_mdef_18ForceDataContainer_11ForcesDataC_17__reduce_cython__, __Pyx_CYFUNCTION_CCLASS, __pyx_n_s_ForcesDataC___reduce_cython, NULL, __pyx_n_s_ForceDataContainer, __pyx_d, ((PyObject *)__pyx_codeobj__11)); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 1, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_CyFunction_New(&__pyx_mdef_18ForceDataContainer_11ForcesDataC_23__reduce_cython__, __Pyx_CYFUNCTION_CCLASS, __pyx_n_s_ForcesDataC___reduce_cython, NULL, __pyx_n_s_ForceDataContainer, __pyx_d, ((PyObject *)__pyx_codeobj__15)); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 1, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_reduce_cython, __pyx_t_2) < 0) __PYX_ERR(1, 1, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
@@ -6162,7 +7255,7 @@ if (!__Pyx_RefNanny) {
  * def __setstate_cython__(self, __pyx_state):             # <<<<<<<<<<<<<<
  *     raise TypeError, "no default __reduce__ due to non-trivial __cinit__"
  */
-  __pyx_t_2 = __Pyx_CyFunction_New(&__pyx_mdef_18ForceDataContainer_11ForcesDataC_19__setstate_cython__, __Pyx_CYFUNCTION_CCLASS, __pyx_n_s_ForcesDataC___setstate_cython, NULL, __pyx_n_s_ForceDataContainer, __pyx_d, ((PyObject *)__pyx_codeobj__13)); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 3, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_CyFunction_New(&__pyx_mdef_18ForceDataContainer_11ForcesDataC_25__setstate_cython__, __Pyx_CYFUNCTION_CCLASS, __pyx_n_s_ForcesDataC___setstate_cython, NULL, __pyx_n_s_ForceDataContainer, __pyx_d, ((PyObject *)__pyx_codeobj__17)); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 3, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_setstate_cython, __pyx_t_2) < 0) __PYX_ERR(1, 3, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
@@ -10206,7 +11299,7 @@ __Pyx_PyType_GetName(PyTypeObject* tp)
     if (unlikely(name == NULL) || unlikely(!PyUnicode_Check(name))) {
         PyErr_Clear();
         Py_XDECREF(name);
-        name = __Pyx_NewRef(__pyx_n_s__14);
+        name = __Pyx_NewRef(__pyx_n_s__18);
     }
     return name;
 }

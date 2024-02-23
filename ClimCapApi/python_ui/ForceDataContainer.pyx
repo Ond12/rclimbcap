@@ -95,6 +95,35 @@ cdef class ForcesDataC:
         forces_z_list =  [self.forces_z[i]  for i in range(self.num_data_points)]
         return forces_z_list
 
+    cpdef set_force_x(self, data):
+        num_elements = len(data)
+        if num_elements > self.capacity:
+            self.capacity = num_elements
+            self.reallocate_memory()
+        self.num_data_points = num_elements
+        for i in range(self.num_data_points):
+            self.forces_x[i] = data[i]
+
+    # Method to set forces_y values
+    cpdef set_force_y(self, data):
+        num_elements = len(data)
+        if num_elements > self.capacity:
+            self.capacity = num_elements
+            self.reallocate_memory()
+        self.num_data_points = num_elements
+        for i in range(self.num_data_points):
+            self.forces_y[i] = data[i]
+
+    # Method to set forces_z values
+    cpdef set_force_z(self, data):
+        num_elements = len(data)
+        if num_elements > self.capacity:
+            self.capacity = num_elements
+            self.reallocate_memory()
+        self.num_data_points = num_elements
+        for i in range(self.num_data_points):
+            self.forces_z[i] = data[i]
+    
     def __dealloc__(self):
         free(self.forces_x)
         free(self.forces_y)

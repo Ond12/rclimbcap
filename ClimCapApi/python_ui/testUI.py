@@ -16,7 +16,8 @@ from plotterWidget import *
 from contact import *
 from colors import *
 from contactTableWidget import *
-from osc_sender import*
+from osc_sender import *
+from routeViewWidget import *
 
 class RingBuffer:
     def __init__(self, capacity):
@@ -310,7 +311,7 @@ class DataContainer:
 
             return data_arr
         else:
-            return None
+            return []
     
     def add_sensor(self, sensor):
         self.sensors.append(sensor)
@@ -895,11 +896,20 @@ class Wid(QMainWindow):
         main_grid.addWidget(record_widget, 3, 0)
 
         self.contactTable_widget = ContactTableWidget()
+
         
         dock = QDockWidget('Contact infos')
         dock.setFeatures(QDockWidget.DockWidgetFeature.NoDockWidgetFeatures)
-        self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, dock)
+        self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, dock)
         dock.setWidget(self.contactTable_widget)
+
+        self.routeView_widget = RouteViewWidget()
+        self.routeView_widget.holdclicked.connect(self.plot_controller.show_hide_sensor_data)
+
+        dockR = QDockWidget('Plan')
+        dockR.setFeatures(QDockWidget.DockWidgetFeature.NoDockWidgetFeatures)
+        self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, dockR)
+        dockR.setWidget(self.routeView_widget)
 
         self.osc_play_pause_widget = PlayPauseWidget()
 

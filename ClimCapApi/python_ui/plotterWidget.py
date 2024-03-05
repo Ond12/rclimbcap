@@ -289,9 +289,9 @@ class Plotter(pg.PlotWidget):
  
             sensor_plot.set_visible_contact(not sensor_plot.is_visible)
             sensor_plot.is_visible = not sensor_plot.is_visible
-            
-            button.setStyleSheet(pastel_color)
-            
+            if button:
+                button.setStyleSheet(pastel_color)
+                
             self.update()
 
     def clear_contacts(self):
@@ -342,6 +342,9 @@ class PlotterController(QWidget):
         for button in self.toggle_buttons:
             button.click()
 
+    def show_hide_sensor_data(self, sensor_id):
+        self.plotter.show_hide_lines(None, sensor_id)
+    
     def set_up_widget(self):
         self.clean_widget()
         

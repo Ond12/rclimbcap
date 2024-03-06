@@ -19,13 +19,13 @@ from contactTableWidget import *
 from osc_sender import *
 
 #utils
-def get_x_y_z_array(forcedata:ForcesDataC):
+def get_x_y_z_array(forcedata):
     forces,moments = forcedata.get_forces_and_moments()
     return np.column_stack((forces[0], 
                             forces[1], 
                             forces[2])) 
     
-def to_dataframe(forcedata:ForcesDataC):
+def to_dataframe(forcedata):
         forces, moments = forcedata.get_forces_and_moments()
         data_dict = {
             'fx':  forces[0],

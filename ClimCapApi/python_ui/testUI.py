@@ -20,6 +20,7 @@ from osc_sender import *
 
 from datacore import *
 
+from routeViewWidget import *
 from analogdata import *
 from ForceDataContainer import *
 

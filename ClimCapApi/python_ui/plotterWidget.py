@@ -189,18 +189,15 @@ class Plotter(pg.PlotWidget):
 
                     force_data = sensor.get_forces_data()
 
-                    force_x = force_data.forces_x
                     color_x_v = RED[sensor.sensor_id % 11]
                     line_style = style_dict[sensor.sensor_id % 11]
                     plot_item_force_x = self.plot([0], [0], pen=pg.mkPen(color_x_v, width=2, alpha=200, style=line_style), name=f"S{sensor.sensor_id}-FX",skipFiniteCheck=True)
                     self.plot_items.append(plot_item_force_x)
 
-                    force_y = force_data.forces_y
                     color_y_v = GREEN[sensor.sensor_id % 11]
                     plot_item_force_y = self.plot([0], [0], pen=pg.mkPen(color_y_v, width=2, alpha=200,  style=line_style), name=f"S{sensor.sensor_id}-FY",skipFiniteCheck=True)
                     self.plot_items.append(plot_item_force_y)
 
-                    force_z = force_data.forces_z
                     color_z_v = BLUE[sensor.sensor_id % 11]
                     plot_item_force_z = self.plot([0], [0], pen=pg.mkPen(color_z_v, width=2, alpha=200,  style=line_style), name=f"S{sensor.sensor_id}-FZ",skipFiniteCheck=True)
                     self.plot_items.append(plot_item_force_z)

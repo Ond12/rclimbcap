@@ -22,7 +22,6 @@ from datacore import *
 from analogdata import *
 from ForceDataContainer import *
 
-
 #region window
 #_________________________________________________________________________________________
 class Wid(QMainWindow):
@@ -487,6 +486,7 @@ class Worker_udp(QObject):
         finally:
             UDPServerSocket.close()
             self.finished.emit()        
+
 def main():
     app =  QApplication(sys.argv)
     widm = Wid()

@@ -109,10 +109,7 @@ class Sensor:
 
         self.rotation_matrix = np.dot(self.rotation_matrix, rot_matrix)
         print(self.rotation_matrix)
-        
-    def data_size(self):
-        return self.force_data.num_data_points
-        
+
     def add_data_point(self, forces_values, analog_values):
         self.force_data.add_data_point(forces_values[0], forces_values[1], forces_values[2], forces_values[3], forces_values[4], forces_values[5] )
         #self.analog_data.add_data_point(analog_values)
@@ -122,10 +119,13 @@ class Sensor:
 
     def get_forces_data(self):
         return self.force_data
-
+        
     def get_analog_data(self):
         return self.analog_data
     
+    def data_size(self):
+        return self.force_data.num_data_points
+        
     def get_frequency(self):
         return self.frequency
     
@@ -459,10 +459,6 @@ class DataContainer:
             sensor.get_forces_data().set_force_y(filtered_signal_y)
             sensor.get_forces_data().set_force_z(filtered_signal_z)
 
-    def fill_debug_data(self):
-        for sensor in self.sensors:
-            self.create_debug_data(sensor, False, True)
-
     def apply_rotation_to_force(self):
         for sensor in self.sensors:
             #if sensor.isrotate:
@@ -508,7 +504,6 @@ class DataContainer:
         return signal
             
     def switch_sign_off_sensors(self, sensorid_to_switch, set_up_type):
-
         #when the sensor is comp flip it
         #when platform flip x axis
         
@@ -543,6 +538,10 @@ class DataContainer:
         self.chrono_data = signal
 
         return time, signal
+    #debug
+    def fill_debug_data(self):
+        for sensor in self.sensors:
+            self.create_debug_data(sensor, False, True)
 
     def create_debug_data(self, sensor=None, addnoise=False, linear=False):
         if sensor==None:

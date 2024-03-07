@@ -74,6 +74,7 @@ class AxisLabel(Enum):
     CHRONO = 'chrono'
 
 class SensorPlotItem:
+
     def __init__(self, sensor_id):
         self.sensor_id:int = sensor_id
         self.contacts:list = []
@@ -112,6 +113,8 @@ class SensorPlotItem:
             contact_item.contact_display.set_visible(visible)            
               
 class Plotter(pg.PlotWidget):
+    notifyvisibilitychange = pyqtSignal(int, bool)
+    
     def __init__(self, data_container, parent=None):
         super(Plotter, self).__init__(parent=parent)
         self.data_container = data_container
@@ -129,9 +132,11 @@ class Plotter(pg.PlotWidget):
         self.legend.setPos(1, 1)
         self.legend.setColumnCount(3)
         
+        self.setBackground('w')
+        
         self.update_is_started = False
         self.update_timer = QTimer()
-        self.update_timer.setInterval( self.refresh_rate )
+        self.update_timer.setInterval(self.refresh_rate)
         self.update_timer.timeout.connect(self.update_plots)
         
         self.vertical_line = None
@@ -171,8 +176,7 @@ class Plotter(pg.PlotWidget):
             sensor_plot_item.get_plot_item(AxisLabel.Z).setData(force_z)
             
             #print(f"updating plot sensor {cur_sensor.sensor_id} until {maxlimit} lx {len(force_x)}")
-
-             
+          
     def plot_chrono_bip_marker(self, times):
         for time in times:
             marker_time_line = pg.InfiniteLine(pos=time, angle=90, movable=False, pen='b')
@@ -190,17 +194,24 @@ class Plotter(pg.PlotWidget):
                     force_data = sensor.get_forces_data()
 
                     color_x_v = RED[sensor.sensor_id % 11]
-                    line_style = style_dict[sensor.sensor_id % 11]
+                    line_style = style_dict[0]
                     plot_item_force_x = self.plot([0], [0], pen=pg.mkPen(color_x_v, width=2, alpha=200, style=line_style), name=f"S{sensor.sensor_id}-FX",skipFiniteCheck=True)
                     self.plot_items.append(plot_item_force_x)
+                    plot_item_force_x.setSkipFiniteCheck(True)
+                    plot_item_force_x.setCurveClickable(True)
 
                     color_y_v = GREEN[sensor.sensor_id % 11]
                     plot_item_force_y = self.plot([0], [0], pen=pg.mkPen(color_y_v, width=2, alpha=200,  style=line_style), name=f"S{sensor.sensor_id}-FY",skipFiniteCheck=True)
                     self.plot_items.append(plot_item_force_y)
+                    plot_item_force_y.setSkipFiniteCheck(True)
+                    plot_item_force_y.setCurveClickable(True)
 
                     color_z_v = BLUE[sensor.sensor_id % 11]
                     plot_item_force_z = self.plot([0], [0], pen=pg.mkPen(color_z_v, width=2, alpha=200,  style=line_style), name=f"S{sensor.sensor_id}-FZ",skipFiniteCheck=True)
                     self.plot_items.append(plot_item_force_z)
+                    plot_item_force_z.setSkipFiniteCheck(True)
+                    plot_item_force_z.setCurveClickable(True)
+                    plot_item_force_z.sigClicked.connect(lambda x: self.handle_curve_click(x))
 
                     c_plot_sensor = SensorPlotItem(sensor.sensor_id)
                     c_plot_sensor.add_plot_item(AxisLabel.X, plot_item_force_x)
@@ -225,6 +236,9 @@ class Plotter(pg.PlotWidget):
             self.update_plots()
             self.update()
 
+    def handle_curve_click(self, curve):
+        print(f"Curve clicked: {curve}")  # for testing
+
     def plot_sum_force(self):
         force_result = self.data_container.sum_force_data()
 
@@ -247,10 +261,7 @@ class Plotter(pg.PlotWidget):
 
         sensor_plot_items = [plot_item_force_x, plot_item_force_y, plot_item_force_z]
 
-    def plot_resultant_force(self, force_result):
-        time_increments = force_result["time"]
-        resultant_force = force_result["data"]
-        sensor_id = force_result["sensor_id"]
+    def plot_resultant_force(self, resultant_force, sensor_id):
         plot_item_resultant_force = self.plot(resultant_force, pen=pg.mkPen((255,105,180), width=2, alpha=200), name=f"Sensor {sensor_id} - Res")
         plot_item_resultant_force.setVisible(True)
         self.plot_items.append(plot_item_resultant_force)
@@ -277,18 +288,16 @@ class Plotter(pg.PlotWidget):
         self.clear()
         self.vertical_line = None
 
-    def show_hide_lines(self, button, sensor_id):
+    def toggle_sensor_visibility(self, sensor_id):
         if sensor_id in self.sensor_plot_map:
             sensor_plot = self.sensor_plot_map[sensor_id]
 
-            pastel_color = "background-color: #C1E1C1" if sensor_plot.is_visible else "background-color: #FAA0A0"
             sensor_plot.set_visible_plot(not sensor_plot.is_visible)
- 
             sensor_plot.set_visible_contact(not sensor_plot.is_visible)
+            
             sensor_plot.is_visible = not sensor_plot.is_visible
-            if button:
-                button.setStyleSheet(pastel_color)
-                
+            
+            self.notifyvisibilitychange.emit(sensor_id, sensor_plot.is_visible)
             self.update()
 
     def clear_contacts(self):
@@ -316,6 +325,7 @@ class Plotter(pg.PlotWidget):
         print(f"update state {self.update_is_started}")
 
 class PlotterController(QWidget):
+      
     def __init__(self, plotter):
         super().__init__()
         self.plotter = plotter
@@ -324,23 +334,29 @@ class PlotterController(QWidget):
 
     def initUI(self):
         self.button_layout = QHBoxLayout()
-        self.toggle_buttons = []
+        self.toggle_buttons = {}
         self.setLayout(self.button_layout)
         self.button_layout.setContentsMargins(0, 0, 0, 0)
         
-        set_all_visible_button = QPushButton(f"Hide", self)
+        set_all_visible_button = QPushButton(f"Show/Hide", self)
         self.button_layout.addWidget(set_all_visible_button)
-        
         set_all_visible_button.clicked.connect(self.set_visible_all)
         
         self.show()
 
     def set_visible_all(self):
-        for button in self.toggle_buttons:
+        for button in self.toggle_buttons.values():
             button.click()
-
-    def show_hide_sensor_data(self, sensor_id):
-        self.plotter.show_hide_lines(None, sensor_id)
+    
+    def set_button_color(self, sensor_id, visible):
+        if self.toggle_buttons[sensor_id]:
+            b = self.toggle_buttons[sensor_id]
+            if visible :
+                pastel_color = "background-color: #C1E1C1" 
+                b.setStyleSheet(pastel_color)
+            else:
+                pastel_color = "background-color: #FAA0A0"  
+                b.setStyleSheet(pastel_color)
     
     def set_up_widget(self):
         self.clean_widget()
@@ -349,14 +365,15 @@ class PlotterController(QWidget):
             self.add_button(sensor.sensor_id)
 
     def add_button(self, sensor_id):
-        button = QPushButton(f"Sensor {sensor_id }", self)
+        button = QPushButton(f"S {sensor_id }", self)
         pastel_color = "background-color: #FAA0A0"  
         button.setStyleSheet(pastel_color)
-        button.clicked.connect(lambda checked, button=button, sensor_id=sensor_id: self.plotter.show_hide_lines(button, sensor_id))
-        self.toggle_buttons.append(button)
-        self.button_layout.addWidget(button)
-
+        button.clicked.connect(lambda checked, sensor_id=sensor_id: self.plotter.toggle_sensor_visibility(sensor_id))
+        self.plotter.notifyvisibilitychange.connect(self.set_button_color)
+        self.toggle_buttons[sensor_id] = button
+        self.button_layout.addWidget(button)        
+    
     def clean_widget(self):
-        for button in self.toggle_buttons:
+        for button in self.toggle_buttons.values():
             button.deleteLater()  
-        self.toggle_buttons = []  
+        self.toggle_buttons = {} 

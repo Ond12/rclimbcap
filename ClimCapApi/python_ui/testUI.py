@@ -182,6 +182,7 @@ class Wid(QMainWindow):
 
         self.plot_controller = PlotterController(self.plotter)
         
+        
         record_widget = RecordWidget()
         record_widget.recording_toggled_signal.connect(self.plotter.toggle_plotter_update)
         
@@ -191,20 +192,23 @@ class Wid(QMainWindow):
 
         self.contactTable_widget = ContactTableWidget()
 
-        
         dock = QDockWidget('Contact infos')
         dock.setFeatures(QDockWidget.DockWidgetFeature.NoDockWidgetFeatures)
         self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, dock)
         dock.setWidget(self.contactTable_widget)
 
-        self.routeView_widget = RouteViewWidget()
-        self.routeView_widget.holdclicked.connect(self.plot_controller.show_hide_sensor_data)
-
+        self.routeView_widget = RouteViewWidget(self.plotter)
+               
         dockR = QDockWidget('Plan')
         dockR.setFeatures(QDockWidget.DockWidgetFeature.NoDockWidgetFeatures)
         self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, dockR)
         dockR.setWidget(self.routeView_widget)
 
+
+        self.init_osc_sender()
+        self.show()
+    
+    def init_osc_sender(self):
         self.osc_play_pause_widget = PlayPauseWidget()
 
         self.osc_sender = OSCSender()
@@ -213,8 +217,6 @@ class Wid(QMainWindow):
         self.osc_play_pause_widget.play_pause_signal.connect(self.osc_sender.handle_play_pause_state)
         self.osc_play_pause_widget.reset_idx.connect(self.osc_sender.reset_packet_idx)
         self.osc_sender.position_signal.connect(self.plotter.set_player_scroll_hline)
-
-        self.show()
     
     def merge_sensor_action(self):
         s1 = self.data_container.get_sensor(7)
@@ -335,8 +337,11 @@ class Wid(QMainWindow):
     def calculate_resultant_force_action(self):
         sensors = self.data_container.sensors
         for sensor in sensors:
-            resultant_force = self.data_container.cal_resultant_force(sensor)
-            self.plotter.plot_resultant_force(resultant_force)
+            resultant_force, sid = self.data_container.cal_resultant_force(sensor)
+            cutoff_freq = 10
+            fs = 200
+            resultant_force = self.data_container.apply_filter_low_pass(resultant_force, cutoff_freq, fs)
+            self.plotter.plot_resultant_force(resultant_force, sid)
   
         print("calculate resultant_force for sensor")
 

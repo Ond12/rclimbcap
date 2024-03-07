@@ -18,9 +18,9 @@ class HoldItem(QGraphicsSvgItem):
         self.hold_id = hold_id
         self.sensor_id = 0
 
-    def set_color(self):
+    def set_color(self, color):
         colorize_effect = QGraphicsColorizeEffect()
-        colorize_effect.setColor(QColor("blue"))  
+        colorize_effect.setColor(color)  
         self.setGraphicsEffect(colorize_effect)
     
     def set_sensor_id(self, sid):
@@ -31,9 +31,10 @@ class HoldItem(QGraphicsSvgItem):
             self.clicked.emit(self.sensor_id)
 
 class RouteViewWidget(QWidget):
-    holdclicked = pyqtSignal(int)
     
-    def __init__(self):
+    def __init__(self, plotter):
+        super().__init__()
+        self.plotter = plotter
         super().__init__()
         current_folder = os.path.dirname(os.path.realpath(__file__))
         parent_folder = os.path.dirname(current_folder)
@@ -41,6 +42,7 @@ class RouteViewWidget(QWidget):
         self.initUI()
 
     def initUI(self):
+        self.holditems = {}
         self.scene = QGraphicsScene(0, 0, 0, 0)
         
         equiped_hand_hold = {1:3 , 3:4 , 5:6, 6:9, 7:10, 8:11}
@@ -58,11 +60,14 @@ class RouteViewWidget(QWidget):
             hold.setPos(original_pos)
             hold.setElementId(hold_name)
             self.scene.addItem(hold)
+
             if i in equiped_hand_hold.keys():
-                hold.set_color()
+                hold.set_color(QColor("blue"))
                 hold.clicked.connect(self.onHoldClicked)
-                hold.set_sensor_id(equiped_hand_hold[i])
+                sensor_id = equiped_hand_hold[i]
+                hold.set_sensor_id(sensor_id)
                 hold.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)
+                self.holditems[sensor_id] = hold
 
         for i in range(1,12):
             hold_name = "foot" + str(i)
@@ -74,10 +79,12 @@ class RouteViewWidget(QWidget):
             hold.setElementId(hold_name)
             self.scene.addItem(hold)
             if i in equiped_foot_hold.keys():
-                hold.set_color()
+                hold.set_color(QColor("blue"))
                 hold.clicked.connect(self.onHoldClicked)
-                hold.set_sensor_id(equiped_foot_hold[i])
+                sensor_id =  equiped_foot_hold[i]
+                hold.set_sensor_id(sensor_id)
                 hold.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)
+                self.holditems[sensor_id] = hold
 
         wall_height = 1500
         panel_height = 150
@@ -95,12 +102,25 @@ class RouteViewWidget(QWidget):
         layout.addWidget(self.view)
         self.setLayout(layout)
 
-    def onHoldClicked(self, hold_id):
-        self.holdclicked.emit(hold_id)
+        self.plotter.notifyvisibilitychange.connect(self.set_hold_color)
 
+    def onHoldClicked(self, sensor_id):
+        self.plotter.toggle_sensor_visibility(sensor_id)
+    
+    def set_hold_color(self, sensor_id, visible):
+        if sensor_id > 39:
+            return
+        
+        if self.holditems[sensor_id]:
+            hold_item = self.holditems[sensor_id]
+            if visible :
+                hold_item.set_color(QColor("green"))
+            else:
+                hold_item.set_color(QColor("red"))
+        
 def main():
     app = QApplication(sys.argv)
-    widget = RouteViewWidget()
+    widget = RouteViewWidget(None)
     widget.show()
     sys.exit(app.exec())
 

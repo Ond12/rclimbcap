@@ -1,13 +1,9 @@
-import sys
 from datetime import datetime
-import os
-import socket
-import json
 import numpy as np
 import pandas as pd
 from scipy.integrate import quad
 import re
-from scipy.signal import butter, sosfilt
+from scipy.signal import butter, sosfilt, filtfilt
 import pyqtgraph as pg
 from PyQt6.QtWidgets import *
 from PyQt6.QtGui import *
@@ -17,6 +13,8 @@ from contact import *
 from colors import *
 from contactTableWidget import *
 from osc_sender import *
+from analogdata import *
+from ForceDataContainer import *
 
 #utils
 def get_x_y_z_array(forcedata):
@@ -108,7 +106,6 @@ class Sensor:
             raise ValueError("Invalid axis. Use 'x', 'y', or 'z'.")
 
         self.rotation_matrix = np.dot(self.rotation_matrix, rot_matrix)
-        print(self.rotation_matrix)
 
     def add_data_point(self, forces_values, analog_values):
         self.force_data.add_data_point(forces_values[0], forces_values[1], forces_values[2], forces_values[3], forces_values[4], forces_values[5] )
@@ -233,11 +230,7 @@ class DataContainer:
         forces = np.array([force_data.get_forces_x(), force_data.get_forces_y(), force_data.get_forces_z()])
         resultant_force = np.linalg.norm(forces, axis=0)
         
-        result = {}
-        result["sensor_id"] = sensor.sensor_id
-        result["data"] = resultant_force
-
-        return result
+        return resultant_force, sensor.sensor_id
     
     def add_chrono_data_point(self, data_value):
         self.chrono_data.append(data_value)
@@ -440,6 +433,17 @@ class DataContainer:
         sos = butter(order, high_cutoff, btype='lowpass', analog=False, output='sos')
 
         return sos
+
+    def butter_lowpass(self, cutoff_freq, fs, order=5):
+        nyquist_freq = 0.5 * fs
+        normal_cutoff = cutoff_freq / nyquist_freq
+        sos = butter(order, normal_cutoff, btype='lowpass', analog=False, output='sos')
+        return sos
+
+    def apply_filter_low_pass(self, data, cutoff_freq, fs, order=5):
+        sos_butter = self.butter_lowpass(cutoff_freq, fs, order=order)
+        filtered_data = sosfilt(sos_butter, data)
+        return filtered_data
 
     def apply_filter_hcutoff_to_sensors(self):
         stop_band_frequency = 10    

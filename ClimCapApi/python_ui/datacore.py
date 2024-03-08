@@ -108,7 +108,8 @@ class Sensor:
         self.rotation_matrix = np.dot(self.rotation_matrix, rot_matrix)
 
     def add_data_point(self, forces_values, analog_values):
-        self.force_data.add_data_point(forces_values[0], forces_values[1], forces_values[2], forces_values[3], forces_values[4], forces_values[5] )
+        #self.force_data.add_data_point(forces_values[0], forces_values[1], forces_values[2], forces_values[3], forces_values[4], forces_values[5] )
+        self.force_data.add_data_force_point(forces_values[0], forces_values[1], forces_values[2])
         #self.analog_data.add_data_point(analog_values)
 
     def get_num_channels(self):
@@ -415,8 +416,8 @@ class DataContainer:
         
         for sensor in self.sensors:
             sensor_id = sensor.sensor_id
-            resultant_force_dic = self.cal_resultant_force(sensor)
-            data = resultant_force_dic["data"]
+            resultant_force,sid= self.cal_resultant_force(sensor)
+            data = resultant_force
             cur_contacts_list = self.detect_contacts(data, sensor_id, detect_threshold_up, detect_threshold_down, True, crossing_threshold )
             for contact in cur_contacts_list:
                 all_contacts_list.append(contact)
@@ -501,6 +502,7 @@ class DataContainer:
         for i, value in enumerate(array):
             if min_value <= value <= max_value:
                 array[i] = override_value
+        return array
 
     def switch_sign(self, signal):
         for i in range(len(signal)):

@@ -34,7 +34,7 @@ namespace globals
 	constexpr auto DEBUG_MOD_PLATFORM = false;
 	constexpr auto DEBUG_MOD_SENSOR = false;
 
-	constexpr auto DUMMY_SENDER = false;
+	constexpr auto DUMMY_SENDER = true;
 
 	static uint nbpacketsend = 0;
 }

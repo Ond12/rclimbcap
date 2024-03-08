@@ -61,6 +61,17 @@ cdef class ForcesDataC:
 
         self.num_data_points += 1
 
+    cpdef add_data_force_point(self, double force_x_val, double force_y_val, double force_z_val):
+        if self.num_data_points >= self.capacity:
+            self.capacity *= 2
+            self.reallocate_memory()
+
+        self.forces_x[self.num_data_points] = force_x_val
+        self.forces_y[self.num_data_points] = force_y_val
+        self.forces_z[self.num_data_points] = force_z_val
+
+        self.num_data_points += 1
+
     # Method to reallocate memory when needed
     cdef reallocate_memory(self):
         self.forces_x  = <double*>realloc(self.forces_x,  self.capacity  * sizeof(double))

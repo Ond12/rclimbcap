@@ -119,8 +119,9 @@ class Plotter(pg.PlotWidget):
         super(Plotter, self).__init__(parent=parent)
         self.data_container = data_container
         
-        self.refresh_rate = 500
-                
+        self.refresh_rate = 1200
+        
+        self.setRange(xRange=(0,5000), yRange=(-1500, 1500))
         self.plot_items:list = []
         self.contact_list:list = []
         self.sensor_plot_map:dict = {}

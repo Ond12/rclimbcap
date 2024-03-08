@@ -215,7 +215,8 @@ public:
 
 				////////////////////////////////////////////////////////////////
 			}
-			else if (globals::DUMMY_SENDER)
+
+			if (globals::DUMMY_SENDER)
 			{
 				auto sensorList = MyDataController->loadSensorToAnalogConfig();
 				uint NsensorLoaded = sensorList.count();
@@ -232,18 +233,9 @@ public:
 					dummySender->setNbchan(totalNumberOfChannelssensor);
 				}
 
-				qDebug() << "set up dummy sender mode nbchan plat " << totalNumberOfChannelssensor;
+				qDebug() << "set up dummy sender mode nbchan  " << totalNumberOfChannelssensor;
 			}
-			else
-			{
-				qCritical() << "Echec NidaqmxConnectionThread ";
-				return false;
-			}
-		}
-		else
-		{
-			qCritical() << "DataController nullptr";
-			return false;
+
 		}
 
 		return false;

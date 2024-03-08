@@ -182,7 +182,6 @@ class Wid(QMainWindow):
 
         self.plot_controller = PlotterController(self.plotter)
         
-        
         record_widget = RecordWidget()
         record_widget.recording_toggled_signal.connect(self.plotter.toggle_plotter_update)
         
@@ -203,7 +202,6 @@ class Wid(QMainWindow):
         dockR.setFeatures(QDockWidget.DockWidgetFeature.NoDockWidgetFeatures)
         self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, dockR)
         dockR.setWidget(self.routeView_widget)
-
 
         self.init_osc_sender()
         self.show()
@@ -241,7 +239,7 @@ class Wid(QMainWindow):
         #domo
         sensor_ids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
         #sensor_ids = [] #7, 8, 9, 10, 11]
-        add_platformes = True
+        add_platformes = False
         
         sensor_frequency = 200
               
@@ -256,6 +254,7 @@ class Wid(QMainWindow):
             self.data_container.add_sensor(current_sensor)    
             
         self.plotter.plot_data()
+        self.plotter.set_refresh_rate(1500)
         self.plot_controller.clean_widget()
         self.plot_controller.set_up_widget()          
 
@@ -341,6 +340,7 @@ class Wid(QMainWindow):
             cutoff_freq = 10
             fs = 200
             resultant_force = self.data_container.apply_filter_low_pass(resultant_force, cutoff_freq, fs)
+            resultant_force = self.data_container.override_low_values(resultant_force, -50, 0, 0)
             self.plotter.plot_resultant_force(resultant_force, sid)
   
         print("calculate resultant_force for sensor")

@@ -63,6 +63,7 @@ class ContactInfo(QObject):
         self.start_time = start_time
         self.end_time = end_time
         self.period = end_time - start_time
+        
         self.area = 0
         self.contact_display = None
     

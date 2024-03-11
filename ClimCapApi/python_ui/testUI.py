@@ -34,13 +34,12 @@ class Wid(QMainWindow):
         parent_folder = os.path.dirname(current_folder)
         
         self.icon_folder = os.path.join(parent_folder,'forms/images/svg')
+        
 
         self.udpServerinit()
         self.init_ui()
         self.init_actions()
-
-        ic_path = os.path.join( self.icon_folder, 'prise.png')
-        self.setWindowIcon(QIcon(ic_path))
+ 
 
         auto_delete = False
         if(auto_delete):
@@ -172,7 +171,7 @@ class Wid(QMainWindow):
         
         main_widget = QWidget()
         main_widget.setLayout(main_grid)
-        main_widget.show()
+        
 
         self.setCentralWidget(main_widget)
 
@@ -204,7 +203,6 @@ class Wid(QMainWindow):
         dockR.setWidget(self.routeView_widget)
 
         self.init_osc_sender()
-        self.show()
     
     def init_osc_sender(self):
         self.osc_play_pause_widget = PlayPauseWidget()
@@ -506,6 +504,21 @@ class Worker_udp(QObject):
 def main():
     app =  QApplication(sys.argv)
     widm = Wid()
+    
+    import ctypes
+    myappid = 'mycompany.myproduct.subproduct.version' # arbitrary string
+    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+    
+    current_folder = os.path.dirname(os.path.realpath(__file__))
+    parent_folder = os.path.dirname(current_folder)
+
+    icon_folder = os.path.join(parent_folder,'forms/images/svg')
+
+    ic_path = os.path.join( icon_folder, 'prisefr.ico')
+
+    app.setWindowIcon(QIcon(ic_path))
+    
+    widm.show()
 
     sys.exit(app.exec())
 

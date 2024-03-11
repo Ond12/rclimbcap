@@ -141,6 +141,27 @@ class Plotter(pg.PlotWidget):
         self.update_timer.timeout.connect(self.update_plots)
         
         self.vertical_line = None
+        self.set_crosshair()
+
+    def set_crosshair(self):
+        self.label = pg.LabelItem(justify='right')
+        self.addItem(self.label)
+        self.vLine = pg.InfiniteLine(angle=90, movable=False)
+        self.hLine = pg.InfiniteLine(angle=0, movable=False)
+        self.addItem(self.vLine, ignoreBounds=True)
+        self.addItem(self.hLine, ignoreBounds=True)
+        self.scene().sigMouseMoved.connect(self.mouseMoved)
+        
+    def mouseMoved(self,evt):
+        pos = evt
+        if self.sceneBoundingRect().contains(pos):
+            mousePoint = self.getPlotItem().vb.mapSceneToView(pos)
+            index = int(mousePoint.x())
+            #if index > 0 and index < len(data1):
+            self.label.setText("<span style='font-size: 12pt'>x=%0.1f,   <span style='color: red'>y1=%0.1f</span>," % (mousePoint.x(), mousePoint.y()))
+            self.vLine.setPos(mousePoint.x())
+            self.hLine.setPos(mousePoint.y())
+
 
     def set_refresh_rate(self, refresh_rate_ms):
         self.refresh_rate = refresh_rate_ms

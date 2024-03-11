@@ -44,9 +44,8 @@ class ContactInfo(QObject):
             self.end_vertical_line.setVisible(visible)
 
         def add_into_graphplot(self, plot):
-            if plot != None:
-                plot.addItem(self.start_vertical_line)
-                plot.addItem(self.end_vertical_line)
+            plot.addItem(self.start_vertical_line)
+            plot.addItem(self.end_vertical_line)
         
         def remove_from_graphplot(self, plot):
             if plot != None:
@@ -67,7 +66,6 @@ class ContactInfo(QObject):
         self.contact_display = None
     
     def add_into_plot(self, plot):
-        if plot != None:
             color = colors_dict[self.sensor_id%11]
             self.contact_display = self.ContactDisplay(self.start_time, self.end_time, color)
             self.contact_display.add_into_graphplot(plot)

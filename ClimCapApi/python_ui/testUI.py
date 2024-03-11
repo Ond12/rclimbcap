@@ -179,7 +179,7 @@ class Wid(QMainWindow):
         self.data_container = DataContainer()
 
         self.plotter = Plotter(self.data_container)
-
+        
         self.plot_controller = PlotterController(self.plotter)
         
         record_widget = RecordWidget()
@@ -301,7 +301,6 @@ class Wid(QMainWindow):
                         sheet_name = f"Capteur {curr_sensor.sensor_id}"
                         dataforce = to_dataframe(curr_sensor.get_forces_data())
                         dataanalog = curr_sensor.get_analog_data().to_dataframe()
-                        curr_sensor.get_forces_data().print_debug_data()
             
                         df = pd.concat([dataforce, dataanalog], axis=1)
                         

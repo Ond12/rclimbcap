@@ -112,28 +112,39 @@ class SensorPlotItem:
         for contact_item in self.contacts:
             contact_item.contact_display.set_visible(visible)            
               
-class Plotter(pg.PlotWidget):
+class Plotter(QWidget):
     notifyvisibilitychange = pyqtSignal(int, bool)
     
-    def __init__(self, data_container, parent=None):
+    def __init__(self, data_container, parent=None):  
         super(Plotter, self).__init__(parent=parent)
+        layout = QHBoxLayout()
+        
+        self.view = pg.widgets.RemoteGraphicsView.RemoteGraphicsView()
+        self.view.pg.setConfigOptions(antialias=False) 
+        layout.addWidget(self.view)
+        self.setLayout(layout)
+        ## Create a PlotItem in the remote process that will be displayed locally
+        self.plotItem = self.view.pg.PlotItem()
+        self.plotItem._setProxyOptions(deferGetattr=True)  ## speeds up access to rplt.plot
+        self.view.setCentralItem(self.plotItem)
+        
         self.data_container = data_container
         
         self.refresh_rate = 1200
         
-        self.setRange(xRange=(0,5000), yRange=(-1500, 1500))
+        self.plotItem.setRange(xRange=(0,5000), yRange=(-1500, 1500))
         self.plot_items:list = []
         self.contact_list:list = []
         self.sensor_plot_map:dict = {}
         
         self.chrono_plot_item = None
         
-        self.showGrid(x=False, y=True)
-        self.legend = self.addLegend()
+        self.plotItem.showGrid(x=False, y=True)
+        self.legend = self.plotItem.addLegend()
         self.legend.setPos(1, 1)
         self.legend.setColumnCount(3)
         
-        self.setBackground('w')
+        #self.view.setBackground('w')
         
         self.update_is_started = False
         self.update_timer = QTimer()
@@ -185,7 +196,7 @@ class Plotter(pg.PlotWidget):
 
     def plot_data(self, colors=None):
         if self.data_container.sensors:
-            self.clear()
+            self.plotItem.clear()
 
             if colors is None:
                 colors = ['b'] * len(self.data_container.sensors)
@@ -196,23 +207,24 @@ class Plotter(pg.PlotWidget):
 
                     color_x_v = RED[sensor.sensor_id % 11]
                     line_style = style_dict[0]
-                    plot_item_force_x = self.plot([0], [0], pen=pg.mkPen(color_x_v, width=2, alpha=200, style=line_style), name=f"S{sensor.sensor_id}-FX",skipFiniteCheck=True)
+                    plot_item_force_x = self.plotItem.plot([0], [0], pen='r', name=f"S{sensor.sensor_id}-FX",skipFiniteCheck=True)
                     self.plot_items.append(plot_item_force_x)
                     plot_item_force_x.setSkipFiniteCheck(True)
                     plot_item_force_x.setCurveClickable(True)
 
                     color_y_v = GREEN[sensor.sensor_id % 11]
-                    plot_item_force_y = self.plot([0], [0], pen=pg.mkPen(color_y_v, width=2, alpha=200,  style=line_style), name=f"S{sensor.sensor_id}-FY",skipFiniteCheck=True)
+                    plot_item_force_y = self.plotItem.plot([0], [0], pen='g', name=f"S{sensor.sensor_id}-FY",skipFiniteCheck=True)
                     self.plot_items.append(plot_item_force_y)
                     plot_item_force_y.setSkipFiniteCheck(True)
                     plot_item_force_y.setCurveClickable(True)
 
                     color_z_v = BLUE[sensor.sensor_id % 11]
-                    plot_item_force_z = self.plot([0], [0], pen=pg.mkPen(color_z_v, width=2, alpha=200,  style=line_style), name=f"S{sensor.sensor_id}-FZ",skipFiniteCheck=True)
+                    pen = pg.mkPen(color_z_v, width=2, alpha=200,  style=line_style)
+                    plot_item_force_z = self.plotItem.plot([0], [0], pen='b', name=f"S{sensor.sensor_id}-FZ",skipFiniteCheck=True)
                     self.plot_items.append(plot_item_force_z)
                     plot_item_force_z.setSkipFiniteCheck(True)
                     plot_item_force_z.setCurveClickable(True)
-                    plot_item_force_z.sigClicked.connect(lambda x: self.handle_curve_click(x))
+                    #plot_item_force_z.sigClicked.connect(lambda x: self.handle_curve_click(x))
 
                     c_plot_sensor = SensorPlotItem(sensor.sensor_id)
                     c_plot_sensor.add_plot_item(AxisLabel.X, plot_item_force_x)
@@ -231,9 +243,6 @@ class Plotter(pg.PlotWidget):
                     
             #         self.chrono_plot_item = plot_item_chrono_data
                     
-            for item, label in self.legend.items:
-                label.setFont(QFont("Arial", 4))
-
             self.update_plots()
             self.update()
 
@@ -286,7 +295,7 @@ class Plotter(pg.PlotWidget):
         self.sensor_plot_map = {}
         self.plot_items.clear()
         self.clear_contacts()
-        self.clear()
+        self.plotItem.clear()
         self.vertical_line = None
 
     def toggle_sensor_visibility(self, sensor_id):
@@ -311,7 +320,7 @@ class Plotter(pg.PlotWidget):
             contact_info_list = self.contact_list
             
         for contact in contact_info_list:
-            contact.add_into_plot(self)
+            contact.add_into_plot(self.plotItem)
             self.sensor_plot_map[contact.sensor_id].add_contact(contact)
             if contact.max_value_time != 0:
                 self.plot_marker_max(contact.max_value_time, contact.max_value)

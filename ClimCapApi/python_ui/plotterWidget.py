@@ -144,8 +144,9 @@ class Plotter(pg.PlotWidget):
         self.set_crosshair()
 
     def set_crosshair(self):
-        self.label = pg.LabelItem(justify='right')
-        self.addItem(self.label)
+        self.crosshair_point_text = pg.TextItem()
+        self.crosshair_point_text.setPos(1000,1000)
+        self.addItem(self.crosshair_point_text)
         self.vLine = pg.InfiniteLine(angle=90, movable=False)
         self.hLine = pg.InfiniteLine(angle=0, movable=False)
         self.addItem(self.vLine, ignoreBounds=True)
@@ -155,12 +156,18 @@ class Plotter(pg.PlotWidget):
     def mouseMoved(self,evt):
         pos = evt
         if self.sceneBoundingRect().contains(pos):
-            mousePoint = self.getPlotItem().vb.mapSceneToView(pos)
-            index = int(mousePoint.x())
+            mouse_point = self.getPlotItem().vb.mapSceneToView(pos)
+            index = int(mouse_point.x())
+            
+            x = mouse_point.x()
+            y = mouse_point.y()
+            self.crosshair_point_text.setHtml(
+                "<span style='font-size: 16pt'>x=%0.1f,   <span style='color: red'>y1=%0.1f</span>," % (x, y))
+
             #if index > 0 and index < len(data1):
-            self.label.setText("<span style='font-size: 12pt'>x=%0.1f,   <span style='color: red'>y1=%0.1f</span>," % (mousePoint.x(), mousePoint.y()))
-            self.vLine.setPos(mousePoint.x())
-            self.hLine.setPos(mousePoint.y())
+
+            self.vLine.setPos(x)
+            self.hLine.setPos(y)
 
 
     def set_refresh_rate(self, refresh_rate_ms):

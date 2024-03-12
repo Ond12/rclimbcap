@@ -387,21 +387,21 @@ class DataContainer:
                 if signal[i] < crossing_threshold and slope_up_detected:
                     slope_up_detected = False
                     end_time = i#time_increments[i]
-                    cur_contact = ContactInfo(sensor_id, start_time, end_time)
+                    cur_contact = ContactInfo(sensor_id, start_time, end_time, self.index_to_time(start_time), self.index_to_time(end_time))
 
                     contacts.append(cur_contact)
 
             elif slope < -slope_threshold_down and slope_up_detected:
                 slope_up_detected = False
                 end_time = i# time_increments[i]
-                cur_contact = ContactInfo(sensor_id, self.index_to_time(start_time), self.index_to_time(end_time))
+                cur_contact = ContactInfo(sensor_id, start_time, end_time, self.index_to_time(start_time), self.index_to_time(end_time))
 
                 contacts.append(cur_contact)
                 
         if slope_up_detected:
             # Assume the end time is the last time increment in the signal
             end_time = len(signal)#time_increments[-1]
-            cur_contact = ContactInfo(sensor_id, self.index_to_time(start_time), self.index_to_time(end_time))
+            cur_contact = ContactInfo(sensor_id, start_time, end_time, self.index_to_time(start_time), self.index_to_time(end_time))
             contacts.append(cur_contact)
 
         return contacts
@@ -423,6 +423,8 @@ class DataContainer:
             data = resultant_force
             cur_contacts_list = self.detect_contacts(data, sensor_id, detect_threshold_up, detect_threshold_down, True, crossing_threshold )
             for contact in cur_contacts_list:
+                if(contact.period > 600):
+                    break
                 if(contact.period > 50):
                     all_contacts_list.append(contact)
         

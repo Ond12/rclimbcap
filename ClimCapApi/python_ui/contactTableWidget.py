@@ -63,9 +63,9 @@ class ContactTableWidget(QWidget):
         row = self.table.rowCount()
         self.table.insertRow(row)
         
-        self.table.setItem(row, 0, QTableWidgetItem(str(contact.start_time)))
-        self.table.setItem(row, 1, QTableWidgetItem(str(contact.end_time)))
-        self.table.setItem(row, 2, QTableWidgetItem(str(contact.period)))
+        self.table.setItem(row, 0, QTableWidgetItem(str(round(contact.start_time_sec, 3))))
+        self.table.setItem(row, 1, QTableWidgetItem(str(round(contact.end_time_sec, 3))))
+        self.table.setItem(row, 2, QTableWidgetItem(str(round(contact.period_sec, 3))))
     
     def handleCellClicked(self, row, column):
         custom_object = self.custom_objects[row]

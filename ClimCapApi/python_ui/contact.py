@@ -53,7 +53,7 @@ class ContactInfo(QObject):
                 plot.removeItem(self.start_vertical_line)
                 plot.removeItem(self.end_vertical_line)
 
-    def __init__(self, sensor_id = 0, start_time=0, end_time=0):
+    def __init__(self, sensor_id = 0, start_time=0, end_time=0 , stsec =0, etsec = 0):
         self.sensor_id = sensor_id
         self.axis_name = "all"
         self.max_value = 0
@@ -63,6 +63,10 @@ class ContactInfo(QObject):
         self.start_time = start_time
         self.end_time = end_time
         self.period = end_time - start_time
+        
+        self.start_time_sec = stsec
+        self.end_time_sec = etsec
+        self.period_sec =  etsec - stsec
         
         self.area = 0
         self.contact_display = None

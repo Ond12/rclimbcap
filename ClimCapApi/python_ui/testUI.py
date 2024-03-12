@@ -23,6 +23,7 @@ from datacore import *
 from routeViewWidget import *
 from analogdata import *
 from ForceDataContainer import *
+from MediaController import *
 
 #region window
 #_________________________________________________________________________________________
@@ -128,6 +129,11 @@ class Wid(QMainWindow):
         merge_sensor_action.setStatusTip("Merge sensor")
         merge_sensor_action.triggered.connect(self.merge_sensor_action)
         
+        icon_path = os.path.join(self.icon_folder, 'ruler.svg')
+        show_cross_hair_action = QAction(QIcon(icon_path), "&Crosshair", self)
+        show_cross_hair_action.setStatusTip("Crosshair")
+        show_cross_hair_action.triggered.connect(self.show_cross_hair_action)
+        
         toolbar = self.addToolBar("Tools")
         toolbar.addAction(open_file_action)
         toolbar.addAction(save_file_action)
@@ -148,6 +154,7 @@ class Wid(QMainWindow):
 
         toolbar.addAction(apply_rotation_action)
         toolbar.addAction(merge_sensor_action)
+        toolbar.addAction(show_cross_hair_action)
         
         separator = QAction(self)
         separator.setSeparator(True)
@@ -184,9 +191,12 @@ class Wid(QMainWindow):
         record_widget = RecordWidget()
         record_widget.recording_toggled_signal.connect(self.plotter.toggle_plotter_update)
         
+        mediaController_widget = MediaController()
+        
         main_grid.addWidget(self.plot_controller, 1, 0)
         main_grid.addWidget(self.plotter, 2, 0)
         main_grid.addWidget(record_widget, 3, 0)
+        main_grid.addWidget(mediaController_widget, 4,0)
 
         self.contactTable_widget = ContactTableWidget()
 
@@ -233,6 +243,9 @@ class Wid(QMainWindow):
         self.data_container.apply_rotation_to_force()
         self.plotter.plot_data()
         
+    def show_cross_hair_action(self):
+        self.plotter.set_crosshair()
+    
     def settings_action(self):
         #domo
         sensor_ids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]

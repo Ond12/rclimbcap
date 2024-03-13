@@ -336,6 +336,7 @@ class Wid(QMainWindow):
 
     def find_contacts_action(self): 
         all_contact_list = self.data_container.detect_contacts_on_sensors()
+        self.data_container.find_max_contacts(all_contact_list)
         self.contactTable_widget.add_all_contacts(all_contact_list)
         self.plotter.plot_contacts(all_contact_list)
 

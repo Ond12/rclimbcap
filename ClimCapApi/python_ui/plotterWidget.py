@@ -162,7 +162,7 @@ class Plotter(pg.PlotWidget):
             x = mouse_point.x()
             y = mouse_point.y()
             self.crosshair_point_text.setHtml(
-                "<span style='font-size: 16pt'>x=%0.1f,   <span style='color: red'>y1=%0.1f</span>," % (x, y))
+                "<span style='font-size: 16pt'>x=%0.01f,   <span style='color: red'>y=%0.1f</span>," % (x*(1/200), y))
 
             #if index > 0 and index < len(data1):
 
@@ -226,6 +226,7 @@ class Plotter(pg.PlotWidget):
                     line_style = style_dict[0]
                     plot_item_force_x = self.plot([0], [0], pen=pg.mkPen(color_x_v, width=2, alpha=200, style=line_style), name=f"S{sensor.sensor_id}-FX",skipFiniteCheck=True)
                     self.plot_items.append(plot_item_force_x)
+                    plot_item_force_x.setVisible(False)
                     plot_item_force_x.setSkipFiniteCheck(True)
                     plot_item_force_x.setCurveClickable(True)
 

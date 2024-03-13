@@ -267,14 +267,11 @@ class DataContainer:
         for i,value in enumerate(signal):
             if value > max_value:
                 max_value = value
-                print(max_value)
-                time = startidx + i
+                time = i
 
-        return time, value
+        return time, max_value
 
-    def find_max_contacts(self, contacts_list=None):
-        if contacts_list == None:
-            contacts_list = self.contacts
+    def find_max_contacts(self, contacts_list):
         for contact in contacts_list:
             self.find_max_in_contact(contact)
 
@@ -294,14 +291,13 @@ class DataContainer:
             sample_rate = sensor.frequency
             num_sample = sensor.get_forces_data().num_data_points
             
-            start_index = self.time_to_index(start_time, sample_rate, num_sample)
-            end_index = self.time_to_index(end_time, sample_rate, num_sample)
-             
-            #to change todo
-            signal_slice = sensor.get_forces_data().resultant[start_index:end_index + 1]
+            start_index = start_time
+            end_index = end_time
+
+            signal_slice, sid = self.cal_resultant_force(sensor)
             
-            print(f"{signal_slice.size}")
             
+            #print(f"{signal_slice.size}")
             print(f"start t : {start_time}   sidx : {start_index}")
             print(f"end t : {end_time}   eidx : {end_index}")
             
@@ -419,7 +415,7 @@ class DataContainer:
         
         for sensor in self.sensors:
             sensor_id = sensor.sensor_id
-            resultant_force,sid= self.cal_resultant_force(sensor)
+            resultant_force, sid= self.cal_resultant_force(sensor)
             data = resultant_force
             cur_contacts_list = self.detect_contacts(data, sensor_id, detect_threshold_up, detect_threshold_down, True, crossing_threshold )
             for contact in cur_contacts_list:

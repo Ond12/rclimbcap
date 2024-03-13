@@ -5,7 +5,7 @@ from PyQt6.QtWidgets import (
     QGraphicsEllipseItem, QApplication, QWidget, QVBoxLayout,QGraphicsColorizeEffect
 )
 from PyQt6.QtGui import QBrush, QPen, QColor
-from PyQt6.QtCore import Qt, pyqtSignal, QPointF
+from PyQt6.QtCore import Qt, pyqtSignal, QPointF, QLineF
 from PyQt6.QtSvg import QSvgRenderer
 from PyQt6.QtSvgWidgets import QGraphicsSvgItem
 
@@ -17,6 +17,7 @@ class HoldItem(QGraphicsSvgItem):
         self.setSharedRenderer(renderer)
         self.hold_id = hold_id
         self.sensor_id = 0
+        self.contact_vectors = []
 
     def set_color(self, color):
         colorize_effect = QGraphicsColorizeEffect()
@@ -50,6 +51,8 @@ class RouteViewWidget(QWidget):
         
         svg_path = os.path.join( self.icon_folder, 'wall.svg')
         renderer = QSvgRenderer(svg_path)
+                
+        shoes_path = os.path.join( self.icon_folder, 'climbing-shoes.svg')
         
         for i in range(1,21):
             hold_name = "hold" + str(i)
@@ -68,6 +71,8 @@ class RouteViewWidget(QWidget):
                 hold.set_sensor_id(sensor_id)
                 hold.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)
                 self.holditems[sensor_id] = hold
+                text = self.scene.addSimpleText(str(sensor_id))
+                text.setPos(original_pos+QPointF(40, 10))
 
         for i in range(1,12):
             hold_name = "foot" + str(i)
@@ -85,6 +90,19 @@ class RouteViewWidget(QWidget):
                 hold.set_sensor_id(sensor_id)
                 hold.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)
                 self.holditems[sensor_id] = hold
+                text = self.scene.addSimpleText(str(sensor_id))
+                text.setPos(original_pos+QPointF(10, 10))
+                
+        renderer = QSvgRenderer(shoes_path)
+        shoes = HoldItem(renderer, 30) 
+        shoes.setPos(150, 1255)
+        shoes.setScale(0.08)
+        self.scene.addItem(shoes)
+        shoes.set_sensor_id(30)
+        shoes.set_color(QColor("blue"))
+        shoes.clicked.connect(self.onHoldClicked)
+        shoes.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)
+        self.holditems[30] = shoes
 
         wall_height = 1500
         panel_height = 150
@@ -102,7 +120,19 @@ class RouteViewWidget(QWidget):
         layout.addWidget(self.view)
         self.setLayout(layout)
 
+        self.draw_fvec([])
         self.plotter.notifyvisibilitychange.connect(self.set_hold_color)
+
+    def draw_fvec(self, fvec_list):
+        fvec_list = [(3,QPointF(50, 50))]
+        for fvec in fvec_list:
+            sensor_id = fvec[0]
+            fvecpoint = fvec[1]
+            
+            hold = self.holditems[sensor_id]
+            
+            hold_pos = hold.scenePos()
+            self.scene.addLine(QLineF(hold_pos.x()+20, hold_pos.y()+20, hold_pos.x()+fvecpoint.x(), hold_pos.y()+fvecpoint.y()))
 
     def onHoldClicked(self, sensor_id):
         self.plotter.toggle_sensor_visibility(sensor_id)

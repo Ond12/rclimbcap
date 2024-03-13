@@ -32,7 +32,7 @@ class ContactTableWidget(QWidget):
         delete_button.clicked.connect(self.delete)
         
         contacts = [
-            {'start': 10, 'end': 20, 'time': 25, 'max': 1000, 'power': 200},
+            {'start': 10, 'end': 20, 'time': 25, 'max': 1000, 'sensor': 0, 'power': 200},
         ]
 
         self.table = QTableWidget(self)
@@ -66,6 +66,8 @@ class ContactTableWidget(QWidget):
         self.table.setItem(row, 0, QTableWidgetItem(str(round(contact.start_time_sec, 3))))
         self.table.setItem(row, 1, QTableWidgetItem(str(round(contact.end_time_sec, 3))))
         self.table.setItem(row, 2, QTableWidgetItem(str(round(contact.period_sec, 3))))
+        self.table.setItem(row, 3, QTableWidgetItem(str(round(contact.max_value, 1))))
+        self.table.setItem(row, 4, QTableWidgetItem(str(round(contact.sensor_id, 1))))
     
     def handleCellClicked(self, row, column):
         custom_object = self.custom_objects[row]

@@ -35,12 +35,10 @@ class Wid(QMainWindow):
         parent_folder = os.path.dirname(current_folder)
         
         self.icon_folder = os.path.join(parent_folder,'forms/images/svg')
-        
 
         self.udpServerinit()
         self.init_ui()
         self.init_actions()
- 
 
         auto_delete = False
         if(auto_delete):
@@ -179,7 +177,6 @@ class Wid(QMainWindow):
         main_widget = QWidget()
         main_widget.setLayout(main_grid)
         
-
         self.setCentralWidget(main_widget)
 
         self.data_container = DataContainer()
@@ -187,6 +184,8 @@ class Wid(QMainWindow):
         self.plotter = Plotter(self.data_container)
 
         self.plot_controller = PlotterController(self.plotter)
+        self.plot_controller.normalize_checkbox.stateChanged.connect(self.compute_normalized_data)
+        #self.plot_controller.weight_doubleSpinBox.valueChanged.connect(self.value_changed)
         
         record_widget = RecordWidget()
         record_widget.recording_toggled_signal.connect(self.plotter.toggle_plotter_update)
@@ -214,6 +213,10 @@ class Wid(QMainWindow):
 
         self.init_osc_sender()
     
+    def compute_normalized_data(self):
+        wv = self.plot_controller.get_weight_value()
+        print(f'{wv}tick box was tick')
+
     def init_osc_sender(self):
         self.osc_play_pause_widget = PlayPauseWidget()
 

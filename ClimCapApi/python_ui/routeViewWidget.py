@@ -30,7 +30,7 @@ class HoldItem(QGraphicsSvgItem):
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton:
             self.clicked.emit(self.sensor_id)
-
+    
 class RouteViewWidget(QWidget):
     
     def __init__(self, plotter):
@@ -103,6 +103,18 @@ class RouteViewWidget(QWidget):
         shoes.clicked.connect(self.onHoldClicked)
         shoes.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)
         self.holditems[30] = shoes
+        
+        plate_path = os.path.join( self.icon_folder, 'forceplate.svg')
+        renderer = QSvgRenderer(plate_path)
+        forceplate = HoldItem(renderer, 40) 
+        forceplate.setPos(150, 1500)
+        forceplate.setScale(0.25)
+        self.scene.addItem(forceplate)
+        forceplate.set_sensor_id(40)
+        forceplate.set_color(QColor("blue"))
+        forceplate.clicked.connect(self.onHoldClicked)
+        forceplate.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)
+        self.holditems[40] = forceplate
 
         wall_height = 1500
         panel_height = 150
@@ -138,9 +150,7 @@ class RouteViewWidget(QWidget):
         self.plotter.toggle_sensor_visibility(sensor_id)
     
     def set_hold_color(self, sensor_id, visible):
-        if sensor_id > 39:
-            return
-        
+
         if self.holditems[sensor_id]:
             hold_item = self.holditems[sensor_id]
             if visible :

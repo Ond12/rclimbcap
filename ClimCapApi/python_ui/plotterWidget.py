@@ -105,9 +105,8 @@ class SensorPlotItem:
         self.plot_items = {}
     
     def set_visible_plot(self, visible:bool) -> None:
-        for plot_key, plot_item in self.plot_items.items():
-            plot_item.setVisible(visible)
-        
+        self.get_plot_item(AxisLabel.Z).setVisible(visible)
+
     def set_visible_contact(self, visible:bool) -> None:
         for contact_item in self.contacts:
             contact_item.contact_display.set_visible(visible)            
@@ -121,17 +120,19 @@ class Plotter(pg.PlotWidget):
         
         self.refresh_rate = 1200
         
-        self.setRange(xRange=(0,5000), yRange=(-1500, 1500))
+        self.setRange(xRange=(0,2000), yRange=(-1100, 1100))
         self.plot_items:list = []
         self.contact_list:list = []
         self.sensor_plot_map:dict = {}
         
+        self.climber_weight_hline = None
         self.chrono_plot_item = None
         
         self.showGrid(x=False, y=True)
         self.legend = self.addLegend()
         self.legend.setPos(1, 1)
         self.legend.setColumnCount(3)
+        self.legend.hide()
         
         self.setBackground('w')
         
@@ -141,7 +142,6 @@ class Plotter(pg.PlotWidget):
         self.update_timer.timeout.connect(self.update_plots)
         
         self.vertical_line = None
-        self.set_crosshair()
 
     def set_crosshair(self):
         self.crosshair_point_text = pg.TextItem()
@@ -168,7 +168,6 @@ class Plotter(pg.PlotWidget):
 
             self.vLine.setPos(x)
             self.hLine.setPos(y)
-
 
     def set_refresh_rate(self, refresh_rate_ms):
         self.refresh_rate = refresh_rate_ms
@@ -234,6 +233,7 @@ class Plotter(pg.PlotWidget):
                     plot_item_force_y = self.plot([0], [0], pen=pg.mkPen(color_y_v, width=2, alpha=200,  style=line_style), name=f"S{sensor.sensor_id}-FY",skipFiniteCheck=True)
                     self.plot_items.append(plot_item_force_y)
                     plot_item_force_y.setSkipFiniteCheck(True)
+                    plot_item_force_y.setVisible(False)
                     plot_item_force_y.setCurveClickable(True)
 
                     color_z_v = BLUE[sensor.sensor_id % 11]
@@ -298,6 +298,7 @@ class Plotter(pg.PlotWidget):
         #self.sensor_plot_map[sensor_id].add_plot_item(plot_item_resultant_force)
 
     def plot_marker_max(self, time, value):
+        return 
         self.plot([time], [value],
               pen=(187, 26, 95), symbolBrush=(187, 26, 95),
               symbolPen='w', symbol='arrow_up', symbolSize=22, name="symbol='arrow_up'")
@@ -311,12 +312,20 @@ class Plotter(pg.PlotWidget):
                 
         self.vertical_line.setValue(position)
 
+    def set_climber_weight_hline(self, kg_value):
+        newton_value = kg_value * 9.81
+        if not self.climber_weight_hline:
+            self.climber_weight_hline = pg.InfiniteLine(pos=newton_value, angle=0, movable=False, pen='r')
+            self.addItem(self.climber_weight_hline)
+        self.climber_weight_hline.setValue(newton_value)
+        
     def clear_plot(self):
         self.sensor_plot_map = {}
         self.plot_items.clear()
         self.clear_contacts()
         self.clear()
         self.vertical_line = None
+        self.climber_weight_hline = None
 
     def toggle_sensor_visibility(self, sensor_id):
         if sensor_id in self.sensor_plot_map:
@@ -372,7 +381,24 @@ class PlotterController(QWidget):
         self.button_layout.addWidget(set_all_visible_button)
         set_all_visible_button.clicked.connect(self.set_visible_all)
         
+        label = QLabel("Poids:")
+        self.weight_doubleSpinBox = QDoubleSpinBox()
+        self.weight_doubleSpinBox.setRange(0.0, 200.0)
+        self.weight_doubleSpinBox.setValue(0.0)
+        
+        self.normalize_checkbox = QCheckBox('Normaliser')
+        
+        self.button_layout.addWidget(label)
+        self.button_layout.addWidget(self.weight_doubleSpinBox)
+        self.button_layout.addWidget(self.normalize_checkbox)
+        
+        self.weight_doubleSpinBox.valueChanged.connect(self.plotter.set_climber_weight_hline)
+
         self.show()
+
+    def get_weight_value(self):
+        value = self.doubleSpinBox.value()
+        return value
 
     def set_visible_all(self):
         for button in self.toggle_buttons.values():
@@ -392,10 +418,17 @@ class PlotterController(QWidget):
         self.clean_widget()
         
         for i, sensor in enumerate(self.plotter.data_container.sensors):
-            self.add_button(sensor.sensor_id)
+            if ((sensor.sensor_id == 7) or (sensor.sensor_id == 8)):
+                self.plotter.toggle_sensor_visibility(sensor.sensor_id)
+            else:
+                self.add_button(sensor.sensor_id)
 
     def add_button(self, sensor_id):
-        button = QPushButton(f"S {sensor_id }", self)
+        if sensor_id == 40:
+            name = "Platforme"
+        else:
+            name = f"P{sensor_id}"
+        button = QPushButton(name, self)
         pastel_color = "background-color: #FAA0A0"  
         button.setStyleSheet(pastel_color)
         button.clicked.connect(lambda checked, sensor_id=sensor_id: self.plotter.toggle_sensor_visibility(sensor_id))

@@ -11,8 +11,8 @@ namespace globals
 	constexpr auto  DEFAULT_TRIGGER_SETTING = 0;
 	constexpr auto  DEFAULT_SAMPLE_CALIBRATION_NUMBER = 1000;
 
-	constexpr auto  ENABLE_PLATFORM = false;
-	constexpr auto  ENABLE_SENSOR = false;
+	constexpr auto  ENABLE_PLATFORM = true;
+	constexpr auto  ENABLE_SENSOR = true;
 
 	//NIDAQmx globals
 	constexpr auto IMPORT_SAMPLE_CLOCK_PIN = "PFI0";
@@ -23,8 +23,8 @@ namespace globals
 
 	//constexpr auto CHRONO_PULSE_PIN = 72; // pin number in acq card
 
-	constexpr auto SENSOR_ACQ_CARD_NAME = "Dev1";  //NI 6211
-	constexpr auto PLATFORM_ACQ_CARD_NAME = "Dev3"; //NI 6255
+	constexpr auto SENSOR_ACQ_CARD_NAME = "Dev1";  //NI 6255
+	constexpr auto PLATFORM_ACQ_CARD_NAME = "Dev3"; //NI 
 
 	constexpr auto NUMBERANALOGCHANPLATFORM = 8;
 	constexpr auto NUMBERANALOGCHANSENSOR = 6;
@@ -34,7 +34,7 @@ namespace globals
 	constexpr auto DEBUG_MOD_PLATFORM = false;
 	constexpr auto DEBUG_MOD_SENSOR = false;
 
-	constexpr auto DUMMY_SENDER = true;
+	constexpr auto DUMMY_SENDER = false;
 
 	static uint nbpacketsend = 0;
 }

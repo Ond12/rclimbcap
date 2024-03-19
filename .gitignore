@@ -29,3 +29,4 @@ ClimCapApi/build
 ClimCapApi/forms/images
 *.def
 ClimCapApi/data/log.txt
+ClimCapApi/python_ui_build

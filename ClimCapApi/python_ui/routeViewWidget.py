@@ -132,7 +132,7 @@ class RouteViewWidget(QWidget):
         layout.addWidget(self.view)
         self.setLayout(layout)
 
-        self.draw_fvec([])
+        #self.draw_fvec([])
         self.plotter.notifyvisibilitychange.connect(self.set_hold_color)
 
     def draw_fvec(self, fvec_list):

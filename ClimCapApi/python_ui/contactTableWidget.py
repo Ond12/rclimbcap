@@ -25,7 +25,7 @@ class ContactTableWidget(QWidget):
         edit_button = QPushButton("Export")
         button_layout.addWidget(add_button)
         button_layout.addWidget(delete_button)
-        button_layout.addWidget(edit_button)
+        #button_layout.addWidget(edit_button)
         
         # Connect button signals to slots
         add_button.clicked.connect(self.add_contact)

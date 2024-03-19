@@ -106,6 +106,7 @@ class SensorPlotItem:
     
     def set_visible_plot(self, visible:bool) -> None:
         self.get_plot_item(AxisLabel.Z).setVisible(visible)
+        self.get_plot_item(AxisLabel.Y).setVisible(visible)
 
     def set_visible_contact(self, visible:bool) -> None:
         for contact_item in self.contacts:
@@ -132,7 +133,7 @@ class Plotter(pg.PlotWidget):
         self.legend = self.addLegend()
         self.legend.setPos(1, 1)
         self.legend.setColumnCount(3)
-        self.legend.hide()
+        #self.legend.hide()
         
         self.setBackground('w')
         
@@ -233,7 +234,7 @@ class Plotter(pg.PlotWidget):
                     plot_item_force_y = self.plot([0], [0], pen=pg.mkPen(color_y_v, width=2, alpha=200,  style=line_style), name=f"S{sensor.sensor_id}-FY",skipFiniteCheck=True)
                     self.plot_items.append(plot_item_force_y)
                     plot_item_force_y.setSkipFiniteCheck(True)
-                    plot_item_force_y.setVisible(False)
+                    plot_item_force_y.setVisible(True)
                     plot_item_force_y.setCurveClickable(True)
 
                     color_z_v = BLUE[sensor.sensor_id % 11]
@@ -390,7 +391,7 @@ class PlotterController(QWidget):
         
         self.button_layout.addWidget(label)
         self.button_layout.addWidget(self.weight_doubleSpinBox)
-        self.button_layout.addWidget(self.normalize_checkbox)
+        #self.button_layout.addWidget(self.normalize_checkbox)
         
         self.weight_doubleSpinBox.valueChanged.connect(self.plotter.set_climber_weight_hline)
 
@@ -426,6 +427,8 @@ class PlotterController(QWidget):
     def add_button(self, sensor_id):
         if sensor_id == 40:
             name = "Platforme"
+        elif sensor_id == 30:
+            name = "Foot"
         else:
             name = f"P{sensor_id}"
         button = QPushButton(name, self)

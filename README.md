@@ -17,3 +17,15 @@ pip install pyqtgraph
 pip install xlsxreader
 pip install xlsxwriter
 pip install openpyxl
+pip install python-osc
+
+
+pip install -U pyinstaller-hooks-contrib
+https://github.com/pyinstaller/pyinstaller/issues/7991
+
+
+cd python_ui_build
+pyinstaller --noconfirm  --debug=all --noconsole .\testUI.py
+python -m PyInstaller --name "ClimbCap" --noconfirm --clean "\python_ui\testUI.py"
+
+python -m PyInstaller --name "ClimbCap" --noconfirm "C:\Users\thepaula\Documents\GitHub\rclimbcap\ClimCapApi\python_ui\testUI.py"

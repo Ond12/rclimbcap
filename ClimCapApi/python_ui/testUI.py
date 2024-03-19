@@ -5,9 +5,7 @@ import socket
 import json
 import numpy as np
 import pandas as pd
-from scipy.integrate import quad
 import re
-from scipy.signal import butter, sosfilt
 import pyqtgraph as pg
 from PyQt6.QtWidgets import *
 from PyQt6.QtGui import *
@@ -167,7 +165,7 @@ class Wid(QMainWindow):
         self.statusbar.hide()
 
     def init_ui(self):
-        self.setWindowTitle('ClimbCap')
+        self.setWindowTitle('ClimbCap V0')
         self.setGeometry(0, 0, 1500, 1000)
 
         main_grid = QGridLayout()
@@ -195,7 +193,7 @@ class Wid(QMainWindow):
         main_grid.addWidget(self.plot_controller, 1, 0)
         main_grid.addWidget(self.plotter, 2, 0)
         main_grid.addWidget(record_widget, 3, 0)
-        main_grid.addWidget(mediaController_widget, 4,0)
+        #main_grid.addWidget(mediaController_widget, 4,0)
 
         self.contactTable_widget = ContactTableWidget()
 
@@ -523,7 +521,7 @@ def main():
     widm = Wid()
     
     import ctypes
-    myappid = 'mycompany.myproduct.subproduct.version' # arbitrary string
+    myappid = 'GIPSA-lab.ClimbCap.ui.B' 
     ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
     
     current_folder = os.path.dirname(os.path.realpath(__file__))

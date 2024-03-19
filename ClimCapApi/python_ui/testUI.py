@@ -142,13 +142,13 @@ class Wid(QMainWindow):
         toolbar.addAction(apply_filter_action)
         toolbar.addAction(find_contacts_action)
         toolbar.addAction(chrono_detect_action)
-        toolbar.addAction(calculate_resultant_action)
-        toolbar.addAction(find_max_in_contact_action)
-        toolbar.addAction(sum_force_action)
+        #toolbar.addAction(calculate_resultant_action)
+        #toolbar.addAction(find_max_in_contact_action)
+        #toolbar.addAction(sum_force_action)
         toolbar.addAction(settings_action)
-        toolbar.addAction(flip_action)
+        #toolbar.addAction(flip_action)
 
-        toolbar.addAction(apply_rotation_action)
+        #toolbar.addAction(apply_rotation_action)
         toolbar.addAction(merge_sensor_action)
         toolbar.addAction(show_cross_hair_action)
         
@@ -156,8 +156,8 @@ class Wid(QMainWindow):
         separator.setSeparator(True)
         toolbar.addAction(separator)
         
-        toolbar.addAction(debug_data_action)
-        toolbar.addAction(oscstreaming_action)
+        #toolbar.addAction(debug_data_action)
+        #toolbar.addAction(oscstreaming_action)
 
         self.statusbar = QStatusBar()
         self.setStatusBar(self.statusbar)
@@ -165,8 +165,22 @@ class Wid(QMainWindow):
         self.statusbar.hide()
 
     def init_ui(self):
+        
+        import ctypes
+        myappid = 'GIPSA-lab.ClimbCap.ui.V0' 
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+        
+        current_folder = os.path.dirname(os.path.realpath(__file__))
+        parent_folder = os.path.dirname(current_folder)
+
+        icon_folder = os.path.join(parent_folder,'forms/images/svg')
+
+        ic_path = os.path.join( icon_folder, 'prisefr.ico')
+
+        self.setWindowIcon(QIcon(ic_path))
         self.setWindowTitle('ClimbCap V0')
         self.setGeometry(0, 0, 1500, 1000)
+        
 
         main_grid = QGridLayout()
         main_grid.setSpacing(0)
@@ -209,6 +223,7 @@ class Wid(QMainWindow):
         self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, dockR)
         dockR.setWidget(self.routeView_widget)
 
+        self.showMaximized()
         self.init_osc_sender()
     
     def compute_normalized_data(self):
@@ -520,18 +535,7 @@ def main():
     app =  QApplication(sys.argv)
     widm = Wid()
     
-    import ctypes
-    myappid = 'GIPSA-lab.ClimbCap.ui.B' 
-    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
-    
-    current_folder = os.path.dirname(os.path.realpath(__file__))
-    parent_folder = os.path.dirname(current_folder)
 
-    icon_folder = os.path.join(parent_folder,'forms/images/svg')
-
-    ic_path = os.path.join( icon_folder, 'prisefr.ico')
-
-    app.setWindowIcon(QIcon(ic_path))
     
     widm.show()
 

@@ -148,8 +148,8 @@ class Plotter(pg.PlotWidget):
         self.crosshair_point_text = pg.TextItem()
         self.crosshair_point_text.setPos(1000,1000)
         self.addItem(self.crosshair_point_text)
-        self.vLine = pg.InfiniteLine(angle=90, movable=False)
-        self.hLine = pg.InfiniteLine(angle=0, movable=False)
+        self.vLine = pg.InfiniteLine(angle=90, movable=False, pen='g')
+        self.hLine = pg.InfiniteLine(angle=0, movable=False, pen='g')
         self.addItem(self.vLine, ignoreBounds=True)
         self.addItem(self.hLine, ignoreBounds=True)
         self.scene().sigMouseMoved.connect(self.mouseMoved)
@@ -208,7 +208,7 @@ class Plotter(pg.PlotWidget):
           
     def plot_chrono_bip_marker(self, times):
         for time in times:
-            marker_time_line = pg.InfiniteLine(pos=time, angle=90, movable=False, pen='b')
+            marker_time_line = pg.InfiniteLine(pos=time, angle=90, movable=False, pen=QPen(Qt.GlobalColor.blue, 2, Qt.PenStyle.DashLine))
             self.addItem(marker_time_line)
 
     def plot_data(self, colors=None):
@@ -382,7 +382,7 @@ class PlotterController(QWidget):
         self.button_layout.addWidget(set_all_visible_button)
         set_all_visible_button.clicked.connect(self.set_visible_all)
         
-        label = QLabel("Poids:")
+        label = QLabel("Mass(kg):")
         self.weight_doubleSpinBox = QDoubleSpinBox()
         self.weight_doubleSpinBox.setRange(0.0, 200.0)
         self.weight_doubleSpinBox.setValue(0.0)
@@ -419,9 +419,9 @@ class PlotterController(QWidget):
         self.clean_widget()
         
         for i, sensor in enumerate(self.plotter.data_container.sensors):
-            if ((sensor.sensor_id == 7) or (sensor.sensor_id == 8)):
-                self.plotter.toggle_sensor_visibility(sensor.sensor_id)
-            else:
+            # if ((sensor.sensor_id == 7) or (sensor.sensor_id == 8)):
+            #     self.plotter.toggle_sensor_visibility(sensor.sensor_id)
+            # else:
                 self.add_button(sensor.sensor_id)
 
     def add_button(self, sensor_id):

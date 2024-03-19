@@ -23,7 +23,7 @@ class ContactTableWidget(QWidget):
         add_button = QPushButton("Add")
         delete_button = QPushButton("Delete")
         edit_button = QPushButton("Export")
-        button_layout.addWidget(add_button)
+        #button_layout.addWidget(add_button)
         button_layout.addWidget(delete_button)
         #button_layout.addWidget(edit_button)
         

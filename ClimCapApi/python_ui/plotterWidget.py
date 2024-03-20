@@ -121,7 +121,7 @@ class Plotter(pg.PlotWidget):
         
         self.refresh_rate = 1200
         
-        self.setRange(xRange=(0,2000), yRange=(-1100, 1100))
+        self.setRange(xRange=(0,7), yRange=(-500, 500))
         self.plot_items:list = []
         self.contact_list:list = []
         self.sensor_plot_map:dict = {}
@@ -142,11 +142,12 @@ class Plotter(pg.PlotWidget):
         self.update_timer.setInterval(self.refresh_rate)
         self.update_timer.timeout.connect(self.update_plots)
         
-        self.vertical_line = None
+        self.vertical_line = None  
+        
 
     def set_crosshair(self):
         self.crosshair_point_text = pg.TextItem()
-        self.crosshair_point_text.setPos(1000,1000)
+        self.crosshair_point_text.setPos(5,600)
         self.addItem(self.crosshair_point_text)
         self.vLine = pg.InfiniteLine(angle=90, movable=False, pen='g')
         self.hLine = pg.InfiniteLine(angle=0, movable=False, pen='g')
@@ -163,12 +164,18 @@ class Plotter(pg.PlotWidget):
             x = mouse_point.x()
             y = mouse_point.y()
             self.crosshair_point_text.setHtml(
-                "<span style='font-size: 16pt'>x=%0.01f,   <span style='color: red'>y=%0.1f</span>," % (x*(1/200), y))
+                "<span style='font-size: 16pt'>x=%0.01f,   <span style='color: red'>y=%0.1f</span>," % (x, y))
 
             #if index > 0 and index < len(data1):
 
             self.vLine.setPos(x)
             self.hLine.setPos(y)
+
+    def update_chrono_plot_data(self):
+        cr_data = self.data_container.chrono_data
+        # time_increments_chrono_dummy = np.arange( len(cr_data) ) / self.data_container.chrono_freq
+        if(self.chrono_plot_item):
+            self.chrono_plot_item.setData(cr_data)
 
     def set_refresh_rate(self, refresh_rate_ms):
         self.refresh_rate = refresh_rate_ms
@@ -183,16 +190,11 @@ class Plotter(pg.PlotWidget):
         
         self.update()
 
-    def update_chrono_plot_data(self):
-        cr_data = self.data_container.chrono_data
-        # time_increments_chrono_dummy = np.arange( len(cr_data) ) / self.data_container.chrono_freq
-        if(self.chrono_plot_item):
-            self.chrono_plot_item.setData(cr_data)
-
     def update_sensor_plot_data(self, sensor_id:int):
         cur_sensor = self.data_container.get_sensor(sensor_id)
         if cur_sensor:
             force_data = cur_sensor.get_forces_data()
+            times_incr = cur_sensor.get_times_increments()
             
             force_x = force_data.get_forces_x()
             force_y = force_data.get_forces_y()
@@ -200,16 +202,11 @@ class Plotter(pg.PlotWidget):
 
             sensor_plot_item = self.sensor_plot_map[sensor_id]
             
-            sensor_plot_item.get_plot_item(AxisLabel.X).setData(force_x)
-            sensor_plot_item.get_plot_item(AxisLabel.Y).setData(force_y)
-            sensor_plot_item.get_plot_item(AxisLabel.Z).setData(force_z)
+            sensor_plot_item.get_plot_item(AxisLabel.X).setData(times_incr,force_x)
+            sensor_plot_item.get_plot_item(AxisLabel.Y).setData(times_incr,force_y)
+            sensor_plot_item.get_plot_item(AxisLabel.Z).setData(times_incr,force_z)
             
             #print(f"updating plot sensor {cur_sensor.sensor_id} until {maxlimit} lx {len(force_x)}")
-          
-    def plot_chrono_bip_marker(self, times):
-        for time in times:
-            marker_time_line = pg.InfiniteLine(pos=time, angle=90, movable=False, pen=QPen(Qt.GlobalColor.blue, 2, Qt.PenStyle.DashLine))
-            self.addItem(marker_time_line)
 
     def plot_data(self, colors=None):
         if self.data_container.sensors:
@@ -217,39 +214,39 @@ class Plotter(pg.PlotWidget):
 
             if colors is None:
                 colors = ['b'] * len(self.data_container.sensors)
-
+            
             for i, sensor in enumerate(self.data_container.sensors):
 
-                    force_data = sensor.get_forces_data()
+                force_data = sensor.get_forces_data()
+                
+                color_x_v = RED[sensor.sensor_id % 11]
+                line_style = style_dict[0]
+                plot_item_force_x = self.plot([0], [0], pen=pg.mkPen(color_x_v, width=2, alpha=200, style=line_style), name=f"S{sensor.sensor_id}-FX",skipFiniteCheck=True)
+                self.plot_items.append(plot_item_force_x)
+                plot_item_force_x.setVisible(False)
+                plot_item_force_x.setSkipFiniteCheck(True)
+                plot_item_force_x.setCurveClickable(True)
 
-                    color_x_v = RED[sensor.sensor_id % 11]
-                    line_style = style_dict[0]
-                    plot_item_force_x = self.plot([0], [0], pen=pg.mkPen(color_x_v, width=2, alpha=200, style=line_style), name=f"S{sensor.sensor_id}-FX",skipFiniteCheck=True)
-                    self.plot_items.append(plot_item_force_x)
-                    plot_item_force_x.setVisible(False)
-                    plot_item_force_x.setSkipFiniteCheck(True)
-                    plot_item_force_x.setCurveClickable(True)
+                color_y_v = GREEN[sensor.sensor_id % 11]
+                plot_item_force_y = self.plot([0], [0], pen=pg.mkPen(color_y_v, width=2, alpha=200,  style=line_style), name=f"S{sensor.sensor_id}-FY",skipFiniteCheck=True)
+                self.plot_items.append(plot_item_force_y)
+                plot_item_force_y.setSkipFiniteCheck(True)
+                plot_item_force_y.setVisible(True)
+                plot_item_force_y.setCurveClickable(True)
 
-                    color_y_v = GREEN[sensor.sensor_id % 11]
-                    plot_item_force_y = self.plot([0], [0], pen=pg.mkPen(color_y_v, width=2, alpha=200,  style=line_style), name=f"S{sensor.sensor_id}-FY",skipFiniteCheck=True)
-                    self.plot_items.append(plot_item_force_y)
-                    plot_item_force_y.setSkipFiniteCheck(True)
-                    plot_item_force_y.setVisible(True)
-                    plot_item_force_y.setCurveClickable(True)
+                color_z_v = BLUE[sensor.sensor_id % 11]
+                plot_item_force_z = self.plot([0], [0], pen=pg.mkPen(color_z_v, width=2, alpha=200,  style=line_style), name=f"S{sensor.sensor_id}-FZ",skipFiniteCheck=True)
+                self.plot_items.append(plot_item_force_z)
+                plot_item_force_z.setSkipFiniteCheck(True)
+                plot_item_force_z.setCurveClickable(True)
+                plot_item_force_z.sigClicked.connect(lambda x: self.handle_curve_click(x))
 
-                    color_z_v = BLUE[sensor.sensor_id % 11]
-                    plot_item_force_z = self.plot([0], [0], pen=pg.mkPen(color_z_v, width=2, alpha=200,  style=line_style), name=f"S{sensor.sensor_id}-FZ",skipFiniteCheck=True)
-                    self.plot_items.append(plot_item_force_z)
-                    plot_item_force_z.setSkipFiniteCheck(True)
-                    plot_item_force_z.setCurveClickable(True)
-                    plot_item_force_z.sigClicked.connect(lambda x: self.handle_curve_click(x))
+                c_plot_sensor = SensorPlotItem(sensor.sensor_id)
+                c_plot_sensor.add_plot_item(AxisLabel.X, plot_item_force_x)
+                c_plot_sensor.add_plot_item(AxisLabel.Y, plot_item_force_y)
+                c_plot_sensor.add_plot_item(AxisLabel.Z, plot_item_force_z)
 
-                    c_plot_sensor = SensorPlotItem(sensor.sensor_id)
-                    c_plot_sensor.add_plot_item(AxisLabel.X, plot_item_force_x)
-                    c_plot_sensor.add_plot_item(AxisLabel.Y, plot_item_force_y)
-                    c_plot_sensor.add_plot_item(AxisLabel.Z, plot_item_force_z)
-
-                    self.sensor_plot_map[sensor.sensor_id] = c_plot_sensor
+                self.sensor_plot_map[sensor.sensor_id] = c_plot_sensor
 
             # if self.data_container:
             #     cr_data = self.data_container.chrono_data
@@ -269,6 +266,11 @@ class Plotter(pg.PlotWidget):
 
     def handle_curve_click(self, curve):
         print(f"Curve clicked: {curve}")  # for testing
+          
+    def plot_chrono_bip_marker(self, times):
+        for time in times:
+            marker_time_line = pg.InfiniteLine(pos=time, angle=90, movable=False, pen=QPen(Qt.GlobalColor.blue, 2, Qt.PenStyle.DashLine))
+            self.addItem(marker_time_line)
 
     def plot_sum_force(self):
         force_result = self.data_container.sum_force_data()

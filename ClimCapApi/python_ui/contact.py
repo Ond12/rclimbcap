@@ -16,7 +16,7 @@ color_z = (0, 0, 255)  # Blue
 color_chrono = (255, 255, 0) # Yellow
 
 colors_dict = {
-    0: (255, 255, 255),   # White
+    0: (0, 255, 0),   
     1: (255, 0, 0),       # Red
     2: (0, 255, 0),       # Green
     3: (0, 0, 255),       # Blue
@@ -26,7 +26,7 @@ colors_dict = {
     7: (128, 0, 0),       # Maroon
     8: (0, 128, 0),       # Green (dark)
     9: (0, 0, 128),       # Navy
-    10: (128, 128, 128)   # Gray
+    10:(0, 255, 255) 
 }
 
 class ContactInfo(QObject):
@@ -74,7 +74,7 @@ class ContactInfo(QObject):
     def add_into_plot(self, plot):
         if plot != None:
             color = colors_dict[self.sensor_id%11]
-            self.contact_display = self.ContactDisplay(self.start_time, self.end_time, color)
+            self.contact_display = self.ContactDisplay(self.start_time_sec, self.end_time_sec, color)
             self.contact_display.add_into_graphplot(plot)
     
     def remove_from_plot(self, plot):

@@ -181,7 +181,6 @@ class Wid(QMainWindow):
         self.setWindowTitle('ClimbCap V0')
         self.setGeometry(0, 0, 1500, 1000)
         
-
         main_grid = QGridLayout()
         main_grid.setSpacing(0)
         main_grid.setContentsMargins(0, 0, 0, 0)

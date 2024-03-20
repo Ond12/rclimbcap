@@ -127,6 +127,11 @@ class Sensor:
     def get_frequency(self):
         return self.frequency
     
+    def get_times_increments(self):
+        num_samples = self.force_data.num_data_points
+        time_array = np.linspace(0, (num_samples/self.frequency), num_samples)
+        return time_array
+    
     def clear_data(self):
         self.force_data = ForcesDataC(self.frequency)  
     
@@ -282,11 +287,11 @@ class DataContainer:
             target_sensor_id = contact.sensor_id
             sensor = self.find_sensor_by_id(target_sensor_id)
 
-            if sensor:
-                print(f"Sensor with ID {target_sensor_id} found: {sensor}")
-            else:
-                print(f"Sensor with ID {target_sensor_id} not found.")
-                return None
+            # if sensor:
+            #     print(f"Sensor with ID {target_sensor_id} found: {sensor}")
+            # else:
+            #     print(f"Sensor with ID {target_sensor_id} not found.")
+            #     return None
             
             sample_rate = sensor.frequency
             num_sample = sensor.get_forces_data().num_data_points
@@ -298,12 +303,12 @@ class DataContainer:
             
             
             #print(f"{signal_slice.size}")
-            print(f"start t : {start_time}   sidx : {start_index}")
-            print(f"end t : {end_time}   eidx : {end_index}")
+            # print(f"start t : {start_time}   sidx : {start_index}")
+            # print(f"end t : {end_time}   eidx : {end_index}")
             
             time, value = self.find_max(signal_slice, start_index)
             
-            print(f"max fournd : {value} time : {time}")
+            # print(f"max fournd : {value} time : {time}")
             
             contact.max_value = value
             contact.max_value_time = time
@@ -418,9 +423,8 @@ class DataContainer:
             resultant_force, sid= self.cal_resultant_force(sensor)
             data = resultant_force
             cur_contacts_list = self.detect_contacts(data, sensor_id, detect_threshold_up, detect_threshold_down, True, crossing_threshold )
+
             for contact in cur_contacts_list:
-                if(contact.period > 600):
-                    break
                 if(contact.period > 50):
                     all_contacts_list.append(contact)
         

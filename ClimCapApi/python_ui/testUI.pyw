@@ -1,3 +1,4 @@
+#! C:\\Program Files\\Python312\\pythonw.exe
 import sys
 from datetime import datetime
 import os

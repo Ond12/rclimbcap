@@ -266,7 +266,7 @@ class Wid(QMainWindow):
         #domo
         sensor_ids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
         #sensor_ids = [] #7, 8, 9, 10, 11]
-        add_platformes = False
+        add_platformes = True
         
         sensor_frequency = 200
               
@@ -277,8 +277,8 @@ class Wid(QMainWindow):
         if add_platformes:
             current_sensor = Sensor(41, 8, sensor_frequency)
             self.data_container.add_sensor(current_sensor)         
-            current_sensor = Sensor(40, 8, sensor_frequency)
-            self.data_container.add_sensor(current_sensor)    
+            # current_sensor = Sensor(40, 8, sensor_frequency)
+            # self.data_container.add_sensor(current_sensor)    
             
         self.plotter.plot_data()
         self.plotter.set_refresh_rate(1500)

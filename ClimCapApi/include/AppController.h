@@ -68,8 +68,8 @@ public:
 		settings.setValue("sample_rate", globals::DEFAULT_SAMPLE_RATE);
 		settings.setValue("trigger_enable", globals::DEFAULT_TRIGGER_SETTING);
 		settings.setValue("sample_calibration_number", globals::DEFAULT_SAMPLE_CALIBRATION_NUMBER);
-		settings.setValue("sensor_card_name", globals::SENSOR_ACQ_CARD_NAME);
-		settings.setValue("plat_card_name", globals::PLATFORM_ACQ_CARD_NAME);
+		settings.setValue("sensor_card_name", QString::fromStdString(globals::SENSOR_ACQ_CARD_NAME));
+		settings.setValue("plat_card_name", QString::fromStdString(globals::PLATFORM_ACQ_CARD_NAME));
 
 		settings.setValue("ENABLE_PLATFORM", globals::ENABLE_PLATFORM);
 		settings.setValue("ENABLE_SENSOR", globals::ENABLE_SENSOR);
@@ -97,29 +97,33 @@ public:
 			settings.setValue("ENABLE_SENSOR", globals::ENABLE_SENSOR);
 			m_ENABLE_SENSOR = globals::ENABLE_SENSOR;
 		}
-		else
+		else {
 			m_ENABLE_SENSOR = ENABLE_SENSOR.toBool();
-
+		}
 
 		const auto sensor_card_name = settings.value("sensor_card_name");
 
 		if (sensor_card_name.isNull())
 		{
-			settings.setValue("sensor_card_name", globals::SENSOR_ACQ_CARD_NAME);
-			m_sensor_card_name = globals::SENSOR_ACQ_CARD_NAME;
+			settings.setValue("sensor_card_name", QString::fromStdString(globals::SENSOR_ACQ_CARD_NAME));
+			m_sensor_card_name = QString::fromStdString(globals::SENSOR_ACQ_CARD_NAME);
 		}
-		else
+		else {
 			m_sensor_card_name = sensor_card_name.toString();
+			globals::SENSOR_ACQ_CARD_NAME = m_sensor_card_name.toStdString().c_str();
+		}
 
 		const auto plat_card_name = settings.value("plat_card_name");
 
 		if (plat_card_name.isNull())
 		{
-			settings.setValue("plat_card_name", globals::PLATFORM_ACQ_CARD_NAME);
-			m_platform_card_name = globals::PLATFORM_ACQ_CARD_NAME;
+			settings.setValue("plat_card_name", QString::fromStdString(globals::PLATFORM_ACQ_CARD_NAME));
+			m_platform_card_name = QString::fromStdString(globals::PLATFORM_ACQ_CARD_NAME);
 		}
-		else
+		else {
 			m_platform_card_name = plat_card_name.toString();
+			globals::PLATFORM_ACQ_CARD_NAME = m_platform_card_name.toStdString().c_str();
+		}
 
 		const auto acquisition_time = settings.value("acquisition_time");
 
@@ -216,25 +220,25 @@ public:
 				////////////////////////////////////////////////////////////////
 			}
 
-			if (globals::DUMMY_SENDER)
-			{
-				auto sensorList = MyDataController->loadSensorToAnalogConfig();
-				uint NsensorLoaded = sensorList.count();
-				if (NsensorLoaded == 0) { qCritical() << "Echec dans le chargement de la configuration capteur, vide"; return 0; };
+			//if (globals::DUMMY_SENDER)
+			//{
+			//	auto sensorList = MyDataController->loadSensorToAnalogConfig();
+			//	uint NsensorLoaded = sensorList.count();
+			//	if (NsensorLoaded == 0) { qCritical() << "Echec dans le chargement de la configuration capteur, vide"; return 0; };
 
-				int totalNumberOfChannelssensor = NsensorLoaded * 6;
+			//	int totalNumberOfChannelssensor = NsensorLoaded * 6;
 
-				uint NplatformLoaded = MyDataController->loadPlatformToAnalogConfig();
+			//	uint NplatformLoaded = MyDataController->loadPlatformToAnalogConfig();
 
-				int totalNumberOfChannelsplat = NplatformLoaded * 8;
+			//	int totalNumberOfChannelsplat = NplatformLoaded * 8;
 
-				if (dummySender != nullptr)
-				{
-					dummySender->setNbchan(totalNumberOfChannelssensor);
-				}
+			//	if (dummySender != nullptr)
+			//	{
+			//		dummySender->setNbchan(totalNumberOfChannelssensor);
+			//	}
 
-				qDebug() << "set up dummy sender mode nbchan  " << totalNumberOfChannelssensor;
-			}
+			//	qDebug() << "set up dummy sender mode nbchan  " << totalNumberOfChannelssensor;
+			//}
 
 		}
 
@@ -250,6 +254,7 @@ public:
 
 		MyDataController->connectToUdpSteam(MyUdpClient);
 
+		this->readSettings();
 		if (m_ENABLE_SENSOR || m_ENABLE_PLATFORM)
 		{
 			NidaqmxConnectionThread::init(0, 0, 0, 0, 0);
@@ -293,19 +298,19 @@ public:
 			}
 		}
 
-		if(globals::DUMMY_SENDER)
-		{
-			dummySender = new DummySender();
-			errorFlag = this->reloadSensorConfiguration();
-			qDebug("init dummy senser");
-			QObject::connect(dummySender, SIGNAL(newDataPacketNi(const DataPacket&)),
-				MyDataController, SLOT(processNewDataPacketFromNi(const DataPacket&)));
-			
-			//QObject::connect(dummySender, SIGNAL(newDataPacketNi(const DataPacket&)),
-			//	MyDataController, SLOT(processNewDataPacketPlatformFromNi(const DataPacket&)));
+		//if(globals::DUMMY_SENDER)
+		//{
+		//	dummySender = new DummySender();
+		//	errorFlag = this->reloadSensorConfiguration();
+		//	qDebug("init dummy senser");
+		//	QObject::connect(dummySender, SIGNAL(newDataPacketNi(const DataPacket&)),
+		//		MyDataController, SLOT(processNewDataPacketFromNi(const DataPacket&)));
+		//	
+		//	//QObject::connect(dummySender, SIGNAL(newDataPacketNi(const DataPacket&)),
+		//	//	MyDataController, SLOT(processNewDataPacketPlatformFromNi(const DataPacket&)));
 
-			
-		}
+		//	
+		//}
 
 		return errorFlag;
 	};

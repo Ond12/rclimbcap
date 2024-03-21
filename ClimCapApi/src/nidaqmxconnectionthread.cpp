@@ -54,6 +54,7 @@ bool NidaqmxConnectionThread::init(float acquisitionRate, float callBackRate, ui
 	if (stringLength < 0)
 	{
 		/* handle error */
+		qDebug("no Devices");
 	}
 	else
 	{
@@ -88,11 +89,8 @@ NidaqmxConnectionThread::NidaqmxConnectionThread(float acquisitionRate, float ca
 	int32       error = 0;
 	char        errBuff[2048] = { '\0' };
 
-	this->cardName = globals::SENSOR_ACQ_CARD_NAME;
-	this->platformCardName = globals::PLATFORM_ACQ_CARD_NAME;
-
-	DAQmxErrChk(DAQmxResetDevice(this->cardName.toStdString().c_str()));
-	DAQmxErrChk(DAQmxResetDevice(this->platformCardName.toStdString().c_str()));
+	this->cardName = QString::fromStdString(globals::SENSOR_ACQ_CARD_NAME);
+	this->platformCardName = QString::fromStdString(globals::PLATFORM_ACQ_CARD_NAME);
 
 Error:
 	if (DAQmxFailed(error)) 
@@ -224,12 +222,13 @@ Error:
 
 void NidaqmxConnectionThread::setUPTask(float acquisitionRate, float callBackRate, const QVector<Sensor>& sensorList, bool triggerEnable, uint numberOfSample)
 {
+	DAQmxResetDevice(this->cardName.toStdString().c_str());
 	int32       error = 0;
 	char        errBuff[2048] = { '\0' };
 
 	NidaqmxConnectionThread::m_acqRate = acquisitionRate;
 	NidaqmxConnectionThread::m_callBackRate = callBackRate;
-	NidaqmxConnectionThread::m_numberOfChannels = 0; // +1 for chrono pulse channel
+	NidaqmxConnectionThread::m_numberOfChannels = 0; 
 
 	NidaqmxConnectionThread::m_enableStartTrigger = triggerEnable;
 	NidaqmxConnectionThread::m_numberOfSample = numberOfSample;
@@ -265,7 +264,7 @@ void NidaqmxConnectionThread::setUPTask(float acquisitionRate, float callBackRat
 	std::string str = channelName.toStdString();
 	m_acquisitionTask->AddChannel(str, DAQmx_Val_RSE, -10.0, 10.0);
 	chd << "|chrono: " << channelName << " | ";
-	NidaqmxConnectionThread::m_numberOfChannels++;
+	NidaqmxConnectionThread::m_numberOfChannels++; // +1 for chrono pulse channel
 
 	NidaqmxConnectionThread::m_bufferSize = callBackRate * m_numberOfChannels;
 
@@ -325,7 +324,7 @@ void NidaqmxConnectionThread::setUpCalibrationTask(float acquisitionRate, float 
 			uint currentChanNumber = sensorFisrtChan + i;
 			QString channelName = channelNamePrefix + QString::number(currentChanNumber);
 			std::string str = channelName.toStdString();
-			m_acquisitionTask->AddChannel(str, DAQmx_Val_RSE, -10.0, 10.0);
+			m_calibrationTask->AddChannel(str, DAQmx_Val_RSE, -10.0, 10.0);
 
 			chancpt++;
 		}
@@ -354,6 +353,9 @@ Error:
 #pragma region PLATFORM CARD
 void NidaqmxConnectionThread::setUPPlatformTask(float acquisitionRate, float callBackRate, uint nOfChannels, bool triggerEnable, uint numberOfSample)
 {
+
+	DAQmxResetDevice(this->platformCardName.toStdString().c_str());
+
 	int32	error = 0;
 
 	QString current_card_name = this->platformCardName;

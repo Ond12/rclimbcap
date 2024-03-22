@@ -523,16 +523,23 @@ class DataContainer:
             cur_sensor = self.find_sensor_by_id(id)
             if cur_sensor:
                 if set_up_type == "comp":
-                    self.switch_sign(cur_sensor.get_forces_data().get_forces_x())
-                    self.switch_sign(cur_sensor.get_forces_data().get_forces_y())
-                    self.switch_sign(cur_sensor.get_forces_data().get_forces_z())
+                    sdx = self.switch_sign(cur_sensor.get_forces_data().get_forces_x())
+                    sdy = self.switch_sign(cur_sensor.get_forces_data().get_forces_y())
+                    sdz = self.switch_sign(cur_sensor.get_forces_data().get_forces_z())
+
+                    cur_sensor.get_forces_data().set_force_x(sdx)
+                    cur_sensor.get_forces_data().set_force_y(sdy)
+                    cur_sensor.get_forces_data().set_force_z(sdz)
+                    
                 elif set_up_type == "trac":
                     i=1
                     #self.switch_sign(cur_sensor.get_forces_data().forces_x)
                     #self.switch_sign(cur_sensor.get_forces_data().forces_y)
                 elif set_up_type == "plat":
-                    self.switch_sign(cur_sensor.get_forces_data().get_forces_x())
-                    self.switch_sign(cur_sensor.get_forces_data().get_forces_y())
+                    sdx = self.switch_sign(cur_sensor.get_forces_data().get_forces_x())
+                    sdy = self.switch_sign(cur_sensor.get_forces_data().get_forces_y())
+                    cur_sensor.get_forces_data().set_force_x(sdx)
+                    cur_sensor.get_forces_data().set_force_y(sdy)
                 else:
                     print("error no adequate type")
                     return

@@ -62,13 +62,13 @@ class Wid(QMainWindow):
         save_file_action.setShortcut("Ctrl+S")
 
         icon_path = os.path.join(self.icon_folder, 'full_trash.svg')
-        clear_data_action = QAction(QIcon(icon_path), "&Clear Data", self)
-        clear_data_action.setStatusTip("Clear Data")
-        clear_data_action.triggered.connect(self.clear_data_action)
+        self.Qclear_data_action = QAction(QIcon(icon_path), "&Clear Data", self)
+        self.Qclear_data_action.setStatusTip("Clear Data")
+        self.Qclear_data_action.triggered.connect(self.clear_data_action)
 
         icon_path = os.path.join(self.icon_folder, 'electrical_threshold.svg')
-        apply_filter_action = QAction(QIcon(icon_path), "&Apply filter", self)
-        apply_filter_action.setStatusTip("Apply filter")
+        apply_filter_action = QAction(QIcon(icon_path), "&Post pro", self)
+        apply_filter_action.setStatusTip("Post pro")
         apply_filter_action.triggered.connect(self.apply_filter_action)
 
         icon_path = os.path.join(self.icon_folder, 'heat_map.svg')
@@ -131,10 +131,11 @@ class Wid(QMainWindow):
         show_cross_hair_action.setStatusTip("Crosshair")
         show_cross_hair_action.triggered.connect(self.show_cross_hair_action)
         
-        toolbar = self.addToolBar("Tools")
+        self.mtoolbar = self.addToolBar("Tools")
+        toolbar = self.mtoolbar
         toolbar.addAction(open_file_action)
         toolbar.addAction(save_file_action)
-        toolbar.addAction(clear_data_action)
+        toolbar.addAction(self.Qclear_data_action)
         
         separator = QAction(self)
         separator.setSeparator(True)
@@ -199,14 +200,15 @@ class Wid(QMainWindow):
         self.plot_controller.normalize_checkbox.stateChanged.connect(self.compute_normalized_data)
         #self.plot_controller.weight_doubleSpinBox.valueChanged.connect(self.value_changed)
         
-        record_widget = RecordWidget()
-        record_widget.recording_toggled_signal.connect(self.plotter.toggle_plotter_update)
+        self.record_widget = RecordWidget()
+        #self.record_widget.recording_toggled_signal.connect(self.plotter.toggle_plotter_update)
+        #self.record_widget.recording_toggled_signal.connect(self.toggle_record)
         
         mediaController_widget = MediaController()
         
         main_grid.addWidget(self.plot_controller, 1, 0)
         main_grid.addWidget(self.plotter, 2, 0)
-        main_grid.addWidget(record_widget, 3, 0)
+        #main_grid.addWidget(self.record_widget, 3, 0)
         #main_grid.addWidget(mediaController_widget, 4,0)
 
         self.contactTable_widget = ContactTableWidget()
@@ -225,6 +227,13 @@ class Wid(QMainWindow):
 
         self.showMaximized()
         self.init_osc_sender()
+
+    def toggle_record(self):
+        record_state = self.record_widget.is_recording
+        if record_state:
+            self.mtoolbar.setDisabled(True)
+        else:
+            self.mtoolbar.setDisabled(False)
     
     def compute_normalized_data(self):
         wv = self.plot_controller.get_weight_value()
@@ -277,8 +286,8 @@ class Wid(QMainWindow):
         if add_platformes:
             current_sensor = Sensor(41, 8, sensor_frequency)
             self.data_container.add_sensor(current_sensor)         
-            # current_sensor = Sensor(40, 8, sensor_frequency)
-            # self.data_container.add_sensor(current_sensor)    
+            current_sensor = Sensor(40, 8, sensor_frequency)
+            self.data_container.add_sensor(current_sensor)    
             
         self.plotter.plot_data()
         self.plotter.set_refresh_rate(1500)
@@ -328,7 +337,7 @@ class Wid(QMainWindow):
                         sheet_name = f"Capteur {curr_sensor.sensor_id}"
                         dataforce = to_dataframe(curr_sensor.get_forces_data())
                         dataanalog = curr_sensor.get_analog_data().to_dataframe()
-                        curr_sensor.get_forces_data().print_debug_data()
+                        #curr_sensor.get_forces_data().print_debug_data()
             
                         df = pd.concat([dataforce, dataanalog], axis=1)
                         
@@ -347,6 +356,7 @@ class Wid(QMainWindow):
         self.plot_controller.clean_widget()
 
     def apply_filter_action(self):
+        self.flip_action()
         self.data_container.apply_filter_hcutoff_to_sensors()
         self.plotter.plot_data()
 
@@ -383,7 +393,7 @@ class Wid(QMainWindow):
         platform = [40,41]
         
         self.data_container.switch_sign_off_sensors(sensorid_compression,"comp")
-        self.data_container.switch_sign_off_sensors(sensorid_traction,"trac")
+        #self.data_container.switch_sign_off_sensors(sensorid_traction,"trac")
         self.data_container.switch_sign_off_sensors(platform,"plat")
         self.plotter.plot_data()
     
@@ -401,6 +411,7 @@ class Wid(QMainWindow):
         self.plotter.plot_data()
 
     def open_file_action(self):
+        self.clear_data_action()
         file_path, _ = QFileDialog.getOpenFileName(self, "Open Excel File", "", "Excel Files (*.xlsx);;All Files (*)")
 
         if file_path:

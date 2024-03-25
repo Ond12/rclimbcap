@@ -137,9 +137,10 @@ class Plotter(pg.PlotWidget):
         
         self.setBackground('w')
         
-        self.update_is_started = False
+        self.update_is_started = True
         self.update_timer = QTimer()
         self.update_timer.setInterval(self.refresh_rate)
+        self.update_timer.start()
         self.update_timer.timeout.connect(self.update_plots)
         
         self.vertical_line = None  
@@ -269,7 +270,8 @@ class Plotter(pg.PlotWidget):
           
     def plot_chrono_bip_marker(self, times):
         for time in times:
-            marker_time_line = pg.InfiniteLine(pos=time, angle=90, movable=False)
+            time = time * (1/200)
+            marker_time_line = pg.InfiniteLine(pos=time, angle=90, movable=False, pen='r')
             self.addItem(marker_time_line)
 
     def plot_sum_force(self):

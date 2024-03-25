@@ -19,12 +19,12 @@ namespace globals
 	constexpr auto IMPORT_START_TRIGGER_PIN = "PFI1";
 	constexpr auto EXPORT_SAMPLE_CLOCK_PIN = "PFI4";
 	constexpr auto EXPORT_START_TRIGGER_PIN = "PFI5";
-	constexpr auto CHRONO_PULSE_PIN = 7;
+	constexpr auto CHRONO_PULSE_PIN = 72;
 
 	//constexpr auto CHRONO_PULSE_PIN = 72; // pin number in acq card
 
-	static std::string SENSOR_ACQ_CARD_NAME = "Dev1";  //NI 6255
-	static std::string PLATFORM_ACQ_CARD_NAME = "Dev3"; //NI 
+	static std::string SENSOR_ACQ_CARD_NAME = "sensor";  //NI 6255
+	static std::string PLATFORM_ACQ_CARD_NAME = "plat"; //NI 
 
 
 	constexpr auto NUMBERANALOGCHANPLATFORM = 8;

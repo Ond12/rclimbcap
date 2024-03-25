@@ -158,7 +158,7 @@ class Wid(QMainWindow):
         toolbar.addAction(separator)
         
         #toolbar.addAction(debug_data_action)
-        #toolbar.addAction(oscstreaming_action)
+        toolbar.addAction(oscstreaming_action)
 
         self.statusbar = QStatusBar()
         self.setStatusBar(self.statusbar)

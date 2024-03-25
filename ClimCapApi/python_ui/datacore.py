@@ -155,7 +155,7 @@ class DataContainer:
                 difference = self.chrono_data[i - 1] - self.chrono_data[i]
                 if difference > slope_threshold_down:
                     time = i * (1/self.chrono_freq)
-                    down_edges_time_list.append(i)
+                    down_edges_time_list.append(time)
 
         return down_edges_time_list
         

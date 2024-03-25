@@ -269,7 +269,7 @@ class Plotter(pg.PlotWidget):
           
     def plot_chrono_bip_marker(self, times):
         for time in times:
-            marker_time_line = pg.InfiniteLine(pos=time, angle=90, movable=False, pen=QPen(Qt.GlobalColor.blue, 2, Qt.PenStyle.DashLine))
+            marker_time_line = pg.InfiniteLine(pos=time, angle=90, movable=False)
             self.addItem(marker_time_line)
 
     def plot_sum_force(self):

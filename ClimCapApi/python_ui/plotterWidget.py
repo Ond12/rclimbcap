@@ -270,7 +270,6 @@ class Plotter(pg.PlotWidget):
           
     def plot_chrono_bip_marker(self, times):
         for time in times:
-            time = time * (1/200)
             marker_time_line = pg.InfiniteLine(pos=time, angle=90, movable=False, pen='r')
             self.addItem(marker_time_line)
 

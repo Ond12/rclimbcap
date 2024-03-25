@@ -384,8 +384,18 @@ class Wid(QMainWindow):
         print("calculate resultant_force for sensor")
 
     def chrono_bip_detection_action(self):
-        times = self.data_container.detect_chrono_bip()
-        self.plotter.plot_chrono_bip_marker(times)
+        times_idx = self.data_container.detect_chrono_bip()
+
+        last_bip_time = times_idx[-1]
+        for i in range(len(times_idx)):
+            times_idx[i] = times_idx[i] - last_bip_time
+        
+        self.data_container.apply_idx_offset_to_sensors(last_bip_time)
+        
+        self.plotter.plot_data()
+        
+        self.plotter.plot_chrono_bip_marker(times_idx)
+        
 
     def flip_action(self):
         sensorid_compression = [2,3,5,6,10]

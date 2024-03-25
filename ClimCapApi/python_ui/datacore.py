@@ -44,7 +44,8 @@ class Sensor:
         self.num_channels = num_channels
         self.frequency = frequency
         self.analog_data = AnalogData(frequency, num_channels)
-        self.force_data = ForcesDataC(frequency)  
+        self.force_data = ForcesDataC(frequency) 
+        self.time_offset = 0 
         
         self.isrotate = False
         self.angles = {'x':0,'y':0,'z':0}
@@ -65,7 +66,10 @@ class Sensor:
             self.angles['z'] = z
             self.set_rotation_matrix('z', z)
             self.isrotate = True
-        
+    
+    def set_time_offset(self, time):
+        self.time_offset = time
+    
     def print_rotation_matrix(self):
         print(self.rotation_matrix)
         print(self.angles)
@@ -129,7 +133,7 @@ class Sensor:
     
     def get_times_increments(self):
         num_samples = self.force_data.num_data_points
-        time_array = np.linspace(0, (num_samples/self.frequency), num_samples)
+        time_array = np.linspace(0 - self.time_offset, (num_samples/self.frequency ), num_samples)
         return time_array
     
     def clear_data(self):
@@ -429,7 +433,12 @@ class DataContainer:
                     all_contacts_list.append(contact)
         
         return sorted(all_contacts_list, key=lambda x: x.start_time)
+
+    def apply_idx_offset_to_sensors(self, time_idx):
+        for sensor in self.sensors:
             
+            sensor.set_time_offset(time_idx)
+         
     def butter_bandstop_filter(self, stop_band, sampling_rate):
         nyquist_freq = 0.5 * sampling_rate
         low_cutoff = stop_band[0] / nyquist_freq

@@ -174,9 +174,12 @@ class Plotter(pg.PlotWidget):
 
     def update_chrono_plot_data(self):
         cr_data = self.data_container.chrono_data
-        # time_increments_chrono_dummy = np.arange( len(cr_data) ) / self.data_container.chrono_freq
+        num_samples = len(cr_data)
+        time_interval = 1/ self.data_container.chrono_freq
+        time_increments_chrono_dummy = [(i * time_interval) - self.data_container.chrono_offset for i in range(num_samples)]
+
         if(self.chrono_plot_item):
-            self.chrono_plot_item.setData(cr_data)
+            self.chrono_plot_item.setData(time_increments_chrono_dummy, cr_data)
 
     def set_refresh_rate(self, refresh_rate_ms):
         self.refresh_rate = refresh_rate_ms
@@ -187,7 +190,7 @@ class Plotter(pg.PlotWidget):
         for sensor_plot in self.sensor_plot_map.values():
             self.update_sensor_plot_data(sensor_plot.sensor_id)
         
-        #self.update_chrono_plot_data()
+        self.update_chrono_plot_data()
         
         self.update()
 
@@ -249,18 +252,17 @@ class Plotter(pg.PlotWidget):
 
                 self.sensor_plot_map[sensor.sensor_id] = c_plot_sensor
 
-            # if self.data_container:
-            #     cr_data = self.data_container.chrono_data
-            #     #print(f"cr len {len(cr_data)}")
-            #     if len(cr_data) > 0:
-            #         #time_increments_chrono_dummy = np.arange( len(cr_data) ) / self.data_container.chrono_freq
-            #         plot_item_chrono_data = self.plot(cr_data, pen=pg.mkPen(color_chrono, width=2, alpha=200), name=f"Chrono signal")
-            #         self.plot_items.append(plot_item_chrono_data)
-                    
-            #         self.chrono_plot_item = plot_item_chrono_data
-                    
-            for item, label in self.legend.items:
-                label.setFont(QFont("Arial", 4))
+
+            cr_data = self.data_container.chrono_data
+            #print(f"cr len {len(cr_data)}")
+            if len(cr_data) > 0:
+                num_samples = len(cr_data)
+                time_interval = 1/ self.data_container.chrono_freq
+                time_increments_chrono_dummy = [(i * time_interval) - self.data_container.chrono_offset for i in range(num_samples)]
+                plot_item_chrono_data = self.plot(time_increments_chrono_dummy, cr_data, pen=pg.mkPen(color_chrono, width=2, alpha=200), name=f"Chrono signal")
+                self.plot_items.append(plot_item_chrono_data)
+                
+                self.chrono_plot_item = plot_item_chrono_data
 
             self.update_plots()
             self.update()

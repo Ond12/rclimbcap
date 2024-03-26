@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 from scipy.integrate import quad
 import re
-from scipy.signal import butter, sosfilt, filtfilt
+from scipy.signal import butter, sosfilt, filtfilt, square
 import pyqtgraph as pg
 from PyQt6.QtWidgets import *
 from PyQt6.QtGui import *
@@ -133,7 +133,8 @@ class Sensor:
     
     def get_times_increments(self):
         num_samples = self.force_data.num_data_points
-        time_array = np.linspace(0 - self.time_offset, (num_samples/self.frequency ), num_samples)
+        time_interval = 1 / self.frequency
+        time_array = [(i * time_interval) - self.time_offset for i in range(num_samples)]
         return time_array
     
     def clear_data(self):
@@ -149,19 +150,22 @@ class DataContainer:
         self.chrono_data = [0] * 1
         self.contacts = []
         self.chrono_freq = 200
+        self.chrono_offset = 0
 
     def detect_chrono_bip(self):
         slope_threshold_down = 1
         down_edges_time_list = []
+        down_edges_idx_list = []
         
         if len(self.chrono_data) > 2:
             for i in range(1, len(self.chrono_data)):
                 difference = self.chrono_data[i - 1] - self.chrono_data[i]
                 if difference > slope_threshold_down:
-                    time = i * (1/self.chrono_freq)
+                    time = i / self.chrono_freq
                     down_edges_time_list.append(time)
+                    down_edges_idx_list.append(i)
 
-        return down_edges_time_list
+        return down_edges_time_list, down_edges_idx_list
         
     def get_sensor_min_data_len(self):
         if len(self.sensors) > 0:
@@ -375,7 +379,7 @@ class DataContainer:
                 return sensor
         return None
 
-    def detect_contacts(self, signal, sensor_id=0, slope_threshold_up=100, slope_threshold_down=100, use_crossing=True, crossing_threshold=0):
+    def detect_contacts(self, signal, sensor_id=0, time_offset=0, slope_threshold_up=100, slope_threshold_down=100, use_crossing=True, crossing_threshold=0):
         
         slope_up_detected = False
         contacts = []
@@ -392,27 +396,35 @@ class DataContainer:
                 if signal[i] < crossing_threshold and slope_up_detected:
                     slope_up_detected = False
                     end_time = i#time_increments[i]
-                    cur_contact = ContactInfo(sensor_id, start_time, end_time, self.index_to_time(start_time), self.index_to_time(end_time))
+                    
+                    start_time_s = self.index_to_time(start_time) - time_offset
+                    end_time_s =  self.index_to_time(end_time) - time_offset
+                    cur_contact = ContactInfo(sensor_id, start_time, end_time, start_time_s, end_time_s)
 
                     contacts.append(cur_contact)
 
             elif slope < -slope_threshold_down and slope_up_detected:
                 slope_up_detected = False
                 end_time = i# time_increments[i]
-                cur_contact = ContactInfo(sensor_id, start_time, end_time, self.index_to_time(start_time), self.index_to_time(end_time))
+                start_time_s = self.index_to_time(start_time) - time_offset
+                end_time_s =  self.index_to_time(end_time) - time_offset
+                cur_contact = ContactInfo(sensor_id, start_time, end_time, start_time_s, end_time_s)
 
                 contacts.append(cur_contact)
                 
         if slope_up_detected:
             # Assume the end time is the last time increment in the signal
             end_time = len(signal)#time_increments[-1]
+            start_time_s = self.index_to_time(start_time) - time_offset
+            end_time_s =  self.index_to_time(end_time) - time_offset
+            cur_contact = ContactInfo(sensor_id, start_time, end_time, start_time_s, end_time_s)
             cur_contact = ContactInfo(sensor_id, start_time, end_time, self.index_to_time(start_time), self.index_to_time(end_time))
             contacts.append(cur_contact)
 
         return contacts
     
-    def index_to_time(self, index):
-        time = index * (1/200)
+    def  index_to_time(self, index):
+        time = index/self.chrono_freq
         return time
     
     def detect_contacts_on_sensors(self):
@@ -426,17 +438,17 @@ class DataContainer:
             sensor_id = sensor.sensor_id
             resultant_force, sid= self.cal_resultant_force(sensor)
             data = resultant_force
-            cur_contacts_list = self.detect_contacts(data, sensor_id, detect_threshold_up, detect_threshold_down, True, crossing_threshold )
+            time_offset =  sensor.time_offset
+            cur_contacts_list = self.detect_contacts(data, sensor_id, time_offset, detect_threshold_up, detect_threshold_down, True, crossing_threshold )
 
             for contact in cur_contacts_list:
                 if(contact.period > 50):
                     all_contacts_list.append(contact)
-        
+                    
         return sorted(all_contacts_list, key=lambda x: x.start_time)
 
     def apply_idx_offset_to_sensors(self, time_idx):
         for sensor in self.sensors:
-            
             sensor.set_time_offset(time_idx)
          
     def butter_bandstop_filter(self, stop_band, sampling_rate):
@@ -569,19 +581,20 @@ class DataContainer:
     #debug
     def fill_debug_data(self):
         for sensor in self.sensors:
-            self.create_debug_data(sensor, False, True)
+            self.create_debug_data(sensor, False, False)
 
     def create_debug_data(self, sensor=None, addnoise=False, linear=False):
-        if sensor==None:
+        if sensor is None:
             sensor = self.sensors[0]
-            if sensor == None:
+            if sensor is None:
                 print("No sensor to fill up debug data")
                 return None
 
         signal_parameters = [
-            {"amplitude": 100, "frequency": 2,   "phase": 0.0, "constant":0},
-            {"amplitude": 400, "frequency": 0.5, "phase": np.pi / 4.0, "constant":-50},
-            {"amplitude": 800, "frequency": 0.2, "phase": np.pi / 2.0, "constant":250},
+            {"type": "sine", "amplitude": 100, "frequency": 2,   "phase": 0.0, "constant":0},
+            {"type": "sine", "amplitude": 400, "frequency": 0.5, "phase": np.pi / 4.0, "constant":-50},
+            {"type": "square", "amplitude": 800, "frequency": 1.0, "duty": 0.5, "phase": 0.0, "constant":250},
+
         ]
 
         duration = 5
@@ -597,7 +610,10 @@ class DataContainer:
                 signals.append(signal)
         else:
             for params in signal_parameters:
-                signal = params["amplitude"] * np.sin(2 * np.pi * params["frequency"] * t + params["phase"])
+                if params["type"] == "sine":
+                    signal = params["amplitude"] * np.sin(2 * np.pi * params["frequency"] * t + params["phase"])
+                elif params["type"] == "square":
+                    signal = params["amplitude"] * square(2 * np.pi * params["frequency"] * t + params["phase"], duty=params["duty"])
                 signals.append(signal)
                 
         if addnoise:
@@ -606,7 +622,7 @@ class DataContainer:
         else:
             noise_amplitude = 0
             white_noise = np.random.normal(0, noise_amplitude, len(t))
-          
+        
         for i in range(len(t)):
             # Combine signals with white noise
             sensor.add_data_point([signals[0][i] + white_noise[i],
@@ -614,7 +630,7 @@ class DataContainer:
                                 signals[2][i] + white_noise[i],
                                 0, 0, 0], [0, 0, 0, 0, 0, 0])
 
-        #self.generate_debug_chrono_data()
+            #self.generate_debug_chrono_data()
 
     def clear_all_sensor_data(self):
         for sensor in self.sensors:

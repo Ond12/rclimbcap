@@ -158,7 +158,7 @@ class Wid(QMainWindow):
         separator.setSeparator(True)
         toolbar.addAction(separator)
         
-        #toolbar.addAction(debug_data_action)
+        toolbar.addAction(debug_data_action)
         toolbar.addAction(oscstreaming_action)
 
         self.statusbar = QStatusBar()
@@ -384,17 +384,17 @@ class Wid(QMainWindow):
         print("calculate resultant_force for sensor")
 
     def chrono_bip_detection_action(self):
-        times_idx = self.data_container.detect_chrono_bip()
+        times, times_idx = self.data_container.detect_chrono_bip()
 
-        last_bip_time = times_idx[-1]
-        for i in range(len(times_idx)):
-            times_idx[i] = times_idx[i] - last_bip_time
+        last_bip_time = times[-1]
+        for i in range(len(times)):
+            times[i] = times[i] - last_bip_time
         
-        self.data_container.apply_idx_offset_to_sensors(last_bip_time)
+        self.data_container.apply_idx_offset_to_sensors(3)
         
         self.plotter.plot_data()
         
-        self.plotter.plot_chrono_bip_marker(times_idx)
+        self.plotter.plot_chrono_bip_marker(times)
         
 
     def flip_action(self):
@@ -416,9 +416,19 @@ class Wid(QMainWindow):
         self.plotter.plot_contacts()
 
     def debug_action(self):
-        self.override_low_values_action()
-        #self.data_container.fill_debug_data()
+        #self.override_low_values_action()
+        self.data_container.fill_debug_data()
         self.plotter.plot_data()
+
+        num_samples = 200
+        freq = 200
+        time_offset = 0
+        
+        time_array = np.arange(0 - time_offset, (num_samples) * (1/freq) - time_offset  , (1/freq))
+        
+        np.set_printoptions(suppress=True)
+        print(time_array)
+        print(len(time_array))
 
     def open_file_action(self):
         self.clear_data_action()

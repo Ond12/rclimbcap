@@ -390,7 +390,7 @@ class Wid(QMainWindow):
         for i in range(len(times)):
             times[i] = times[i] - last_bip_time
         
-        self.data_container.apply_idx_offset_to_sensors(3)
+        self.data_container.apply_idx_offset_to_sensors(last_bip_time)
         
         self.plotter.plot_data()
         
@@ -400,7 +400,7 @@ class Wid(QMainWindow):
     def flip_action(self):
         sensorid_compression = [2,3,5,6,10]
         sensorid_traction = [1,4,7,8,9,11]
-        platform = [40,41]
+        platform = [40, 41]
         
         self.data_container.switch_sign_off_sensors(sensorid_compression,"comp")
         #self.data_container.switch_sign_off_sensors(sensorid_traction,"trac")

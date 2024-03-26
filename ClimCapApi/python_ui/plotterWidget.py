@@ -272,7 +272,9 @@ class Plotter(pg.PlotWidget):
           
     def plot_chrono_bip_marker(self, times):
         for time in times:
-            marker_time_line = pg.InfiniteLine(pos=time, angle=90, movable=False, pen='r')
+            marker_time_line = pg.InfiniteLine(pos=time, angle=90, movable=False, pen='g')
+            marker_time_line.addMarker('o', position=0.9, size=8.0)
+
             self.addItem(marker_time_line)
 
     def plot_sum_force(self):

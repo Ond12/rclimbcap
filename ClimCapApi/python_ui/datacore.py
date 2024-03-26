@@ -384,7 +384,9 @@ class DataContainer:
         slope_up_detected = False
         contacts = []
 
-        for i in range(1, len(signal)):
+        start_idx = self.time_to_index(time_offset - 0.5, self.chrono_freq, len(signal))
+
+        for i in range(start_idx, len(signal)):
             slope = signal[i] - signal[i - 1]
 
             if slope > slope_threshold_up and not slope_up_detected:

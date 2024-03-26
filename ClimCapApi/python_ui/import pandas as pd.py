@@ -1,3 +1,99 @@
+import sys
+from PyQt6.QtWidgets import QApplication, QDialog, QFormLayout, QPushButton, QTimeEdit
+
+import sys
+from PyQt6.QtWidgets import (QLineEdit, QPushButton, QApplication,
+    QVBoxLayout, QDialog, QLabel, QDialogButtonBox)
+from PyQt6.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,
+    QMetaObject, QObject, QPoint, QRect,
+    QSize, QTime, QUrl, Qt)
+from PyQt6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
+    QFont, QFontDatabase, QGradient, QIcon,
+    QImage, QKeySequence, QLinearGradient, QPainter,
+    QPalette, QPixmap, QRadialGradient, QTransform)
+from PyQt6.QtWidgets import (QAbstractButton, QApplication, QDialog, QDialogButtonBox,
+    QSizePolicy, QWidget)
+
+class TimeForm(QDialog):
+
+    def __init__(self, parent=None):
+        super(TimeForm, self).__init__(parent)
+        if not self.objectName():
+            self.setObjectName(u"Dialog")
+        self.resize(400, 300)
+        self.buttonBox = QDialogButtonBox(self)
+        self.buttonBox.setObjectName(u"buttonBox")
+        self.buttonBox.setGeometry(QRect(30, 240, 341, 32))
+        self.buttonBox.setOrientation(Qt.Orientation.Horizontal)
+        self.buttonBox.setStandardButtons(QDialogButtonBox.StandardButton.Ok|QDialogButtonBox.StandardButton.Cancel)
+
+        self.buttonBox.accepted.connect(self.accept)
+        self.buttonBox.rejected.connect(self.reject)
+
+        QMetaObject.connectSlotsByName(self)
+        
+        self.setWindowTitle("Times?")
+        self.setModal(True)
+        label1 = QLabel("Run time:")
+        self.run_time_edit = QTimeEdit()
+        label2 = QLabel("Reaction time:")
+        self.reaction_time_edit = QTimeEdit()
+        self.button = QPushButton("Ok")
+        layout = QVBoxLayout()
+        layout.addWidget(label1)
+        layout.addWidget(self.run_time_edit)
+        layout.addWidget(label2)
+        layout.addWidget(self.reaction_time_edit)
+        layout.addWidget(self.button)
+        layout.addWidget(self.buttonBox)
+        self.setLayout(layout)
+        
+    def get_reaction_time(self):
+        return self.reaction_time_edit.time()
+        
+    def get_run_time(self):
+        return self.run_time_edit.time()
+
+if __name__ == '__main__':
+    # Create the Qt Application
+    app = QApplication(sys.argv)
+    # Create and show the form
+    form = TimeForm()
+    rsp = form.exec()
+    
+    if rsp == QDialog.DialogCode.Accepted:
+        print("a")
+        print(form.get_reaction_time())
+        print(form.get_run_time())
+    else:
+        print("b") 
+
+    # Run the main Qt loop
+
+# class TimeDialog(QDialog):
+#     def __init__(self, parent=None):
+#         super().__init__(parent)
+#         self.setWindowTitle("Time Input Dialog")
+#         layout = QFormLayout()
+#         self.time_edit = QTimeEdit()
+#         layout.addRow("Select Time:", self.time_edit)
+#         self.ok_button = QPushButton("OK")
+#         self.ok_button.clicked.connect(self.accept)
+#         layout.addWidget(self.ok_button)
+#         self.setLayout(layout)
+
+#     def get_selected_time(self):
+#         print("Selected Time:", self.time_edit.time())
+#         return self.time_edit.time()
+
+# if __name__ == '__main__':
+#     app = QApplication(sys.argv)
+#     dialog = TimeDialog()
+#     if dialog.exec() == QDialog.accept:  
+#         selected_time = dialog.get_selected_time()
+        
+#     sys.exit(app.exec())
+
 # import pyqtgraph.examples
 # pyqtgraph.examples.run()
 # """
@@ -169,88 +265,88 @@
 # # if __name__ == '__main__':
 # #     pg.exec()
 
-"""
-Demonstrates some customized mouse interaction by drawing a crosshair that follows 
-the mouse.
-"""
+# """
+# Demonstrates some customized mouse interaction by drawing a crosshair that follows 
+# the mouse.
+# """
 
-import numpy as np
+# import numpy as np
 
-import pyqtgraph as pg
+# import pyqtgraph as pg
 
-#generate layout
-app = pg.mkQApp("Crosshair Example")
-win = pg.GraphicsLayoutWidget(show=True)
-win.setWindowTitle('pyqtgraph example: crosshair')
-label = pg.LabelItem(justify='right')
-win.addItem(label)
-p1 = win.addPlot(row=1, col=0)
-# customize the averaged curve that can be activated from the context menu:
-p1.avgPen = pg.mkPen('#FFFFFF')
-p1.avgShadowPen = pg.mkPen('#8080DD', width=10)
+# #generate layout
+# app = pg.mkQApp("Crosshair Example")
+# win = pg.GraphicsLayoutWidget(show=True)
+# win.setWindowTitle('pyqtgraph example: crosshair')
+# label = pg.LabelItem(justify='right')
+# win.addItem(label)
+# p1 = win.addPlot(row=1, col=0)
+# # customize the averaged curve that can be activated from the context menu:
+# p1.avgPen = pg.mkPen('#FFFFFF')
+# p1.avgShadowPen = pg.mkPen('#8080DD', width=10)
 
-p2 = win.addPlot(row=2, col=0)
+# p2 = win.addPlot(row=2, col=0)
 
-region = pg.LinearRegionItem()
-region.setZValue(10)
-# Add the LinearRegionItem to the ViewBox, but tell the ViewBox to exclude this 
-# item when doing auto-range calculations.
-p2.addItem(region, ignoreBounds=True)
+# region = pg.LinearRegionItem()
+# region.setZValue(10)
+# # Add the LinearRegionItem to the ViewBox, but tell the ViewBox to exclude this 
+# # item when doing auto-range calculations.
+# p2.addItem(region, ignoreBounds=True)
 
-#pg.dbg()
-p1.setAutoVisible(y=True)
-
-
-#create numpy arrays
-#make the numbers large to show that the range shows data from 10000 to all the way 0
-data1 = 10000 + 15000 * pg.gaussianFilter(np.random.random(size=10000), 10) + 3000 * np.random.random(size=10000)
-data2 = 15000 + 15000 * pg.gaussianFilter(np.random.random(size=10000), 10) + 3000 * np.random.random(size=10000)
-
-p1.plot(data1, pen="r")
-p1.plot(data2, pen="g")
-
-p2d = p2.plot(data1, pen="w")
-# bound the LinearRegionItem to the plotted data
-region.setClipItem(p2d)
-
-def update():
-    region.setZValue(10)
-    minX, maxX = region.getRegion()
-    p1.setXRange(minX, maxX, padding=0)    
-
-region.sigRegionChanged.connect(update)
-
-def updateRegion(window, viewRange):
-    rgn = viewRange[0]
-    region.setRegion(rgn)
-
-p1.sigRangeChanged.connect(updateRegion)
-
-region.setRegion([1000, 2000])
-
-#cross hair
-vLine = pg.InfiniteLine(angle=90, movable=False)
-hLine = pg.InfiniteLine(angle=0, movable=False)
-p1.addItem(vLine, ignoreBounds=True)
-p1.addItem(hLine, ignoreBounds=True)
+# #pg.dbg()
+# p1.setAutoVisible(y=True)
 
 
-vb = p1.vb
+# #create numpy arrays
+# #make the numbers large to show that the range shows data from 10000 to all the way 0
+# data1 = 10000 + 15000 * pg.gaussianFilter(np.random.random(size=10000), 10) + 3000 * np.random.random(size=10000)
+# data2 = 15000 + 15000 * pg.gaussianFilter(np.random.random(size=10000), 10) + 3000 * np.random.random(size=10000)
 
-def mouseMoved(evt):
-    pos = evt
-    if p1.sceneBoundingRect().contains(pos):
-        mousePoint = vb.mapSceneToView(pos)
-        index = int(mousePoint.x())
-        if index > 0 and index < len(data1):
-            label.setText("<span style='font-size: 12pt'>x=%0.1f,   <span style='color: red'>y1=%0.1f</span>,   <span style='color: green'>y2=%0.1f</span>" % (mousePoint.x(), data1[index], data2[index]))
-        vLine.setPos(mousePoint.x())
-        hLine.setPos(mousePoint.y())
+# p1.plot(data1, pen="r")
+# p1.plot(data2, pen="g")
+
+# p2d = p2.plot(data1, pen="w")
+# # bound the LinearRegionItem to the plotted data
+# region.setClipItem(p2d)
+
+# def update():
+#     region.setZValue(10)
+#     minX, maxX = region.getRegion()
+#     p1.setXRange(minX, maxX, padding=0)    
+
+# region.sigRegionChanged.connect(update)
+
+# def updateRegion(window, viewRange):
+#     rgn = viewRange[0]
+#     region.setRegion(rgn)
+
+# p1.sigRangeChanged.connect(updateRegion)
+
+# region.setRegion([1000, 2000])
+
+# #cross hair
+# vLine = pg.InfiniteLine(angle=90, movable=False)
+# hLine = pg.InfiniteLine(angle=0, movable=False)
+# p1.addItem(vLine, ignoreBounds=True)
+# p1.addItem(hLine, ignoreBounds=True)
+
+
+# vb = p1.vb
+
+# def mouseMoved(evt):
+#     pos = evt
+#     if p1.sceneBoundingRect().contains(pos):
+#         mousePoint = vb.mapSceneToView(pos)
+#         index = int(mousePoint.x())
+#         if index > 0 and index < len(data1):
+#             label.setText("<span style='font-size: 12pt'>x=%0.1f,   <span style='color: red'>y1=%0.1f</span>,   <span style='color: green'>y2=%0.1f</span>" % (mousePoint.x(), data1[index], data2[index]))
+#         vLine.setPos(mousePoint.x())
+#         hLine.setPos(mousePoint.y())
 
 
 
-p1.scene().sigMouseMoved.connect(mouseMoved)
+# p1.scene().sigMouseMoved.connect(mouseMoved)
 
 
-if __name__ == '__main__':
-    pg.exec()
+# if __name__ == '__main__':
+#     pg.exec()

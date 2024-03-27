@@ -23,6 +23,7 @@ from routeViewWidget import *
 from analogdata import *
 from ForceDataContainer import *
 from MediaController import *
+from TimeDialog import *
 
 #region window
 #_________________________________________________________________________________________
@@ -295,6 +296,24 @@ class Wid(QMainWindow):
         self.plot_controller.set_up_widget()          
 
     def file_save_action(self):
+        timeform = TimeForm()
+        rsp = timeform.exec()
+        
+        current_datetime = QDateTime.currentDateTime()
+        dst = current_datetime.toString("dd-MM-yyyyThh:mm")
+        
+        reaction_time = 0
+        run_time = 0
+        
+        if rsp == QDialog.DialogCode.Accepted:
+            reaction_time = timeform.get_reaction_time()
+            reaction_time = reaction_time.msecsSinceStartOfDay()
+            run_time = timeform.get_run_time()
+            run_time = run_time.msecsSinceStartOfDay()
+        else:
+            reaction_time = 0
+            runt_time = 0
+        
         file_dialog = QFileDialog()
         file_dialog.setAcceptMode(QFileDialog.AcceptMode.AcceptSave)
         file_dialog.setNameFilter('Excel Files (*.xlsx)')
@@ -322,7 +341,9 @@ class Wid(QMainWindow):
                         "DATE": datetime.now().date(),
                         "FREQ": freq_value,
                         "SESSION": "NONE",
-                        "SUJET": "NONE"
+                        "SUJET": "NONE",
+                        "RUNTIME(ms)": run_time,
+                        "REACTIONTIME(ms)": reaction_time
                     }, index=[0] )
 
                     df.to_excel(writer, sheet_name=sheet_name, index=True)

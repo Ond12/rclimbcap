@@ -147,7 +147,7 @@ class Wid(QMainWindow):
         toolbar.addAction(chrono_detect_action)
         #toolbar.addAction(calculate_resultant_action)
         #toolbar.addAction(find_max_in_contact_action)
-        #toolbar.addAction(sum_force_action)
+        toolbar.addAction(sum_force_action)
         toolbar.addAction(settings_action)
         #toolbar.addAction(flip_action)
 
@@ -184,6 +184,10 @@ class Wid(QMainWindow):
         self.setWindowTitle('ClimbCap V0')
         self.setGeometry(0, 0, 1500, 1000)
         
+        tab = QTabWidget()
+        
+
+        
         main_grid = QGridLayout()
         main_grid.setSpacing(0)
         main_grid.setContentsMargins(0, 0, 0, 0)
@@ -196,9 +200,12 @@ class Wid(QMainWindow):
         self.data_container = DataContainer()
 
         self.plotter = Plotter(self.data_container)
+        
+        self.data_container2 = DataContainer()
+        self.plotter2 = Plotter(self.data_container2)
 
         self.plot_controller = PlotterController(self.plotter)
-        self.plot_controller.normalize_checkbox.stateChanged.connect(self.compute_normalized_data)
+        #self.plot_controller.normalize_checkbox.stateChanged.connect(self.compute_normalized_data)
         #self.plot_controller.weight_doubleSpinBox.valueChanged.connect(self.value_changed)
         
         self.record_widget = RecordWidget()
@@ -206,9 +213,11 @@ class Wid(QMainWindow):
         #self.record_widget.recording_toggled_signal.connect(self.toggle_record)
         
         mediaController_widget = MediaController()
-        
         main_grid.addWidget(self.plot_controller, 1, 0)
-        main_grid.addWidget(self.plotter, 2, 0)
+        main_grid.addWidget(tab, 2, 0)
+        tab.addTab(self.plotter, 'Force')
+        tab.addTab(self.plotter2, 'Normalize Force')
+
         #main_grid.addWidget(self.record_widget, 3, 0)
         #main_grid.addWidget(mediaController_widget, 4,0)
 
@@ -236,10 +245,6 @@ class Wid(QMainWindow):
         else:
             self.mtoolbar.setDisabled(False)
     
-    def compute_normalized_data(self):
-        wv = self.plot_controller.get_weight_value()
-        print(f'{wv}tick box was tick')
-
     def init_osc_sender(self):
         self.osc_play_pause_widget = PlayPauseWidget()
 
@@ -375,9 +380,32 @@ class Wid(QMainWindow):
         self.data_container.clear_all_sensor_data()
         self.plotter.clear_plot()
         self.plot_controller.clean_widget()
+        
+        self.data_container2.clear_all_sensor_data()
+        self.plotter2.clear_plot()
 
+    def compute_normalize_force_action(self):
+        self.plotter2.clear_plot()
+        sensors = self.data_container.sensors
+        body_weight = self.plot_controller.get_weight_value()
+        for sensor in sensors:
+            fd = sensor.get_forces_data()
+            
+            fnx = self.data_container.normalize_force(fd.get_forces_x(), body_weight)
+            fny = self.data_container.normalize_force(fd.get_forces_y(), body_weight)
+            fnz = self.data_container.normalize_force(fd.get_forces_z(), body_weight)
+            
+            new_sensor = Sensor(sensor.sensor_id, sensor.num_channels, sensor.frequency)
+            nfd = new_sensor.get_forces_data()
+            nfd.set_force_x(fnx)
+            nfd.set_force_y(fny)
+            nfd.set_force_z(fnz)
+            self.data_container2.add_sensor(new_sensor)    
+        
+        self.plotter2.plot_data()
+           
     def apply_filter_action(self):
-        self.flip_action()
+        #self.flip_action()
         self.data_container.apply_filter_hcutoff_to_sensors()
         self.plotter.plot_data()
 
@@ -429,7 +457,6 @@ class Wid(QMainWindow):
         self.plotter.plot_data()
     
     def sum_force_action(self):
-        self.data_container.sum_force_data()
         self.plotter.plot_sum_force()
         
     def find_max_in_contact_action(self):
@@ -438,18 +465,9 @@ class Wid(QMainWindow):
 
     def debug_action(self):
         #self.override_low_values_action()
-        self.data_container.fill_debug_data()
+        self.compute_normalize_force_action()
+        #self.data_container.fill_debug_data()
         self.plotter.plot_data()
-
-        num_samples = 200
-        freq = 200
-        time_offset = 0
-        
-        time_array = np.arange(0 - time_offset, (num_samples) * (1/freq) - time_offset  , (1/freq))
-        
-        np.set_printoptions(suppress=True)
-        print(time_array)
-        print(len(time_array))
 
     def open_file_action(self):
         self.clear_data_action()

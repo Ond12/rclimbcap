@@ -283,17 +283,17 @@ class Plotter(pg.PlotWidget):
         time_increments = force_result["time"]
 
         force_x = force_result["sum_x"]
-        plot_item_force_x = self.plot(time_increments, force_x, pen=pg.mkPen(color_x, width=2, alpha=200), name=f"Sum Force X")
+        plot_item_force_x = self.plot(time_increments, force_x, pen=pg.mkPen(color_x, width=2, alpha=200, style=style_dict[0]), name=f"Sum Force X")
         plot_item_force_x.setVisible(False)
         self.plot_items.append(plot_item_force_x)
 
         force_y = force_result["sum_y"]
-        plot_item_force_y = self.plot(time_increments, force_y, pen=pg.mkPen(color_y, width=2, alpha=200), name=f"Sum Force Y")
+        plot_item_force_y = self.plot(time_increments, force_y, pen=pg.mkPen(color_y, width=2, alpha=200, style=style_dict[0]), name=f"Sum Force Y")
         plot_item_force_y.setVisible(False)
         self.plot_items.append(plot_item_force_y)
 
         force_z = force_result["sum_z"]
-        plot_item_force_z = self.plot(time_increments, force_z, pen=pg.mkPen(color_z, width=2, alpha=200), name=f"Sum Force Z")
+        plot_item_force_z = self.plot(time_increments, force_z, pen=pg.mkPen(color_z, width=2, alpha=200, style=style_dict[0]), name=f"Sum Force Z")
         plot_item_force_z.setVisible(False)
         self.plot_items.append(plot_item_force_z)
 
@@ -405,7 +405,7 @@ class PlotterController(QWidget):
         self.show()
 
     def get_weight_value(self):
-        value = self.doubleSpinBox.value()
+        value = self.weight_doubleSpinBox.value()
         return value
 
     def set_visible_all(self):

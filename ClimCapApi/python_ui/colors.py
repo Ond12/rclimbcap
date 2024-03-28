@@ -5,7 +5,7 @@ color_y = (0, 255, 0)  # Green
 color_z = (0, 0, 255)  # Blue
 color_chrono = (255, 255, 0) # Yellow
 
-style_dict = colors_dict = {
+style_dict = {
     0: Qt.PenStyle.SolidLine,  
     1: Qt.PenStyle.DashLine,     
     2: Qt.PenStyle.DotLine,       

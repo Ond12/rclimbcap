@@ -170,19 +170,21 @@ class DataContainer:
     def get_sensor_min_data_len(self):
         if len(self.sensors) > 0:
             min_data_len = self.sensors[0].data_size()
+            sid = self.sensors[0].sensor_id
             for sensor in self.sensors:
                 if sensor.data_size() < min_data_len:
                     min_data_len = sensor.data_size()
-            return min_data_len
+                    sid = sensor.sensor_id
+            return min_data_len, sid
         else:
-            return 0
+            return 0,0
         
     def concat_all_data(self):
         data_row_per_sensor = 3
         sensor_number = len(self.sensors)
         
         if sensor_number > 0:
-            row_size = self.get_sensor_min_data_len()
+            row_size, sid = self.get_sensor_min_data_len()
             col_size = sensor_number * data_row_per_sensor
             
             data_arr = np.empty((row_size, 0), dtype=np.float64)
@@ -250,24 +252,23 @@ class DataContainer:
         self.chrono_data.append(data_value)
                 
     def sum_force_data(self):
-        force_data = self.sensors[0].get_forces_data()
-        num_points = force_data.num_data_points
-
+        num_points, sid = self.get_sensor_min_data_len()
+        
         sum_x_data = np.zeros(num_points)
         sum_y_data = np.zeros(num_points)
         sum_z_data = np.zeros(num_points)
 
         #bug if not same shape
         for sensor in self.sensors:
-            if sensor.sensor_id <=11: #to do
-            
-                force_data = sensor.get_forces_data()
 
-                sum_x_data = np.add(sum_x_data, force_data.get_forces_x()) 
-                sum_y_data = np.add(sum_y_data, force_data.get_forces_y())  
-                sum_z_data = np.add(sum_z_data, force_data.get_forces_z())  
+            force_data = sensor.get_forces_data()
+
+            sum_x_data = np.add(sum_x_data, force_data.get_forces_x()[0:num_points]) 
+            sum_y_data = np.add(sum_y_data, force_data.get_forces_y()[0:num_points])  
+            sum_z_data = np.add(sum_z_data, force_data.get_forces_z()[0:num_points])  
 
         result = {}
+        result["time"] = self.find_sensor_by_id(sid).get_times_increments()
         result["sum_x"] = sum_x_data
         result["sum_y"] = sum_y_data
         result["sum_z"] = sum_z_data
@@ -425,7 +426,7 @@ class DataContainer:
 
         return contacts
     
-    def  index_to_time(self, index):
+    def index_to_time(self, index):
         time = index/self.chrono_freq
         return time
     
@@ -492,6 +493,10 @@ class DataContainer:
             sensor.get_forces_data().set_force_x(filtered_signal_x)
             sensor.get_forces_data().set_force_y(filtered_signal_y)
             sensor.get_forces_data().set_force_z(filtered_signal_z)
+    
+    def normalize_force(self,force_data, body_weight):
+        normalized_force = [force / body_weight for force in force_data]
+        return normalized_force
 
     def apply_rotation_to_force(self):
         for sensor in self.sensors:

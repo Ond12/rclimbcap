@@ -1,72 +1,3 @@
-import sys
-from PyQt6.QtWidgets import QApplication, QDialog, QFormLayout, QPushButton, QTimeEdit
-
-import sys
-from PyQt6.QtWidgets import (QLineEdit, QPushButton, QApplication,
-    QVBoxLayout, QDialog, QLabel, QDialogButtonBox)
-from PyQt6.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,
-    QMetaObject, QObject, QPoint, QRect,
-    QSize, QTime, QUrl, Qt)
-from PyQt6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
-    QFont, QFontDatabase, QGradient, QIcon,
-    QImage, QKeySequence, QLinearGradient, QPainter,
-    QPalette, QPixmap, QRadialGradient, QTransform)
-from PyQt6.QtWidgets import (QAbstractButton, QApplication, QDialog, QDialogButtonBox,
-    QSizePolicy, QWidget)
-
-class TimeForm(QDialog):
-
-    def __init__(self, parent=None):
-        super(TimeForm, self).__init__(parent)
-        if not self.objectName():
-            self.setObjectName(u"Dialog")
-        self.resize(400, 300)
-        self.buttonBox = QDialogButtonBox(self)
-        self.buttonBox.setObjectName(u"buttonBox")
-        self.buttonBox.setGeometry(QRect(30, 240, 341, 32))
-        self.buttonBox.setOrientation(Qt.Orientation.Horizontal)
-        self.buttonBox.setStandardButtons(QDialogButtonBox.StandardButton.Ok|QDialogButtonBox.StandardButton.Cancel)
-
-        self.buttonBox.accepted.connect(self.accept)
-        self.buttonBox.rejected.connect(self.reject)
-
-        QMetaObject.connectSlotsByName(self)
-        
-        self.setWindowTitle("Times?")
-        self.setModal(True)
-        label1 = QLabel("Run time:")
-        self.run_time_edit = QTimeEdit()
-        label2 = QLabel("Reaction time:")
-        self.reaction_time_edit = QTimeEdit()
-        self.button = QPushButton("Ok")
-        layout = QVBoxLayout()
-        layout.addWidget(label1)
-        layout.addWidget(self.run_time_edit)
-        layout.addWidget(label2)
-        layout.addWidget(self.reaction_time_edit)
-        layout.addWidget(self.button)
-        layout.addWidget(self.buttonBox)
-        self.setLayout(layout)
-        
-    def get_reaction_time(self):
-        return self.reaction_time_edit.time()
-        
-    def get_run_time(self):
-        return self.run_time_edit.time()
-
-if __name__ == '__main__':
-    # Create the Qt Application
-    app = QApplication(sys.argv)
-    # Create and show the form
-    form = TimeForm()
-    rsp = form.exec()
-    
-    if rsp == QDialog.DialogCode.Accepted:
-        print("a")
-        print(form.get_reaction_time())
-        print(form.get_run_time())
-    else:
-        print("b") 
 
     # Run the main Qt loop
 
@@ -94,8 +25,8 @@ if __name__ == '__main__':
         
 #     sys.exit(app.exec())
 
-# import pyqtgraph.examples
-# pyqtgraph.examples.run()
+import pyqtgraph.examples
+pyqtgraph.examples.run()
 # """
 # This example demonstrates the use of RemoteGraphicsView to improve performance in
 # applications with heavy load. It works by starting a second process to handle 

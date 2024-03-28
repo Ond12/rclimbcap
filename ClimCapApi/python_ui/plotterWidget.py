@@ -84,6 +84,7 @@ class SensorPlotItem:
 
     def add_contact(self, contact:ContactInfo) -> None:
         self.contacts.append(contact)
+        self.set_visible_contact(self.is_visible)
 
     def add_plot_item(self, axis_label:AxisLabel, plot_item) -> None:
         if not axis_label in self.plot_items: 
@@ -145,7 +146,6 @@ class Plotter(pg.PlotWidget):
         
         self.vertical_line = None  
         
-
     def set_crosshair(self):
         self.crosshair_point_text = pg.TextItem()
         self.crosshair_point_text.setPos(5,600)
@@ -214,8 +214,7 @@ class Plotter(pg.PlotWidget):
 
     def plot_data(self, colors=None):
         if self.data_container.sensors:
-            self.clear()
-
+            self.clear_plot()
             if colors is None:
                 colors = ['b'] * len(self.data_container.sensors)
             
@@ -252,17 +251,16 @@ class Plotter(pg.PlotWidget):
 
                 self.sensor_plot_map[sensor.sensor_id] = c_plot_sensor
 
-
-            cr_data = self.data_container.chrono_data
-            #print(f"cr len {len(cr_data)}")
-            if len(cr_data) > 0:
-                num_samples = len(cr_data)
-                time_interval = 1/ self.data_container.chrono_freq
-                time_increments_chrono_dummy = [(i * time_interval) - self.data_container.chrono_offset for i in range(num_samples)]
-                plot_item_chrono_data = self.plot(time_increments_chrono_dummy, cr_data, pen=pg.mkPen(color_chrono, width=2, alpha=200), name=f"Chrono signal")
-                self.plot_items.append(plot_item_chrono_data)
+            # cr_data = self.data_container.chrono_data
+            # #print(f"cr len {len(cr_data)}")
+            # if len(cr_data) > 0:
+            #     num_samples = len(cr_data)
+            #     time_interval = 1/ self.data_container.chrono_freq
+            #     time_increments_chrono_dummy = [(i * time_interval) - self.data_container.chrono_offset for i in range(num_samples)]
+            #     plot_item_chrono_data = self.plot(time_increments_chrono_dummy, cr_data, pen=pg.mkPen(color_chrono, width=2, alpha=200), name=f"Chrono signal")
+            #     self.plot_items.append(plot_item_chrono_data)
                 
-                self.chrono_plot_item = plot_item_chrono_data
+            #     self.chrono_plot_item = plot_item_chrono_data
 
             self.update_plots()
             self.update()
@@ -283,17 +281,17 @@ class Plotter(pg.PlotWidget):
         time_increments = force_result["time"]
 
         force_x = force_result["sum_x"]
-        plot_item_force_x = self.plot(time_increments, force_x, pen=pg.mkPen(color_x, width=2, alpha=200, style=style_dict[0]), name=f"Sum Force X")
+        plot_item_force_x = self.plot(time_increments, force_x, pen=pg.mkPen((255,102,0), width=2, alpha=200, style=style_dict[1]), name=f"Sum Force X")
         plot_item_force_x.setVisible(False)
         self.plot_items.append(plot_item_force_x)
 
         force_y = force_result["sum_y"]
-        plot_item_force_y = self.plot(time_increments, force_y, pen=pg.mkPen(color_y, width=2, alpha=200, style=style_dict[0]), name=f"Sum Force Y")
+        plot_item_force_y = self.plot(time_increments, force_y, pen=pg.mkPen((51,153,102), width=2, alpha=200, style=style_dict[1]), name=f"Sum Force Y")
         plot_item_force_y.setVisible(False)
         self.plot_items.append(plot_item_force_y)
 
         force_z = force_result["sum_z"]
-        plot_item_force_z = self.plot(time_increments, force_z, pen=pg.mkPen(color_z, width=2, alpha=200, style=style_dict[0]), name=f"Sum Force Z")
+        plot_item_force_z = self.plot(time_increments, force_z, pen=pg.mkPen((128,0,128), width=2, alpha=200, style=style_dict[1]), name=f"Sum Force Z")
         plot_item_force_z.setVisible(False)
         self.plot_items.append(plot_item_force_z)
 
@@ -352,10 +350,7 @@ class Plotter(pg.PlotWidget):
             contact.remove_from_plot(self)
         self.contact_list = []
 
-    def plot_contacts(self, contact_info_list=None):
-        if contact_info_list is None:
-            contact_info_list = self.contact_list
-            
+    def plot_contacts(self, contact_info_list):            
         for contact in contact_info_list:
             contact.add_into_plot(self)
             self.sensor_plot_map[contact.sensor_id].add_contact(contact)

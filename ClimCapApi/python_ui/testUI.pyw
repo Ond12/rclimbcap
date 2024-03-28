@@ -186,8 +186,6 @@ class Wid(QMainWindow):
         
         tab = QTabWidget()
         
-
-        
         main_grid = QGridLayout()
         main_grid.setSpacing(0)
         main_grid.setContentsMargins(0, 0, 0, 0)
@@ -203,6 +201,9 @@ class Wid(QMainWindow):
         
         self.data_container2 = DataContainer()
         self.plotter2 = Plotter(self.data_container2)
+        
+        self.data_container_start = DataContainer()
+        self.plotter_start = Plotter(self.data_container_start)
 
         self.plot_controller = PlotterController(self.plotter)
         #self.plot_controller.normalize_checkbox.stateChanged.connect(self.compute_normalized_data)
@@ -381,6 +382,8 @@ class Wid(QMainWindow):
         self.plotter.clear_plot()
         self.plot_controller.clean_widget()
         
+        self.contactTable_widget.delete_all()
+        
         self.data_container2.clear_all_sensor_data()
         self.plotter2.clear_plot()
 
@@ -407,8 +410,9 @@ class Wid(QMainWindow):
     def apply_filter_action(self):
         #self.flip_action()
         self.data_container.apply_filter_hcutoff_to_sensors()
+        self.plotter.clear_plot()
         self.plotter.plot_data()
-
+        
     def find_contacts_action(self): 
         all_contact_list = self.data_container.detect_contacts_on_sensors()
         self.data_container.find_max_contacts(all_contact_list)

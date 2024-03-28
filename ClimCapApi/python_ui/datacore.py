@@ -260,12 +260,11 @@ class DataContainer:
 
         #bug if not same shape
         for sensor in self.sensors:
-
-            force_data = sensor.get_forces_data()
-
-            sum_x_data = np.add(sum_x_data, force_data.get_forces_x()[0:num_points]) 
-            sum_y_data = np.add(sum_y_data, force_data.get_forces_y()[0:num_points])  
-            sum_z_data = np.add(sum_z_data, force_data.get_forces_z()[0:num_points])  
+            if sensor.sensor_id != 30:
+                force_data = sensor.get_forces_data()
+                sum_x_data = np.add(sum_x_data, force_data.get_forces_x()[0:num_points]) 
+                sum_y_data = np.add(sum_y_data, force_data.get_forces_y()[0:num_points])  
+                sum_z_data = np.add(sum_z_data, force_data.get_forces_z()[0:num_points])  
 
         result = {}
         result["time"] = self.find_sensor_by_id(sid).get_times_increments()

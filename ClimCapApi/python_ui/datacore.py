@@ -1,8 +1,10 @@
 from datetime import datetime
 import numpy as np
+import matplotlib.pyplot as plt
 import pandas as pd
 from scipy.integrate import quad
 import re
+from scipy import integrate
 from scipy.signal import butter, sosfilt, filtfilt, square
 import pyqtgraph as pg
 from PyQt6.QtWidgets import *
@@ -273,6 +275,39 @@ class DataContainer:
         result["sum_z"] = sum_z_data
 
         return result
+    
+    def compute_acceleration_speed(self, times, force_signal, body_weight):
+        acceleration_array = force_signal
+        mass = body_weight
+        delta_t = (1/200)
+        
+        # Calculate acceleration using F = ma
+        acceleration_array = (acceleration_array - body_weight) / mass  
+
+        #velocity using v = u + at (initial velocity u = 0)
+        
+        velocity = integrate.cumulative_trapezoid(acceleration_array, times)
+        plt.plot(times[:-1], integrate.cumtrapz(acceleration_array, x=times))
+        plt.show()
+        np.resize(acceleration_array, acceleration_array.size -1)
+        
+        # Calcul de l'acc
+        Acc = np.zeros_like(force_signal)
+        Acc = (force_signal-body_weight)/body_weight
+
+        #Calcul  Vitesse
+        Vit = np.zeros_like(Acc)
+        Vit[0] = 0.
+        for i in range(1, (len(Acc) - 1 )):
+            Vit[i] = Vit[i-1]+(Acc[i-1]+Acc[i])/(2*200)
+        
+        velocity = Vit
+        
+        print(len(times))
+        print(len(acceleration_array))
+        print(len(velocity))
+            
+        return times, acceleration_array, velocity
     
     def find_max(self, signal, startidx = 0):
         max_value = signal[0]  

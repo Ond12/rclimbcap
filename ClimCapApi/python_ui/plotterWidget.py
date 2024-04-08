@@ -119,10 +119,10 @@ class Plotter(pg.PlotWidget):
     def __init__(self, data_container, parent=None):
         super(Plotter, self).__init__(parent=parent)
         self.data_container = data_container
-        
+                
         self.refresh_rate = 1200
         
-        self.setRange(xRange=(0,7), yRange=(-500, 500))
+        self.setRange(xRange=(0,6), yRange=(-500, 500))
         self.plot_items:list = []
         self.contact_list:list = []
         self.sensor_plot_map:dict = {}
@@ -145,17 +145,27 @@ class Plotter(pg.PlotWidget):
         self.update_timer.timeout.connect(self.update_plots)
         
         self.vertical_line = None  
+        self.region = None
+    
+    def set_region(self):
+        if self.region == None:
+            self.region = pg.LinearRegionItem()
+            self.region.setZValue(10)
+            self.addItem(self.region, ignoreBounds=True)
+            
+        else:
+            print(self.region.getRegion())
         
     def set_crosshair(self):
         self.crosshair_point_text = pg.TextItem()
-        self.crosshair_point_text.setPos(5,600)
+        self.crosshair_point_text.setPos(3,800)
         self.addItem(self.crosshair_point_text)
         self.vLine = pg.InfiniteLine(angle=90, movable=False, pen='g')
         self.hLine = pg.InfiniteLine(angle=0, movable=False, pen='g')
         self.addItem(self.vLine, ignoreBounds=True)
         self.addItem(self.hLine, ignoreBounds=True)
         self.scene().sigMouseMoved.connect(self.mouseMoved)
-        
+  
     def mouseMoved(self,evt):
         pos = evt
         if self.sceneBoundingRect().contains(pos):
@@ -303,6 +313,13 @@ class Plotter(pg.PlotWidget):
         self.plot_items.append(plot_item_resultant_force)
         #self.sensor_plot_map[sensor_id].add_plot_item(plot_item_resultant_force)
 
+    def plot_accel_speed(self, times, accel_data, speed_data):
+        # plot_item_acc = self.plot(times, accel_data, pen=pg.mkPen((128,0,128), width=2, alpha=200, style=style_dict[2]), name=f"acce")
+        # self.plot_items.append(plot_item_acc)
+        
+        plot_item_vel = self.plot(times, speed_data, pen=pg.mkPen((128,58,128), width=2, alpha=200, style=style_dict[2]), name=f"speed")
+        self.plot_items.append(plot_item_vel)
+        
     def plot_marker_max(self, time, value):
         return 
         self.plot([time], [value],
@@ -331,6 +348,7 @@ class Plotter(pg.PlotWidget):
         self.clear_contacts()
         self.clear()
         self.vertical_line = None
+        self.region = None
         self.climber_weight_hline = None
 
     def toggle_sensor_visibility(self, sensor_id):
@@ -428,7 +446,9 @@ class PlotterController(QWidget):
 
     def add_button(self, sensor_id):
         if sensor_id == 40:
-            name = "Platforme"
+            name = "Platform 1"
+        elif sensor_id == 41:
+            name = "Platform 2"
         elif sensor_id == 30:
             name = "Foot"
         else:

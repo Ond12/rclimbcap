@@ -24,6 +24,7 @@ from analogdata import *
 from ForceDataContainer import *
 from MediaController import *
 from TimeDialog import *
+from qtimelinewidget import *
 
 #region window
 #_________________________________________________________________________________________
@@ -122,6 +123,11 @@ class Wid(QMainWindow):
         apply_rotation_action.setStatusTip("Apply rotation")
         apply_rotation_action.triggered.connect(self.apply_rotation_action)
         
+        icon_path = os.path.join(self.icon_folder, 'frame.svg')
+        process_custom_frame_action = QAction(QIcon(icon_path), "&Custom frame", self)
+        process_custom_frame_action.setStatusTip("Custom frame")
+        process_custom_frame_action.triggered.connect(self.process_custom_frame_action)
+        
         icon_path = os.path.join(self.icon_folder, 'tree_structure.svg')
         merge_sensor_action = QAction(QIcon(icon_path), "&Merge sensor", self)
         merge_sensor_action.setStatusTip("Merge sensor")
@@ -154,6 +160,7 @@ class Wid(QMainWindow):
         #toolbar.addAction(apply_rotation_action)
         toolbar.addAction(merge_sensor_action)
         toolbar.addAction(show_cross_hair_action)
+        toolbar.addAction(process_custom_frame_action)
         
         separator = QAction(self)
         separator.setSeparator(True)
@@ -219,7 +226,10 @@ class Wid(QMainWindow):
         tab.addTab(self.plotter, 'Force')
         tab.addTab(self.plotter2, 'Normalize Force')
 
-        #main_grid.addWidget(self.record_widget, 3, 0)
+        self.qtimeline = QTimeLine(6, 60) 
+
+        main_grid.addWidget(self.qtimeline, 3, 0)
+        #main_grid.addWidget(self.record_widget,4 , 0)
         #main_grid.addWidget(mediaController_widget, 4,0)
 
         self.contactTable_widget = ContactTableWidget()
@@ -238,6 +248,9 @@ class Wid(QMainWindow):
 
         self.showMaximized()
         self.init_osc_sender()
+
+    def process_custom_frame_action(self):
+        self.plotter.set_region()
 
     def toggle_record(self):
         record_state = self.record_widget.is_recording
@@ -316,9 +329,11 @@ class Wid(QMainWindow):
             reaction_time = reaction_time.msecsSinceStartOfDay()
             run_time = timeform.get_run_time()
             run_time = run_time.msecsSinceStartOfDay()
+            note = timeform.get_run_note()
         else:
             reaction_time = 0
             runt_time = 0
+            note = 0
         
         file_dialog = QFileDialog()
         file_dialog.setAcceptMode(QFileDialog.AcceptMode.AcceptSave)
@@ -349,7 +364,8 @@ class Wid(QMainWindow):
                         "SESSION": "NONE",
                         "SUJET": "NONE",
                         "RUNTIME(ms)": run_time,
-                        "REACTIONTIME(ms)": reaction_time
+                        "REACTIONTIME(ms)": reaction_time,
+                        "NOTE": note
                     }, index=[0] )
 
                     df.to_excel(writer, sheet_name=sheet_name, index=True)
@@ -418,6 +434,8 @@ class Wid(QMainWindow):
         self.data_container.find_max_contacts(all_contact_list)
         self.contactTable_widget.add_all_contacts(all_contact_list)
         self.plotter.plot_contacts(all_contact_list)
+        
+        self.qtimeline.add_all_contacts(all_contact_list)
 
     def override_low_values_action(self):
         self.data_container.override_neg_z()
@@ -471,7 +489,14 @@ class Wid(QMainWindow):
         #self.override_low_values_action()
         self.compute_normalize_force_action()
         #self.data_container.fill_debug_data()
-        self.plotter.plot_data()
+        force_result = self.data_container.sum_force_data()
+        
+        time_increments = force_result["time"]
+        forces = force_result["sum_z"]
+        
+        times, acc_data, velocity = self.data_container.compute_acceleration_speed(time_increments, forces, 64)
+
+        self.plotter.plot_accel_speed(times, acc_data, velocity)
 
     def open_file_action(self):
         self.clear_data_action()
@@ -608,8 +633,6 @@ class Worker_udp(QObject):
 def main():
     app =  QApplication(sys.argv)
     widm = Wid()
-    
-
     
     widm.show()
 

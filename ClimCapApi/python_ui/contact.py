@@ -31,7 +31,7 @@ colors_dict = {
 
 class ContactInfo(QObject):
     class ContactDisplay:
-        def __init__(self, start_time=0, end_time=0, color= (0, 255, 0)):
+        def __init__(self, start_time=0, end_time=0, color= (0, 255, 0, 65)):
             super().__init__()
             pen = pg.mkPen(color)  
             self.start_vertical_line = pg.InfiniteLine(start_time, angle=90, movable=False, pen=pen)
@@ -74,7 +74,8 @@ class ContactInfo(QObject):
     def add_into_plot(self, plot):
         if plot != None:
             color = colors_dict[self.sensor_id%11]
-            self.contact_display = self.ContactDisplay(self.start_time_sec, self.end_time_sec, color)
+            qc = QColor(color[0],color[1],color[2],80)
+            self.contact_display = self.ContactDisplay(self.start_time_sec, self.end_time_sec, qc)
             self.contact_display.add_into_graphplot(plot)
     
     def remove_from_plot(self, plot):

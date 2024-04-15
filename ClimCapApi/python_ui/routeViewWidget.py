@@ -133,7 +133,8 @@ class RouteViewWidget(QWidget):
         self.setLayout(layout)
 
         #self.draw_fvec([])
-        self.plotter.notifyvisibilitychange.connect(self.set_hold_color)
+        if self.plotter:
+            self.plotter.notifyvisibilitychange.connect(self.set_hold_color)
 
     def draw_fvec(self, fvec_list):
         fvec_list = [(3,QPointF(50, 50))]
@@ -147,7 +148,8 @@ class RouteViewWidget(QWidget):
             self.scene.addLine(QLineF(hold_pos.x()+20, hold_pos.y()+20, hold_pos.x()+fvecpoint.x(), hold_pos.y()+fvecpoint.y()))
 
     def onHoldClicked(self, sensor_id):
-        self.plotter.toggle_sensor_visibility(sensor_id)
+        if self.plotter:
+            self.plotter.toggle_sensor_visibility(sensor_id)
     
     def set_hold_color(self, sensor_id, visible):
 
@@ -157,6 +159,8 @@ class RouteViewWidget(QWidget):
                 hold_item.set_color(QColor("green"))
             else:
                 hold_item.set_color(QColor("red"))
+    
+    # def fill_hold_color(self, sensor_id):
         
 def main():
     app = QApplication(sys.argv)

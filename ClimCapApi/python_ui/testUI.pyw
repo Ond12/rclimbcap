@@ -220,18 +220,35 @@ class Wid(QMainWindow):
         #self.record_widget.recording_toggled_signal.connect(self.plotter.toggle_plotter_update)
         #self.record_widget.recording_toggled_signal.connect(self.toggle_record)
         
+        self.w = pg.PlotWidget()
+        self.w.getPlotItem().setXLink(self.plotter.getPlotItem())
+        self.w.setYRange(-1, 6)
+        self.w.showGrid(x=False, y=True)
+        self.w.setBackground('w')
+        self.w.addLegend()
+        self.w.setMaximumHeight(200)
+        self.vertical_line = pg.InfiniteLine(pos=0, angle=90, movable=False, pen='r')
+        self.w.addItem(self.vertical_line, ignoreBounds=True)
+        
+        
+        # p1 = w.addPlot(row=0, col=0)
+       
         mediaController_widget = MediaController()
+        
         main_grid.addWidget(self.plot_controller, 1, 0)
         main_grid.addWidget(tab, 2, 0)
+        main_grid.addWidget(self.w,3,0)
         tab.addTab(self.plotter, 'Force')
         tab.addTab(self.plotter2, 'Normalize Force')
 
         self.qtimeline = QTimeLine(6, 60) 
 
-        main_grid.addWidget(self.qtimeline, 3, 0)
+        main_grid.addWidget(self.qtimeline, 4, 0)
         #main_grid.addWidget(self.record_widget,4 , 0)
         #main_grid.addWidget(mediaController_widget, 4,0)
-
+        self.qtimeline.positionChanged.connect(self.plotter.set_player_scroll_hline)
+        self.plotter.scroll_line_pos_changed.connect(self.vertical_line.setPos)
+        
         self.contactTable_widget = ContactTableWidget()
 
         dock = QDockWidget('Contact infos')
@@ -293,9 +310,9 @@ class Wid(QMainWindow):
     
     def settings_action(self):
         #domo
-        sensor_ids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
-        #sensor_ids = [] #7, 8, 9, 10, 11]
-        add_platformes = True
+        #sensor_ids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+        sensor_ids = [1] #7, 8, 9, 10, 11]
+        add_platformes = False
         
         sensor_frequency = 200
               
@@ -425,6 +442,7 @@ class Wid(QMainWindow):
            
     def apply_filter_action(self):
         #self.flip_action()
+        self.data_container.chrono_data = medfilt(self.data_container.chrono_data, kernel_size=3)
         self.data_container.apply_filter_hcutoff_to_sensors()
         self.plotter.clear_plot()
         self.plotter.plot_data()
@@ -433,6 +451,10 @@ class Wid(QMainWindow):
         all_contact_list = self.data_container.detect_contacts_on_sensors()
         self.data_container.find_max_contacts(all_contact_list)
         self.contactTable_widget.add_all_contacts(all_contact_list)
+        
+        end_time_idx = self.data_container.find_last_contact_end_time(all_contact_list)
+        self.data_container.set_end_time(end_time_idx)
+        
         self.plotter.plot_contacts(all_contact_list)
         
         self.qtimeline.add_all_contacts(all_contact_list)
@@ -457,17 +479,18 @@ class Wid(QMainWindow):
     def chrono_bip_detection_action(self):
         times, times_idx = self.data_container.detect_chrono_bip()
 
-        last_bip_time = times[-1]
-        for i in range(len(times)):
-            times[i] = times[i] - last_bip_time
-        
-        self.data_container.apply_idx_offset_to_sensors(last_bip_time)
+        if(len(times) > 1):
+            last_bip_time = times[-1]
+            last_bip_idx = times_idx[-1]
+            for i in range(len(times)):
+                times[i] = times[i] - last_bip_time
+            
+            self.data_container.apply_idx_offset_to_sensors(last_bip_time)
         
         self.plotter.plot_data()
         
         self.plotter.plot_chrono_bip_marker(times)
         
-
     def flip_action(self):
         sensorid_compression = [2,3,5,6,10]
         sensorid_traction = [1,4,7,8,9,11]
@@ -493,10 +516,17 @@ class Wid(QMainWindow):
         
         time_increments = force_result["time"]
         forces = force_result["sum_z"]
+        body_weight_kg = self.plot_controller.get_weight_value()
         
-        times, acc_data, velocity = self.data_container.compute_acceleration_speed(time_increments, forces, 64)
+        times, times_idx = self.data_container.detect_chrono_bip()
+        if len(times_idx) > 1:
+            last_bip_idx = times_idx[-1]
+        
+        times, acc_data, velocity = self.data_container.compute_acceleration_speed(time_increments, forces, body_weight_kg, last_bip_idx)
 
-        self.plotter.plot_accel_speed(times, acc_data, velocity)
+        #self.plotter.plot_accel_speed(times, acc_data, velocity)
+                
+        plot_item_vel = self.w.plot(times, velocity, pen=pg.mkPen((235,52,225), width=2, alpha=200, style=style_dict[2]), name=f"speed")        
 
     def open_file_action(self):
         self.clear_data_action()

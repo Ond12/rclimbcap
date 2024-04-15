@@ -115,6 +115,7 @@ class SensorPlotItem:
               
 class Plotter(pg.PlotWidget):
     notifyvisibilitychange = pyqtSignal(int, bool)
+    scroll_line_pos_changed = pyqtSignal(float)
     
     def __init__(self, data_container, parent=None):
         super(Plotter, self).__init__(parent=parent)
@@ -122,7 +123,7 @@ class Plotter(pg.PlotWidget):
                 
         self.refresh_rate = 1200
         
-        self.setRange(xRange=(0,6), yRange=(-500, 500))
+        #self.setRange(xRange=(0,6), yRange=(-500, 500))
         self.plot_items:list = []
         self.contact_list:list = []
         self.sensor_plot_map:dict = {}
@@ -261,19 +262,19 @@ class Plotter(pg.PlotWidget):
 
                 self.sensor_plot_map[sensor.sensor_id] = c_plot_sensor
 
-            # cr_data = self.data_container.chrono_data
-            # #print(f"cr len {len(cr_data)}")
-            # if len(cr_data) > 0:
-            #     num_samples = len(cr_data)
-            #     time_interval = 1/ self.data_container.chrono_freq
-            #     time_increments_chrono_dummy = [(i * time_interval) - self.data_container.chrono_offset for i in range(num_samples)]
-            #     plot_item_chrono_data = self.plot(time_increments_chrono_dummy, cr_data, pen=pg.mkPen(color_chrono, width=2, alpha=200), name=f"Chrono signal")
-            #     self.plot_items.append(plot_item_chrono_data)
-                
-            #     self.chrono_plot_item = plot_item_chrono_data
+        cr_data = self.data_container.chrono_data
+        #print(f"cr len {len(cr_data)}")
+        if len(cr_data) > 0:
+            num_samples = len(cr_data)
+            time_interval = 1/ self.data_container.chrono_freq
+            time_increments_chrono_dummy = [(i * time_interval) - self.data_container.chrono_offset for i in range(num_samples)]
+            plot_item_chrono_data = self.plot(time_increments_chrono_dummy, cr_data, pen=pg.mkPen(color_chrono, width=2, alpha=200), name=f"Cr")
+            self.plot_items.append(plot_item_chrono_data)
+            
+            self.chrono_plot_item = plot_item_chrono_data
 
-            self.update_plots()
-            self.update()
+        self.update_plots()
+        self.update()
 
     def handle_curve_click(self, curve):
         print(f"Curve clicked: {curve}")  # for testing
@@ -291,17 +292,17 @@ class Plotter(pg.PlotWidget):
         time_increments = force_result["time"]
 
         force_x = force_result["sum_x"]
-        plot_item_force_x = self.plot(time_increments, force_x, pen=pg.mkPen((255,102,0), width=2, alpha=200, style=style_dict[1]), name=f"Sum Force X")
+        plot_item_force_x = self.plot(time_increments, force_x, pen=pg.mkPen((255,102,0), width=2, alpha=200, style=style_dict[1]), name=f"TotFX")
         plot_item_force_x.setVisible(False)
         self.plot_items.append(plot_item_force_x)
 
         force_y = force_result["sum_y"]
-        plot_item_force_y = self.plot(time_increments, force_y, pen=pg.mkPen((51,153,102), width=2, alpha=200, style=style_dict[1]), name=f"Sum Force Y")
+        plot_item_force_y = self.plot(time_increments, force_y, pen=pg.mkPen((51,153,102), width=2, alpha=200, style=style_dict[1]), name=f"TotFY")
         plot_item_force_y.setVisible(False)
         self.plot_items.append(plot_item_force_y)
 
         force_z = force_result["sum_z"]
-        plot_item_force_z = self.plot(time_increments, force_z, pen=pg.mkPen((128,0,128), width=2, alpha=200, style=style_dict[1]), name=f"Sum Force Z")
+        plot_item_force_z = self.plot(time_increments, force_z, pen=pg.mkPen((128,0,128), width=2, alpha=200, style=style_dict[1]), name=f"TotFZ")
         plot_item_force_z.setVisible(False)
         self.plot_items.append(plot_item_force_z)
 
@@ -317,7 +318,7 @@ class Plotter(pg.PlotWidget):
         # plot_item_acc = self.plot(times, accel_data, pen=pg.mkPen((128,0,128), width=2, alpha=200, style=style_dict[2]), name=f"acce")
         # self.plot_items.append(plot_item_acc)
         
-        plot_item_vel = self.plot(times, speed_data, pen=pg.mkPen((128,58,128), width=2, alpha=200, style=style_dict[2]), name=f"speed")
+        plot_item_vel = self.plot(times, speed_data, pen=pg.mkPen((235,52,225), width=2, alpha=200, style=style_dict[2]), name=f"speed")
         self.plot_items.append(plot_item_vel)
         
     def plot_marker_max(self, time, value):
@@ -326,19 +327,22 @@ class Plotter(pg.PlotWidget):
               pen=(187, 26, 95), symbolBrush=(187, 26, 95),
               symbolPen='w', symbol='arrow_up', symbolSize=22, name="symbol='arrow_up'")
     
-    def set_player_scroll_hline(self, packetidx):
-        time_interval = ( 1000/200 )
-        position = (packetidx * time_interval) / 1000 #in seconds
+    def set_player_scroll_hline(self, position):
+        # time_interval = ( 1000/200 )
+        # position = (packetidx * time_interval) / 1000 #in seconds
         if not self.vertical_line:
                 self.vertical_line = pg.InfiniteLine(pos=position, angle=90, movable=False, pen='r')
                 self.addItem(self.vertical_line)
                 
         self.vertical_line.setValue(position)
+        self.scroll_line_pos_changed.emit(position)
+        return position
 
     def set_climber_weight_hline(self, kg_value):
         newton_value = kg_value * 9.81
         if not self.climber_weight_hline:
-            self.climber_weight_hline = pg.InfiniteLine(pos=newton_value, angle=0, movable=False, pen='r')
+            pen = QPen(QColor(255,0,0,230))
+            self.climber_weight_hline = pg.InfiniteLine(pos=newton_value, angle=0, movable=False, pen=pen)
             self.addItem(self.climber_weight_hline)
         self.climber_weight_hline.setValue(newton_value)
         

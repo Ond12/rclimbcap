@@ -5,7 +5,7 @@ import pandas as pd
 from scipy.integrate import quad
 import re
 from scipy import integrate
-from scipy.signal import butter, sosfilt, filtfilt, square
+from scipy.signal import butter, sosfilt, filtfilt, square, medfilt
 import pyqtgraph as pg
 from PyQt6.QtWidgets import *
 from PyQt6.QtGui import *
@@ -153,16 +153,17 @@ class DataContainer:
         self.contacts = []
         self.chrono_freq = 200
         self.chrono_offset = 0
+        self.end_time_idx = 0
 
     def detect_chrono_bip(self):
-        slope_threshold_down = 1
+        slope_threshold = 2
         down_edges_time_list = []
         down_edges_idx_list = []
         
         if len(self.chrono_data) > 2:
             for i in range(1, len(self.chrono_data)):
-                difference = self.chrono_data[i - 1] - self.chrono_data[i]
-                if difference > slope_threshold_down:
+                difference = self.chrono_data[i] - self.chrono_data[i - 1]
+                if difference > slope_threshold:
                     time = i / self.chrono_freq
                     down_edges_time_list.append(time)
                     down_edges_idx_list.append(i)
@@ -276,38 +277,22 @@ class DataContainer:
 
         return result
     
-    def compute_acceleration_speed(self, times, force_signal, body_weight):
+    def compute_acceleration_speed(self, times, force_signal, body_weight, idx_start_offset = 0):
         acceleration_array = force_signal
         mass = body_weight
         delta_t = (1/200)
-        
-        # Calculate acceleration using F = ma
-        acceleration_array = (acceleration_array - body_weight) / mass  
 
-        #velocity using v = u + at (initial velocity u = 0)
-        
-        velocity = integrate.cumulative_trapezoid(acceleration_array, times)
-        plt.plot(times[:-1], integrate.cumtrapz(acceleration_array, x=times))
-        plt.show()
-        np.resize(acceleration_array, acceleration_array.size -1)
-        
-        # Calcul de l'acc
         Acc = np.zeros_like(force_signal)
-        Acc = (force_signal-body_weight)/body_weight
+        Acc = (force_signal - (body_weight*9.81)) / body_weight
 
         #Calcul  Vitesse
         Vit = np.zeros_like(Acc)
         Vit[0] = 0.
-        for i in range(1, (len(Acc) - 1 )):
-            Vit[i] = Vit[i-1]+(Acc[i-1]+Acc[i])/(2*200)
-        
-        velocity = Vit
-        
-        print(len(times))
-        print(len(acceleration_array))
-        print(len(velocity))
-            
-        return times, acceleration_array, velocity
+                
+        for i in range(idx_start_offset + 1, (self.end_time_idx - 1 )):
+            Vit[i] = (Vit[i-1]+(Acc[i-1]+Acc[i])/(2*200) )
+             
+        return times, Acc, Vit
     
     def find_max(self, signal, startidx = 0):
         max_value = signal[0]  
@@ -464,6 +449,16 @@ class DataContainer:
         time = index/self.chrono_freq
         return time
     
+    def find_last_contact_end_time(self, all_contacts_list):
+        if len(all_contacts_list) >= 2:
+            t = all_contacts_list[-2].end_time
+            return t
+        
+        return 0
+        
+    def set_end_time(self, time_idx):
+        self.end_time_idx = time_idx
+        
     def detect_contacts_on_sensors(self):
         detect_threshold_up = 10
         detect_threshold_down = 30
@@ -481,7 +476,7 @@ class DataContainer:
             for contact in cur_contacts_list:
                 if(contact.period > 50):
                     all_contacts_list.append(contact)
-                    
+                            
         return sorted(all_contacts_list, key=lambda x: x.start_time)
 
     def apply_idx_offset_to_sensors(self, time_idx):

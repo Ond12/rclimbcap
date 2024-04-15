@@ -1,4 +1,78 @@
+# from pyqtgraph.Qt import QtGui, QtCore
+# import numpy as np
+# import pyqtgraph as pg
+# pg.setConfigOptions(antialias=True)
+# pg.setConfigOption('background', '#c7c7c7')
+# pg.setConfigOption('foreground', '#000000')
+# from time import time
+# app = QtGui.QApplication([])
 
+# p = pg.plot()
+# p.setXRange(0,10)
+# p.setYRange(-10,10)
+# p.setWindowTitle('Current-Voltage')
+# p.setLabel('bottom', 'Bias', units='V', **{'font-size':'20pt'})
+# p.getAxis('bottom').setPen(pg.mkPen(color='#000000', width=3))
+# p.setLabel('left', 'Current', units='A',
+#             color='#c4380d', **{'font-size':'20pt'})
+# p.getAxis('left').setPen(pg.mkPen(color='#c4380d', width=3))
+# curve = p.plot(x=[], y=[], pen=pg.mkPen(color='#c4380d'))
+# p.showAxis('right')
+# p.setLabel('right', 'Dynamic Resistance', units="<font>&Omega;</font>",
+#             color='#025b94', **{'font-size':'20pt'})
+# p.getAxis('right').setPen(pg.mkPen(color='#025b94', width=3))
+
+# p2 = pg.ViewBox()
+# p.scene().addItem(p2)
+# p.getAxis('right').linkToView(p2)
+# p2.setXLink(p)
+# p2.setYRange(-10,10)
+
+# curve2 = pg.PlotCurveItem(pen=pg.mkPen(color='#025b94', width=1))
+# p2.addItem(curve2)
+
+# def updateViews():
+#     global p2
+#     p2.setGeometry(p.getViewBox().sceneBoundingRect())
+#     p2.linkedViewChanged(p.getViewBox(), p2.XAxis)
+
+# updateViews()
+# p.getViewBox().sigResized.connect(updateViews)
+
+# x = np.arange(0, 10.01,0.01)
+# data = 5+np.sin(30*x)
+# data2 = -5+np.cos(30*x)
+# ptr = 0
+# lastTime = time()
+# fps = None
+
+# def update():
+#     global p, x, curve, data, curve2, data2, ptr, lastTime, fps
+#     if ptr < len(x):
+#         curve.setData(x=x[:ptr], y=data[:ptr])
+#         curve2.setData(x=x[:ptr], y=data2[:ptr])
+#         ptr += 1
+#         now = time()
+#         dt = now - lastTime
+#         lastTime = now
+#         if fps is None:
+#             fps = 1.0/dt
+#         else:
+#             s = np.clip(dt*3., 0, 1)
+#             fps = fps * (1-s) + (1.0/dt) * s
+#         p.setTitle('%0.2f fps' % fps)
+#     else:
+#         ptr = 0
+#     app.processEvents()  ## force complete redraw for every plot.  Try commenting out to see if a different in speed occurs.
+# timer = QtCore.QTimer()
+# timer.timeout.connect(update)
+# timer.start(0)
+
+
+# if __name__ == '__main__':
+#     import sys
+#     if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
+#         QtGui.QApplication.instance().exec_()
     # Run the main Qt loop
 
 # class TimeDialog(QDialog):
@@ -24,7 +98,65 @@
 #         selected_time = dialog.get_selected_time()
         
 #     sys.exit(app.exec())
+"""
+Demonstrates a way to put multiple axes around a single plot. 
 
+(This will eventually become a built-in feature of PlotItem)
+"""
+
+
+# import pyqtgraph as pg
+
+# pg.mkQApp()
+
+# pw = pg.PlotWidget()
+# pw.show()
+# pw.setWindowTitle('pyqtgraph example: MultiplePlotAxes')
+# p1 = pw.plotItem
+# p1.setLabels(left='axis 1')
+
+# ## create a new ViewBox, link the right axis to its coordinate system
+# p2 = pg.ViewBox()
+# p1.showAxis('right')
+# p1.scene().addItem(p2)
+# p1.getAxis('right').linkToView(p2)
+# p2.setXLink(p1)
+# p1.getAxis('right').setLabel('axis2', color='#0000ff')
+
+# ## create third ViewBox. 
+# ## this time we need to create a new axis as well.
+# p3 = pg.ViewBox()
+# ax3 = pg.AxisItem('right')
+# p1.layout.addItem(ax3, 2, 3)
+# p1.scene().addItem(p3)
+# ax3.linkToView(p3)
+# p3.setXLink(p1)
+# ax3.setZValue(-10000)
+# ax3.setLabel('axis 3', color='#ff0000')
+
+
+# ## Handle view resizing 
+# def updateViews():
+#     ## view has resized; update auxiliary views to match
+#     global p1, p2, p3
+#     p2.setGeometry(p1.vb.sceneBoundingRect())
+#     p3.setGeometry(p1.vb.sceneBoundingRect())
+    
+#     ## need to re-update linked axes since this was called
+#     ## incorrectly while views had different shapes.
+#     ## (probably this should be handled in ViewBox.resizeEvent)
+#     p2.linkedViewChanged(p1.vb, p2.XAxis)
+#     p3.linkedViewChanged(p1.vb, p3.XAxis)
+
+# updateViews()
+# p1.vb.sigResized.connect(updateViews)
+
+# p1.plot([1,2,4,8,16,32])
+# p2.addItem(pg.PlotCurveItem([10,20,40,80,40,20], pen='b'))
+# p3.addItem(pg.PlotCurveItem([3200,1600,800,400,200,100], pen='r'))
+
+# if __name__ == '__main__':
+#     pg.exec()
 import pyqtgraph.examples
 pyqtgraph.examples.run()
 # """

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 import tempfile
 from base64 import b64encode
-
+import math
 from colors import *
 from PyQt6 import QtWidgets, QtGui, QtCore
 from PyQt6.QtCore import Qt, QPoint, QLine, QRect, QRectF, pyqtSignal,QPointF
@@ -19,7 +19,6 @@ __font__ = QFont('Decorative', 12)
 
 
 class TimeSample:
-
     def __init__(self, contact_object, duration, color=Qt.GlobalColor.darkYellow, picture=None):
         self.duration = duration
         self.color = color  
@@ -35,7 +34,7 @@ class TimeSample:
 
 class QTimeLine(QWidget):
 
-    positionChanged = pyqtSignal(int)
+    positionChanged = pyqtSignal(float)
     selectionChanged = pyqtSignal(TimeSample)
 
     def __init__(self, duration, length):
@@ -78,27 +77,36 @@ class QTimeLine(QWidget):
         w = 0
         # Draw time
         scale = self.getScale()
-        while w <= self.width():
-            qp.drawText(w - 50, 0, 100, 100, Qt.AlignmentFlag.AlignLeft, self.get_time_string(w * scale))
-            w += 100
+        for i in range(0, math.ceil(self.duration + 1)):
+            pixpox = int(i / scale)
+            qp.drawText(pixpox - 10, 0, 100, 100, Qt.AlignmentFlag.AlignLeft, str(i))
+            
+        # while w <= self.width():
+        #     qp.drawText(w - 50, 0, 100, 100, Qt.AlignmentFlag.AlignLeft, self.get_time_string(w * scale))
+        #     w += 100
 
         # Draw down line
         qp.setPen(QPen(Qt.GlobalColor.darkCyan, 5, Qt.PenStyle.SolidLine))
-        qp.drawLine(0, 40, self.width(), 40)
+        qp.drawLine(0, 30, self.width(), 30)
 
         # Draw dash lines
         point = 0
         qp.setPen(QPen(self.textColor))
-        qp.drawLine(0, 40, self.width(), 40)
-        while point <= self.width():
-            if point % 30 != 0:
-                qp.drawLine(3 * point, 40, 3 * point, 30)
-            else:
-                qp.drawLine(3 * point, 40, 3 * point, 20)
-            point += 10
+        qp.drawLine(0, 30, self.width(), 30)
+        
+        for i in range(0, math.ceil(self.duration + 1)):
+            pixpox = int(i / scale)
+            qp.drawLine(pixpox, 30, pixpox, 20)
+        
+        # while point <= self.width():
+        #     if point % 30 != 0:
+        #         qp.drawLine(3 * point, 30, 3 * point, 20)
+        #     else:
+        #         qp.drawLine(3 * point, 30, 3 * point, 10)
+        #     point += 10
 
         if self.pos is not None and self.is_in:
-            qp.drawLine(self.pos.x(), 0, self.pos.x(), 40)
+            qp.drawLine(self.pos.x(), 0, self.pos.x(), 30)
 
         if self.pointerPos is not None:
             line = QLine(QPoint(int(self.pointerTimePos/self.getScale()), 40),
@@ -190,13 +198,14 @@ class QTimeLine(QWidget):
     def mouseMoveEvent(self, e):
         self.pos = e.pos()
 
-        # if mouse is being pressed, update pointer
         if self.clicking:
             x = self.pos.x()
             self.pointerPos = x
-            self.positionChanged.emit(x)
+            
             self.checkSelection(x)
             self.pointerTimePos = self.pointerPos*self.getScale()
+            
+            self.positionChanged.emit(self.pointerTimePos)
 
         self.update()
 
@@ -205,8 +214,9 @@ class QTimeLine(QWidget):
         if e.button() == Qt.MouseButton.LeftButton:
             x = e.pos().x()
             self.pointerPos = x
-            self.positionChanged.emit(x)
+            
             self.pointerTimePos = self.pointerPos * self.getScale()
+            self.positionChanged.emit(self.pointerPos)
 
             self.checkSelection(x)
 
@@ -278,7 +288,7 @@ class QTimeLine(QWidget):
         cvs = None
         for contact in contact_list:
             color = colors_dict[contact.sensor_id%11]
-            qc = QColor(color[0],color[1],color[2])
+            qc = QColor(color[0],color[1],color[2],128)
             cvs = TimeSample(contact, contact.period_sec, qc)
             cvs.startPosTime = contact.start_time_sec
             self.add_time_sample(cvs)
@@ -291,8 +301,7 @@ class QTimeLine(QWidget):
 def main():
     app =  QApplication(sys.argv)
     
-    qtimeline = QTimeLine(60, 60) 
-
+    qtimeline = QTimeLine(10, 400) 
 
     qtimeline.show()
 

@@ -292,9 +292,11 @@ class Wid(QMainWindow):
         
         if s1 and s2:
             self.data_container.merge_sensor(s1, s2)
+            self.data_container.remove_sensor(s1)
+            self.data_container.remove_sensor(s2)
+            self.plotter.remove_sensor_entry(s1.sensor_id)
+            self.plotter.remove_sensor_entry(s2.sensor_id)
             
-        self.plotter.plot_data()
-        self.plot_controller.set_up_widget()   
     
     def apply_rotation_action(self):
         for sensor in self.data_container.sensors:
@@ -329,7 +331,7 @@ class Wid(QMainWindow):
         self.plotter.plot_data()
         self.plotter.set_refresh_rate(1500)
         self.plot_controller.clean_widget()
-        self.plot_controller.set_up_widget()          
+        self.plot_controller.set_up_widget()    
 
     def file_save_action(self):
         timeform = TimeForm()
@@ -447,8 +449,16 @@ class Wid(QMainWindow):
         self.plotter.clear_plot()
         self.plotter.plot_data()
         
+    def post_pro_action(self):
+        self.flip_action()
+        self.merge_sensor_action()
+        
+        self.apply_filter_action()
+    
     def find_contacts_action(self): 
         all_contact_list = self.data_container.detect_contacts_on_sensors()
+        self.data_container.detect_contact_type(all_contact_list)
+        
         self.data_container.find_max_contacts(all_contact_list)
         self.contactTable_widget.add_all_contacts(all_contact_list)
         

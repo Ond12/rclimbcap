@@ -35,17 +35,18 @@ class ContactTableWidget(QWidget):
         export_button.clicked.connect(self.export_to_csv)
         
         contacts = [
-            {'start': 10, 'end': 20, 'time': 25, 'max': 1000, 'sensor': 0, 'power': 200},
+            {'start': 10, 'end': 20, 'time': 25, 'max': 1000, 'sensor': 0, 'type': 'unk', 'power': 200},
         ]
 
         self.table = QTableWidget(self)
 
-        self.table.setColumnCount(5)
+        self.table.setColumnCount(6)
         self.table.setColumnWidth(0, 50)
         self.table.setColumnWidth(1, 50)
         self.table.setColumnWidth(2, 50)
         self.table.setColumnWidth(3, 50)
         self.table.setColumnWidth(4, 50)
+        self.table.setColumnWidth(5, 50)
 
         self.table.setHorizontalHeaderLabels(contacts[0].keys())
 
@@ -74,6 +75,8 @@ class ContactTableWidget(QWidget):
         self.table.setItem(row, 2, QTableWidgetItem(str(round(contact.period_sec, 3))))
         self.table.setItem(row, 3, QTableWidgetItem(str(round(contact.max_value, 1))))
         self.table.setItem(row, 4, QTableWidgetItem(str(round(contact.sensor_id, 1))))
+        self.table.setItem(row, 5, QTableWidgetItem(contact.contact_type))
+        
     
     def handleCellClicked(self, row, column):
         custom_object = self.custom_objects[row]

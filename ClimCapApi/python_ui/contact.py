@@ -64,6 +64,8 @@ class ContactInfo(QObject):
         self.end_time = end_time
         self.period = end_time - start_time
         
+        self.contact_type  = "unk"
+        
         self.start_time_sec = stsec
         self.end_time_sec = etsec
         self.period_sec =  etsec - stsec

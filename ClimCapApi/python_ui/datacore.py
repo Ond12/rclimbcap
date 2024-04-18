@@ -155,6 +155,23 @@ class DataContainer:
         self.chrono_offset = 0
         self.end_time_idx = 0
 
+    def detect_contact_type(self, all_contact_list):
+        for contact in all_contact_list:
+            sid = contact.sensor_id
+            sensor = self.get_sensor(sid)
+            
+            forcedata = sensor.get_forces_data().get_forces_y()
+            slicedata = np.array(forcedata)[contact.start_time:contact.end_time]
+            
+            mean = np.mean(slicedata)
+            type = "unk"
+            if mean > 0:
+                type = "hand"
+            else:
+                type = "foot"
+                                
+            contact.contact_type = type
+    
     def detect_chrono_bip(self):
         slope_threshold = 2
         down_edges_time_list = []
@@ -169,7 +186,7 @@ class DataContainer:
                     down_edges_idx_list.append(i)
 
         return down_edges_time_list, down_edges_idx_list
-        
+            
     def get_sensor_min_data_len(self):
         if len(self.sensors) > 0:
             min_data_len = self.sensors[0].data_size()
@@ -236,6 +253,13 @@ class DataContainer:
         self.sensors.append(mergeSensor)
         self.sensors_dict[mergeSensor.sensor_id] = mergeSensor
 
+    def compute_power(self, force_data_res, velocity_data):
+        print("compute power")
+
+    def remove_sensor(self, sensor):
+        self.sensors.remove(sensor)
+        self.sensors_dict.pop(sensor.sensor_id)
+
     def get_sensor(self, sensor_id):
         if sensor_id in self.sensors_dict:  
             return self.sensors_dict[sensor_id]
@@ -263,11 +287,10 @@ class DataContainer:
 
         #bug if not same shape
         for sensor in self.sensors:
-            if sensor.sensor_id != 30:
-                force_data = sensor.get_forces_data()
-                sum_x_data = np.add(sum_x_data, force_data.get_forces_x()[0:num_points]) 
-                sum_y_data = np.add(sum_y_data, force_data.get_forces_y()[0:num_points])  
-                sum_z_data = np.add(sum_z_data, force_data.get_forces_z()[0:num_points])  
+            force_data = sensor.get_forces_data()
+            sum_x_data = np.add(sum_x_data, force_data.get_forces_x()[0:num_points]) 
+            sum_y_data = np.add(sum_y_data, force_data.get_forces_y()[0:num_points])  
+            sum_z_data = np.add(sum_z_data, force_data.get_forces_z()[0:num_points])  
 
         result = {}
         result["time"] = self.find_sensor_by_id(sid).get_times_increments()
@@ -431,7 +454,7 @@ class DataContainer:
                 start_time_s = self.index_to_time(start_time) - time_offset
                 end_time_s =  self.index_to_time(end_time) - time_offset
                 cur_contact = ContactInfo(sensor_id, start_time, end_time, start_time_s, end_time_s)
-
+                
                 contacts.append(cur_contact)
                 
         if slope_up_detected:
@@ -441,6 +464,7 @@ class DataContainer:
             end_time_s =  self.index_to_time(end_time) - time_offset
             cur_contact = ContactInfo(sensor_id, start_time, end_time, start_time_s, end_time_s)
             cur_contact = ContactInfo(sensor_id, start_time, end_time, self.index_to_time(start_time), self.index_to_time(end_time))
+
             contacts.append(cur_contact)
 
         return contacts

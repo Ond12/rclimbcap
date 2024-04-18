@@ -7,7 +7,9 @@ from colors import *
 from PyQt6 import QtWidgets, QtGui, QtCore
 from PyQt6.QtCore import Qt, QPoint, QLine, QRect, QRectF, pyqtSignal,QPointF
 from PyQt6.QtGui import QPainter, QColor, QFont, QBrush, QPalette, QPen, QPolygon, QPainterPath, QPixmap
-from PyQt6.QtWidgets import QWidget, QFrame, QScrollArea, QVBoxLayout, QApplication
+from PyQt6.QtWidgets import QWidget, QFrame, QGraphicsView,QScrollArea, QVBoxLayout, QApplication,QGraphicsScene,QGraphicsRectItem
+from PyQt6.QtSvg import QSvgRenderer
+from PyQt6.QtSvgWidgets import QGraphicsSvgItem
 import sys
 import os
 
@@ -31,7 +33,15 @@ class TimeSample:
         self.startPosTime = 0
         self.endPos = self.duration  # End position
         self.contact_object = contact_object
-
+        self.icon_svg_item = None
+        
+    def set_icon(self, svg_renderer, scene):
+        self.icon_svg_item = QGraphicsSvgItem()
+        self.icon_svg_item.setSharedRenderer(svg_renderer)
+        
+        #self.icon_svg_item.setScale(0.005)
+        scene.addItem(self.icon_svg_item)
+        
 class QTimeLine(QWidget):
 
     positionChanged = pyqtSignal(float)
@@ -42,6 +52,10 @@ class QTimeLine(QWidget):
         self.duration = duration
         self.length = length
 
+        current_folder = os.path.dirname(os.path.realpath(__file__))
+        parent_folder = os.path.dirname(current_folder)
+        self.icon_folder = os.path.join(parent_folder,'forms/images/svg')
+        
         self.backgroundColor = __backgroudColor__
         self.textColor = __textColor__
         self.font = __font__
@@ -62,11 +76,24 @@ class QTimeLine(QWidget):
 
         self.setGeometry(300, 300, self.length, 200)
         self.setMinimumHeight(150)
-
-        # Set Background
+        
         pal = QPalette()
         #pal.setColor(QPalette.Background, self.backgroundColor)
         self.setPalette(pal)
+        
+        hand_path = os.path.join( self.icon_folder, 'hand-icon.svg')
+        self.svg_renderer = QSvgRenderer(hand_path)
+
+        self.scene = QGraphicsScene(self)
+        self.scene.setSceneRect(0, 0, self.width(), self.height())
+
+    def resizeEvent(self, event):
+        # Update scene size when the widget is resized
+        self.update_scene_size()
+
+    def update_scene_size(self):
+        # Set the scene size to match the size of the widget
+        self.scene.setSceneRect(0, 0, self.width(), self.height())
 
     def paintEvent(self, event):
         qp = QPainter()
@@ -74,6 +101,7 @@ class QTimeLine(QWidget):
         qp.setPen(self.textColor)
         qp.setFont(self.font)
         qp.setRenderHint(QPainter.RenderHint.Antialiasing)
+
         w = 0
         # Draw time
         scale = self.getScale()
@@ -97,7 +125,7 @@ class QTimeLine(QWidget):
         for i in range(0, math.ceil(self.duration + 1)):
             pixpox = int(i / scale)
             qp.drawLine(pixpox, 30, pixpox, 20)
-        
+            
         # while point <= self.width():
         #     if point % 30 != 0:
         #         qp.drawLine(3 * point, 30, 3 * point, 20)
@@ -132,6 +160,7 @@ class QTimeLine(QWidget):
             t = sample.startPosTime
             path = QPainterPath()
             path.addRoundedRect(QRectF(t/scale, 50, sample.duration/scale, 200), 10, 10)
+
             qp.setClipPath(path)
 
             # Draw sample
@@ -192,6 +221,7 @@ class QTimeLine(QWidget):
 
         qp.drawPolygon(poly)
         qp.drawLine(line)
+        self.scene.render(qp)
         qp.end()
 
     # Mouse movement
@@ -242,7 +272,7 @@ class QTimeLine(QWidget):
         # Check if user clicked in video sample
         for sample in self.videoSamples:
             if sample.startPos < x < sample.endPos:
-                sample.color = Qt.GlobalColor.darkCyan
+                # sample.color = Qt.GlobalColor.darkCyan
                 if self.selectedSample is not sample:
                     self.selectedSample = sample
                     self.selectionChanged.emit(sample)
@@ -291,7 +321,10 @@ class QTimeLine(QWidget):
             qc = QColor(color[0],color[1],color[2],128)
             cvs = TimeSample(contact, contact.period_sec, qc)
             cvs.startPosTime = contact.start_time_sec
+            # cvs.set_icon(self.svg_renderer, self.scene)
+            # cvs.icon_svg_item.setPos(cvs.startPosTime/self.getScale(), 50)
             self.add_time_sample(cvs)
+            
         self.duration =  cvs.contact_object.end_time_sec
         self.update()
 

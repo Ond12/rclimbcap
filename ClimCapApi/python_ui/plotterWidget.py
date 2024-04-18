@@ -153,13 +153,12 @@ class Plotter(pg.PlotWidget):
             self.region = pg.LinearRegionItem()
             self.region.setZValue(10)
             self.addItem(self.region, ignoreBounds=True)
-            
         else:
             print(self.region.getRegion())
-        
+
     def set_crosshair(self):
         self.crosshair_point_text = pg.TextItem()
-        self.crosshair_point_text.setPos(3,800)
+        self.crosshair_point_text.setPos(3, 800)
         self.addItem(self.crosshair_point_text)
         self.vLine = pg.InfiniteLine(angle=90, movable=False, pen='g')
         self.hLine = pg.InfiniteLine(angle=0, movable=False, pen='g')
@@ -196,11 +195,14 @@ class Plotter(pg.PlotWidget):
         self.refresh_rate = refresh_rate_ms
         self.update_timer.setInterval( self.refresh_rate )
         
+    def remove_sensor_entry(self, sensor_id):
+       self.sensor_plot_map.pop(sensor_id)
+    
     def update_plots(self):
 
         for sensor_plot in self.sensor_plot_map.values():
             self.update_sensor_plot_data(sensor_plot.sensor_id)
-        
+         
         self.update_chrono_plot_data()
         
         self.update()
@@ -235,7 +237,7 @@ class Plotter(pg.PlotWidget):
                 
                 color_x_v = RED[sensor.sensor_id % 11]
                 line_style = style_dict[0]
-                plot_item_force_x = self.plot([0], [0], pen=pg.mkPen(color_x_v, width=2, alpha=200, style=line_style), name=f"S{sensor.sensor_id}-FX",skipFiniteCheck=True)
+                plot_item_force_x = self.plot([0], [0], pen=pg.mkPen(color_x_v, width=2, alpha=200, style=line_style), name=f"{sensor.sensor_id}-FX",skipFiniteCheck=True)
                 self.plot_items.append(plot_item_force_x)
                 plot_item_force_x.setVisible(False)
                 plot_item_force_x.setSkipFiniteCheck(True)

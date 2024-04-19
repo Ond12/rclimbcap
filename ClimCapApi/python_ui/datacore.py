@@ -252,9 +252,13 @@ class DataContainer:
         
         self.sensors.append(mergeSensor)
         self.sensors_dict[mergeSensor.sensor_id] = mergeSensor
+        
+        return mergeSensor
 
     def compute_power(self, force_data_res, velocity_data):
         print("compute power")
+        power_data = np.multiply(force_data_res, velocity_data)
+        return power_data
 
     def remove_sensor(self, sensor):
         self.sensors.remove(sensor)
@@ -269,11 +273,12 @@ class DataContainer:
 
     def cal_resultant_force(self, sensor):
         force_data = sensor.get_forces_data()
-        
-        forces = np.array([force_data.get_forces_x(), force_data.get_forces_y(), force_data.get_forces_z()])
-        resultant_force = np.linalg.norm(forces, axis=0)
-        
+        resultant_force = self.cal_resultant_force_arrayin(force_data.get_forces_x(), force_data.get_forces_y(), force_data.get_forces_z())
         return resultant_force, sensor.sensor_id
+    
+    def cal_resultant_force_arrayin(self, datax, datay, dataz):
+        forces = np.array([datax, datay, dataz])
+        return np.linalg.norm(forces, axis=0)
     
     def add_chrono_data_point(self, data_value):
         self.chrono_data.append(data_value)

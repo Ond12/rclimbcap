@@ -196,7 +196,8 @@ class Plotter(pg.PlotWidget):
         self.update_timer.setInterval( self.refresh_rate )
         
     def remove_sensor_entry(self, sensor_id):
-       self.sensor_plot_map.pop(sensor_id)
+        if sensor_id in self.sensor_plot_map:
+            self.sensor_plot_map.pop(sensor_id)
     
     def update_plots(self):
 
@@ -227,7 +228,7 @@ class Plotter(pg.PlotWidget):
 
     def plot_data(self, colors=None):
         if self.data_container.sensors:
-            self.clear_plot()
+            
             if colors is None:
                 colors = ['b'] * len(self.data_container.sensors)
             
@@ -265,7 +266,7 @@ class Plotter(pg.PlotWidget):
                 self.sensor_plot_map[sensor.sensor_id] = c_plot_sensor
 
         cr_data = self.data_container.chrono_data
-        #print(f"cr len {len(cr_data)}")
+
         if len(cr_data) > 0:
             num_samples = len(cr_data)
             time_interval = 1/ self.data_container.chrono_freq

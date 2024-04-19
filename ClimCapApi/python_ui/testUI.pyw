@@ -71,7 +71,7 @@ class Wid(QMainWindow):
         icon_path = os.path.join(self.icon_folder, 'electrical_threshold.svg')
         apply_filter_action = QAction(QIcon(icon_path), "&Post pro", self)
         apply_filter_action.setStatusTip("Post pro")
-        apply_filter_action.triggered.connect(self.apply_filter_action)
+        apply_filter_action.triggered.connect(self.post_pro_action)
 
         icon_path = os.path.join(self.icon_folder, 'heat_map.svg')
         find_contacts_action = QAction(QIcon(icon_path), "&Find contacts", self)
@@ -230,7 +230,6 @@ class Wid(QMainWindow):
         self.vertical_line = pg.InfiniteLine(pos=0, angle=90, movable=False, pen='r')
         self.w.addItem(self.vertical_line, ignoreBounds=True)
         
-        
         # p1 = w.addPlot(row=0, col=0)
        
         mediaController_widget = MediaController()
@@ -296,8 +295,9 @@ class Wid(QMainWindow):
             self.data_container.remove_sensor(s2)
             self.plotter.remove_sensor_entry(s1.sensor_id)
             self.plotter.remove_sensor_entry(s2.sensor_id)
+        
+        print("merge action")
             
-    
     def apply_rotation_action(self):
         for sensor in self.data_container.sensors:
             sensor.set_angles(0, 180, 0)
@@ -443,17 +443,23 @@ class Wid(QMainWindow):
         self.plotter2.plot_data()
            
     def apply_filter_action(self):
-        #self.flip_action()
         self.data_container.chrono_data = medfilt(self.data_container.chrono_data, kernel_size=3)
         self.data_container.apply_filter_hcutoff_to_sensors()
-        self.plotter.clear_plot()
-        self.plotter.plot_data()
-        
+        print("filter action")
+
     def post_pro_action(self):
-        self.flip_action()
+        self.plotter.clear_plot()
+        #self.flip_action()
+        print("post pro action")
         self.merge_sensor_action()
         
         self.apply_filter_action()
+        self.sum_force_action()
+        self.chrono_bip_detection_action()
+        
+        self.plot_controller.set_up_widget()
+        self.plotter.plot_data()
+        self.find_contacts_action()
     
     def find_contacts_action(self): 
         all_contact_list = self.data_container.detect_contacts_on_sensors()
@@ -472,7 +478,6 @@ class Wid(QMainWindow):
     def override_low_values_action(self):
         self.data_container.override_neg_z()
         #self.data_container.override_low_values_alls()
-        self.plotter.plot_data()
 
     def calculate_resultant_force_action(self):
         sensors = self.data_container.sensors
@@ -496,20 +501,18 @@ class Wid(QMainWindow):
                 times[i] = times[i] - last_bip_time
             
             self.data_container.apply_idx_offset_to_sensors(last_bip_time)
-        
-        self.plotter.plot_data()
-        
+                
         self.plotter.plot_chrono_bip_marker(times)
+        print("chrono detect action")
         
     def flip_action(self):
         sensorid_compression = [2,3,5,6,10]
         sensorid_traction = [1,4,7,8,9,11]
         platform = [40, 41]
         
-        self.data_container.switch_sign_off_sensors(sensorid_compression,"comp")
+        self.data_container.switch_sign_off_sensors(sensorid_compression, "comp")
         #self.data_container.switch_sign_off_sensors(sensorid_traction,"trac")
-        self.data_container.switch_sign_off_sensors(platform,"plat")
-        self.plotter.plot_data()
+        self.data_container.switch_sign_off_sensors(platform, "plat")
     
     def sum_force_action(self):
         self.plotter.plot_sum_force()
@@ -525,18 +528,21 @@ class Wid(QMainWindow):
         force_result = self.data_container.sum_force_data()
         
         time_increments = force_result["time"]
-        forces = force_result["sum_z"]
+        all_forces_z = force_result["sum_z"]
         body_weight_kg = self.plot_controller.get_weight_value()
         
         times, times_idx = self.data_container.detect_chrono_bip()
         if len(times_idx) > 1:
             last_bip_idx = times_idx[-1]
         
-        times, acc_data, velocity = self.data_container.compute_acceleration_speed(time_increments, forces, body_weight_kg, last_bip_idx)
+        times, acc_data, velocity = self.data_container.compute_acceleration_speed(time_increments, all_forces_z, body_weight_kg, last_bip_idx)
 
+        self.data_container.compute_power()
         #self.plotter.plot_accel_speed(times, acc_data, velocity)
                 
         plot_item_vel = self.w.plot(times, velocity, pen=pg.mkPen((235,52,225), width=2, alpha=200, style=style_dict[2]), name=f"speed")        
+        plot_item_power = se
+
 
     def open_file_action(self):
         self.clear_data_action()

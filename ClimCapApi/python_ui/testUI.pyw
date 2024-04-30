@@ -149,16 +149,16 @@ class Wid(QMainWindow):
         toolbar.addAction(separator)
         
         toolbar.addAction(apply_filter_action)
-        toolbar.addAction(find_contacts_action)
-        toolbar.addAction(chrono_detect_action)
+        #toolbar.addAction(find_contacts_action)
+        #toolbar.addAction(chrono_detect_action)
         #toolbar.addAction(calculate_resultant_action)
         #toolbar.addAction(find_max_in_contact_action)
-        toolbar.addAction(sum_force_action)
+        #toolbar.addAction(sum_force_action)
         toolbar.addAction(settings_action)
         #toolbar.addAction(flip_action)
 
         #toolbar.addAction(apply_rotation_action)
-        toolbar.addAction(merge_sensor_action)
+        #toolbar.addAction(merge_sensor_action)
         toolbar.addAction(show_cross_hair_action)
         toolbar.addAction(process_custom_frame_action)
         
@@ -167,7 +167,7 @@ class Wid(QMainWindow):
         toolbar.addAction(separator)
         
         toolbar.addAction(debug_data_action)
-        toolbar.addAction(oscstreaming_action)
+        #toolbar.addAction(oscstreaming_action)
 
         self.statusbar = QStatusBar()
         self.setStatusBar(self.statusbar)
@@ -228,7 +228,10 @@ class Wid(QMainWindow):
         self.w.addLegend()
         self.w.setMaximumHeight(200)
         self.vertical_line = pg.InfiniteLine(pos=0, angle=90, movable=False, pen='r')
-        self.w.addItem(self.vertical_line, ignoreBounds=True)
+        self.w.addItem(self.vertical_line, ignoreBounds=True) 
+        inf2 = pg.InfiniteLine(pos= (0,3), movable=True, angle=0, pen=(0, 0, 200), bounds = [-20, 20], hoverPen=(0,200,0), label='V={value:0.2f}m/s', 
+                       labelOpts={'color': (200,0,0), 'movable': True, 'fill': (0, 0, 200, 100)})
+        self.w.addItem(inf2)
         
         # p1 = w.addPlot(row=0, col=0)
        
@@ -249,11 +252,18 @@ class Wid(QMainWindow):
         self.plotter.scroll_line_pos_changed.connect(self.vertical_line.setPos)
         
         self.contactTable_widget = ContactTableWidget()
+        self.info_widget = infoWidget()
 
+        leftw = QWidget()
+        layoutleftw = QVBoxLayout()
+        layoutleftw.addWidget(self.contactTable_widget)
+        layoutleftw.addWidget(self.info_widget)
+        leftw.setLayout(layoutleftw)
+        
         dock = QDockWidget('Contact infos')
         dock.setFeatures(QDockWidget.DockWidgetFeature.NoDockWidgetFeatures)
         self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, dock)
-        dock.setWidget(self.contactTable_widget)
+        dock.setWidget(leftw)
 
         self.routeView_widget = RouteViewWidget(self.plotter)
                
@@ -264,6 +274,9 @@ class Wid(QMainWindow):
 
         self.showMaximized()
         self.init_osc_sender()
+
+    def updatePlotRange(self):
+        self.w.autoRange()
 
     def process_custom_frame_action(self):
         self.plotter.set_region()
@@ -309,6 +322,9 @@ class Wid(QMainWindow):
         
     def show_cross_hair_action(self):
         self.plotter.set_crosshair()
+    
+    def make_back_up_raw_data(self):
+        print("make a backup")
     
     def settings_action(self):
         #domo
@@ -399,7 +415,6 @@ class Wid(QMainWindow):
                         sheet_name = f"Capteur {curr_sensor.sensor_id}"
                         dataforce = to_dataframe(curr_sensor.get_forces_data())
                         dataanalog = curr_sensor.get_analog_data().to_dataframe()
-                        #curr_sensor.get_forces_data().print_debug_data()
             
                         df = pd.concat([dataforce, dataanalog], axis=1)
                         
@@ -418,6 +433,8 @@ class Wid(QMainWindow):
         self.plot_controller.clean_widget()
         
         self.contactTable_widget.delete_all()
+        self.routeView_widget.clear_holditems()
+        self.qtimeline.clear_time_line()
         
         self.data_container2.clear_all_sensor_data()
         self.plotter2.clear_plot()
@@ -453,12 +470,14 @@ class Wid(QMainWindow):
         print("post pro action")
         self.merge_sensor_action()
         
-        self.apply_filter_action()
-        self.sum_force_action()
+        #self.apply_filter_action()
+        
         self.chrono_bip_detection_action()
         
         self.plot_controller.set_up_widget()
         self.plotter.plot_data()
+        
+        self.sum_force_action()
         self.find_contacts_action()
     
     def find_contacts_action(self): 
@@ -474,6 +493,7 @@ class Wid(QMainWindow):
         self.plotter.plot_contacts(all_contact_list)
         
         self.qtimeline.add_all_contacts(all_contact_list)
+        self.routeView_widget.draw_all_contact_time(all_contact_list)
 
     def override_low_values_action(self):
         self.data_container.override_neg_z()
@@ -523,7 +543,7 @@ class Wid(QMainWindow):
 
     def debug_action(self):
         #self.override_low_values_action()
-        self.compute_normalize_force_action()
+        #self.compute_normalize_force_action()
         #self.data_container.fill_debug_data()
         force_result = self.data_container.sum_force_data()
         
@@ -531,18 +551,68 @@ class Wid(QMainWindow):
         all_forces_z = force_result["sum_z"]
         body_weight_kg = self.plot_controller.get_weight_value()
         
-        times, times_idx = self.data_container.detect_chrono_bip()
-        if len(times_idx) > 1:
-            last_bip_idx = times_idx[-1]
-        
-        times, acc_data, velocity = self.data_container.compute_acceleration_speed(time_increments, all_forces_z, body_weight_kg, last_bip_idx)
+        value = body_weight_kg
+        if value == 0.0:
+            QMessageBox.warning(self, "Alert", "Enter a mass")
+            return
+        else:
+            reply = QMessageBox.question(self, "Info", f"Mass is {value} kg ?",
+                                            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
+            if reply == QMessageBox.StandardButton.No:
+                return
+  
+            times_cr, times_idx = self.data_container.detect_chrono_bip()
+            if len(times_idx) > 1:
+                last_bip_idx = times_idx[-1]
+            
+            idx_end = self.data_container.get_end_time()
+            
+            times, acc_data, velocity = self.data_container.compute_acceleration_speed(time_increments, all_forces_z, body_weight_kg, last_bip_idx, idx_end)
 
-        self.data_container.compute_power()
-        #self.plotter.plot_accel_speed(times, acc_data, velocity)
-                
-        plot_item_vel = self.w.plot(times, velocity, pen=pg.mkPen((235,52,225), width=2, alpha=200, style=style_dict[2]), name=f"speed")        
-        plot_item_power = se
+            global_resultant = self.data_container.cal_resultant_force_arrayin(
+                force_result["sum_x"], force_result["sum_y"], force_result["sum_z"] )
+            
+            power_data = self.data_container.compute_power(global_resultant, velocity)
+            
+            avgpower = self.data_container.find_moy(power_data[last_bip_idx:idx_end])
+            power_per_kilo = avgpower / body_weight_kg
+            avgspeed = self.data_container.find_moy(velocity[last_bip_idx:idx_end])
+            
+            self.info_widget.setText("Average_power:", str(round(avgpower)) + " W")
+            self.info_widget.setText("Power/kilos:", str(round(power_per_kilo,2)) + " W/Kg")
+            self.info_widget.setText("Average_speed:", str(round(avgspeed,2)) + " m/s")
+            
+            idx_max_speed, max_speed = self.data_container.find_max_numpy(velocity)
+            idx_max_power, max_power = self.data_container.find_max_numpy(power_data)
 
+            tmp = self.data_container.index_to_time(idx_max_power - last_bip_idx)
+            tmv = self.data_container.index_to_time(idx_max_speed - last_bip_idx)
+            
+            self.qtimeline.set_pmax_vmax_time(tmp, tmv)
+            
+            vmax_marker = pg.TargetItem(
+                pos=(tmv, max_speed),
+                label=str(round(max_speed,2)),
+                movable=False,
+                labelOpts={'color': (200,0,0)}
+            )
+            self.w.addItem(vmax_marker)
+
+            pmax_marker = pg.TargetItem(
+                pos=(tmp, max_power),
+                label=str(round(max_power)),
+                movable=False,
+                labelOpts={'color': (200,0,0)}
+            )
+            self.w.addItem(pmax_marker)
+
+            plot_item_vel = self.w.plot(times, velocity, pen=pg.mkPen((235,52,225), width=2, style=style_dict[2]), name=f"speed")        
+            plot_item_power = self.w.plot(times, power_data,  pen=pg.mkPen((52,52,225), width=2, style=style_dict[1]), name=f"power")
+            plot_item_global_res = self.plotter.plot(times, global_resultant,  pen=pg.mkPen((52,225,52), width=2, style=style_dict[1]), name=f"global res")
+            lot_item_acc_data = self.plotter.plot(times, acc_data,  pen=pg.mkPen((52,225,52), width=2, style=style_dict[1]), name=f"acc")
+            
+            plot_item_vel.visibleChanged.connect(self.updatePlotRange)
+            plot_item_power.visibleChanged.connect(self.updatePlotRange)
 
     def open_file_action(self):
         self.clear_data_action()

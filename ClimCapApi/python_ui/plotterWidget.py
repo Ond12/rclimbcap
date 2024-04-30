@@ -122,7 +122,7 @@ class Plotter(pg.PlotWidget):
         self.data_container = data_container
                 
         self.refresh_rate = 1200
-        
+        self.setMenuEnabled(False)
         #self.setRange(xRange=(0,6), yRange=(-500, 500))
         self.plot_items:list = []
         self.contact_list:list = []
@@ -133,8 +133,9 @@ class Plotter(pg.PlotWidget):
         
         self.showGrid(x=False, y=True)
         self.legend = self.addLegend()
-        self.legend.setPos(1, 1)
+        self.legend.setOffset((-1,-50))
         self.legend.setColumnCount(3)
+        self.legend.verSpacing = -1
         #self.legend.hide()
         
         self.setBackground('w')
@@ -311,7 +312,7 @@ class Plotter(pg.PlotWidget):
 
         sensor_plot_items = [plot_item_force_x, plot_item_force_y, plot_item_force_z]
 
-    def plot_resultant_force(self, resultant_force, sensor_id):
+    def plot_resultant_force(self, times, resultant_force, sensor_id):
         plot_item_resultant_force = self.plot(resultant_force, pen=pg.mkPen((255,105,180), width=2, alpha=200), name=f"Sensor {sensor_id} - Res")
         plot_item_resultant_force.setVisible(True)
         self.plot_items.append(plot_item_resultant_force)

@@ -3,12 +3,42 @@ import csv
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QTableWidget, 
     QTableWidgetItem, QDockWidget, QFormLayout, 
-    QLineEdit, QWidget, QPushButton, QSpinBox, 
+    QLineEdit, QWidget, QPushButton, QSpinBox, QLabel,QGridLayout,
     QMessageBox, QToolBar, QMessageBox,QVBoxLayout,QMenu,QHBoxLayout,QFileDialog
 )
 
 from PyQt6.QtCore import Qt,QSize
 from PyQt6.QtGui import QIcon, QAction
+
+class infoWidget(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.initUI()
+
+    def initUI(self):
+        grid_layout = QGridLayout()
+        
+        data = {
+            "Average power:": "0",
+            "Power/kilos:": "0",
+            "Average speed:" : "0",
+        }
+
+        row = 0
+        for label_text, value_text in data.items():
+            label = QLabel(label_text)
+            value = QLabel(value_text)
+            value.setObjectName(label_text.replace(" ", "_"))  
+            grid_layout.addWidget(label, row, 0)
+            grid_layout.addWidget(value, row, 1)
+            row += 1
+
+        self.setLayout(grid_layout)
+        
+    def setText(self, object_name, text):
+        for child in self.children():
+            if isinstance(child, QLabel) and child.objectName() == object_name:
+                child.setText(text)
 
 class ContactTableWidget(QWidget):
     def __init__(self, *args, **kwargs):
@@ -20,15 +50,14 @@ class ContactTableWidget(QWidget):
         
         button_layout = QHBoxLayout()
         layout.addLayout(button_layout)
-        
-        # Add buttons
+
         add_button = QPushButton("Add")
         delete_button = QPushButton("Delete")
         export_button = QPushButton("Export")
         #button_layout.addWidget(add_button)
         button_layout.addWidget(delete_button)
         button_layout.addWidget(export_button)
-        
+
         # Connect button signals to slots
         add_button.clicked.connect(self.add_contact)
         delete_button.clicked.connect(self.delete_all)
@@ -47,7 +76,7 @@ class ContactTableWidget(QWidget):
         self.table.setColumnWidth(3, 50)
         self.table.setColumnWidth(4, 50)
         self.table.setColumnWidth(5, 50)
-
+        self.table.verticalHeader().setVisible(False)
         self.table.setHorizontalHeaderLabels(contacts[0].keys())
 
         layout.addWidget(self.table)

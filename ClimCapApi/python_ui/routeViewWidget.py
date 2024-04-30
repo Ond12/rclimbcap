@@ -2,9 +2,9 @@ import sys
 import os
 from PyQt6.QtWidgets import (
     QGraphicsScene, QGraphicsView, QGraphicsItem, QGraphicsRectItem,
-    QGraphicsEllipseItem, QApplication, QWidget, QVBoxLayout,QGraphicsColorizeEffect
+    QGraphicsEllipseItem, QApplication, QWidget, QVBoxLayout,QGraphicsColorizeEffect, QGraphicsTextItem
 )
-from PyQt6.QtGui import QBrush, QPen, QColor
+from PyQt6.QtGui import QBrush, QPen, QColor,QFont
 from PyQt6.QtCore import Qt, pyqtSignal, QPointF, QLineF
 from PyQt6.QtSvg import QSvgRenderer
 from PyQt6.QtSvgWidgets import QGraphicsSvgItem
@@ -18,6 +18,7 @@ class HoldItem(QGraphicsSvgItem):
         self.hold_id = hold_id
         self.sensor_id = 0
         self.contact_vectors = []
+        self.contact_times = []
 
     def set_color(self, color):
         colorize_effect = QGraphicsColorizeEffect()
@@ -30,13 +31,36 @@ class HoldItem(QGraphicsSvgItem):
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton:
             self.clicked.emit(self.sensor_id)
+            
+    def draw_contact_time(self):     
+
+            original_pos = self.pos()
+            offsety = 10
+            for ct in self.contact_times:
+
+                text = QGraphicsTextItem()
+                if self.hold_id == 8:
+                    font = QFont("Arial", 12) 
+                    font.setWeight(QFont.Weight.Bold)  
+                    text.setFont(font)
+                
+                text.setParentItem(self)
+                text.setPlainText(str(round(ct,3)) + 's')
+                text.setDefaultTextColor(QColor("red"))
+                text.setPos(QPointF(50, offsety))
+
+                offsety = offsety + 13
+                
+    def clear_all_textitems(self):
+        self.contact_times.clear()
+        for child_item in self.childItems():
+            child_item.setParentItem(None)
     
 class RouteViewWidget(QWidget):
     
     def __init__(self, plotter):
         super().__init__()
         self.plotter = plotter
-        super().__init__()
         current_folder = os.path.dirname(os.path.realpath(__file__))
         parent_folder = os.path.dirname(current_folder)
         self.icon_folder = os.path.join(parent_folder,'forms/images/svg')
@@ -62,6 +86,7 @@ class RouteViewWidget(QWidget):
             hold = HoldItem(renderer, i) 
             hold.setPos(original_pos)
             hold.setElementId(hold_name)
+            hold.setParent(self.scene)
             self.scene.addItem(hold)
 
             if i in equiped_hand_hold.keys():
@@ -82,6 +107,7 @@ class RouteViewWidget(QWidget):
             hold = HoldItem(renderer, i+20) 
             hold.setPos(original_pos)
             hold.setElementId(hold_name)
+            
             self.scene.addItem(hold)
             if i in equiped_foot_hold.keys():
                 hold.set_color(QColor("blue"))
@@ -146,7 +172,24 @@ class RouteViewWidget(QWidget):
             
             hold_pos = hold.scenePos()
             self.scene.addLine(QLineF(hold_pos.x()+20, hold_pos.y()+20, hold_pos.x()+fvecpoint.x(), hold_pos.y()+fvecpoint.y()))
+    
+    def clear_holditems(self):
+        for hold in self.holditems.values():
+            hold.clear_all_textitems()
+        
+    def draw_all_contact_time(self, contact_list):
 
+        self.clear_holditems()
+
+        for contact in contact_list:
+            csid = contact.sensor_id
+            hold = self.holditems[csid]
+            touch_time = contact.start_time_sec
+            hold.contact_times.append(touch_time)
+        
+        for hold in self.holditems.values():
+            hold.draw_contact_time()
+            
     def onHoldClicked(self, sensor_id):
         if self.plotter:
             self.plotter.toggle_sensor_visibility(sensor_id)

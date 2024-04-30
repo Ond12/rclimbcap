@@ -34,7 +34,7 @@ class TimeSample:
         self.endPos = self.duration  # End position
         self.contact_object = contact_object
         self.icon_svg_item = None
-        
+    
     def set_icon(self, svg_renderer, scene):
         self.icon_svg_item = QGraphicsSvgItem()
         self.icon_svg_item.setSharedRenderer(svg_renderer)
@@ -65,12 +65,20 @@ class QTimeLine(QWidget):
         self.selectedSample = None
         self.clicking = False 
         self.is_in = False  
-        self.videoSamples = []  
+        self.videoSamples = [] 
+        self.Pmax_time = None
+        self.Vmax_time = None 
 
-        self.setMouseTracking(True)  # Mouse events
-        self.setAutoFillBackground(True)  # background
+        self.setMouseTracking(True)  
+        self.setAutoFillBackground(True)  
 
         self.initUI()
+    
+    def set_pmax_vmax_time(self, pmax_time, vmax_time):
+        self.Pmax_time = pmax_time
+        self.Vmax_time = vmax_time
+
+        self.update()
 
     def initUI(self):
 
@@ -88,11 +96,9 @@ class QTimeLine(QWidget):
         self.scene.setSceneRect(0, 0, self.width(), self.height())
 
     def resizeEvent(self, event):
-        # Update scene size when the widget is resized
         self.update_scene_size()
 
     def update_scene_size(self):
-        # Set the scene size to match the size of the widget
         self.scene.setSceneRect(0, 0, self.width(), self.height())
 
     def paintEvent(self, event):
@@ -108,7 +114,12 @@ class QTimeLine(QWidget):
         for i in range(0, math.ceil(self.duration + 1)):
             pixpox = int(i / scale)
             qp.drawText(pixpox - 10, 0, 100, 100, Qt.AlignmentFlag.AlignLeft, str(i))
-            
+
+        if self.Pmax_time is not None:
+            qp.drawText(int(self.Pmax_time/scale),10,100,100,Qt.AlignmentFlag.AlignLeft, "P")
+        if self.Vmax_time is not None:
+            qp.drawText(int(self.Vmax_time/scale),10,100,100,Qt.AlignmentFlag.AlignLeft, "V")
+
         # while w <= self.width():
         #     qp.drawText(w - 50, 0, 100, 100, Qt.AlignmentFlag.AlignLeft, self.get_time_string(w * scale))
         #     w += 100
@@ -324,12 +335,18 @@ class QTimeLine(QWidget):
             # cvs.set_icon(self.svg_renderer, self.scene)
             # cvs.icon_svg_item.setPos(cvs.startPosTime/self.getScale(), 50)
             self.add_time_sample(cvs)
+
+        if cvs is not None:
+            self.duration =  cvs.contact_object.end_time_sec
             
-        self.duration =  cvs.contact_object.end_time_sec
         self.update()
 
     def add_time_sample(self, timesample):
         self.videoSamples.append(timesample)
+
+    def clear_time_line(self):
+        self.videoSamples.clear()
+        self.update()
 
 def main():
     app =  QApplication(sys.argv)

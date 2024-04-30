@@ -184,14 +184,19 @@ class DataContainer:
                     time = i / self.chrono_freq
                     down_edges_time_list.append(time)
                     down_edges_idx_list.append(i)
+        
+        print(down_edges_idx_list)
 
         return down_edges_time_list, down_edges_idx_list
             
-    def get_sensor_min_data_len(self):
-        if len(self.sensors) > 0:
-            min_data_len = self.sensors[0].data_size()
-            sid = self.sensors[0].sensor_id
-            for sensor in self.sensors:
+    def get_sensor_min_data_len(self, sensor_list = None):
+        if sensor_list is None:
+            sensor_list = self.sensors
+        
+        if len(sensor_list) > 0:
+            min_data_len = sensor_list[0].data_size()
+            sid = sensor_list[0].sensor_id
+            for sensor in sensor_list:
                 if sensor.data_size() < min_data_len:
                     min_data_len = sensor.data_size()
                     sid = sensor.sensor_id
@@ -292,10 +297,11 @@ class DataContainer:
 
         #bug if not same shape
         for sensor in self.sensors:
-            force_data = sensor.get_forces_data()
-            sum_x_data = np.add(sum_x_data, force_data.get_forces_x()[0:num_points]) 
-            sum_y_data = np.add(sum_y_data, force_data.get_forces_y()[0:num_points])  
-            sum_z_data = np.add(sum_z_data, force_data.get_forces_z()[0:num_points])  
+            if sensor.sensor_id != 41:
+                force_data = sensor.get_forces_data()
+                sum_x_data = np.add(sum_x_data, force_data.get_forces_x()[0:num_points]) 
+                sum_y_data = np.add(sum_y_data, force_data.get_forces_y()[0:num_points])  
+                sum_z_data = np.add(sum_z_data, force_data.get_forces_z()[0:num_points])  
 
         result = {}
         result["time"] = self.find_sensor_by_id(sid).get_times_increments()
@@ -305,7 +311,41 @@ class DataContainer:
 
         return result
     
-    def compute_acceleration_speed(self, times, force_signal, body_weight, idx_start_offset = 0):
+    def find_max_numpy(self, data):
+        max_index = np.argmax(data)
+        max_value = data[max_index]
+        return max_index, max_value
+    
+    def find_moy(self, data):
+        return np.average(data)
+    
+    def transforme_sensor_7_8(self):
+
+        Fx7 = self.find_sensor_by_id(7).get_forces_data().get_forces_x()
+        Fy7 = self.find_sensor_by_id(7).get_forces_data().get_forces_y()
+        Fz7 = self.find_sensor_by_id(7).get_forces_data().get_forces_z()
+
+        Fx8 = self.find_sensor_by_id(8).get_forces_data().get_forces_x()
+        Fy8 = self.find_sensor_by_id(8).get_forces_data().get_forces_y()
+        Fz8 = self.find_sensor_by_id(8).get_forces_data().get_forces_z()
+        
+        long = l
+        
+        ang7 = 53.5*2*np.pi/360
+        ang8 = 45.4*2*np.pi/360
+
+
+        Fx78 = Fx7[:long]*np.cos(ang7) - Fz7[:long]*np.sin(ang7) + \
+               Fx8[:long]*np.cos(ang8) + Fz8[:long]*np.sin(ang8)
+          
+        Fy78 = Fy7[:long] + Fy8[:long]  
+        
+        Fz78 = Fz7[:long]*np.cos(ang7) + Fx7[:long]*np.sin(ang7) + \
+               Fz8[:long]*np.cos(ang8) - Fx8[:long]*np.sin(ang8)
+        
+        return Fx78, Fy78, Fz78
+    
+    def compute_acceleration_speed(self, times, force_signal, body_weight, idx_start_offset = 0, idx_end = 0):
         acceleration_array = force_signal
         mass = body_weight
         delta_t = (1/200)
@@ -316,8 +356,11 @@ class DataContainer:
         #Calcul  Vitesse
         Vit = np.zeros_like(Acc)
         Vit[0] = 0.
+        
+        if idx_end == 0:
+            idx_end = len(Acc)
                 
-        for i in range(idx_start_offset + 1, (self.end_time_idx - 1 )):
+        for i in range(idx_start_offset + 1, (idx_end - 1 )):
             Vit[i] = (Vit[i-1]+(Acc[i-1]+Acc[i])/(2*200) )
              
         return times, Acc, Vit
@@ -487,7 +530,10 @@ class DataContainer:
         
     def set_end_time(self, time_idx):
         self.end_time_idx = time_idx
-        
+    
+    def get_end_time(self):
+        return self.end_time_idx
+    
     def detect_contacts_on_sensors(self):
         detect_threshold_up = 10
         detect_threshold_down = 30

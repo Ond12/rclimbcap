@@ -184,8 +184,6 @@ class DataContainer:
                     time = i / self.chrono_freq
                     down_edges_time_list.append(time)
                     down_edges_idx_list.append(i)
-        
-        print(down_edges_idx_list)
 
         return down_edges_time_list, down_edges_idx_list
             
@@ -245,15 +243,17 @@ class DataContainer:
         forces_z_sensor1 = np.pad(forces_z_sensor1, (0, max_length - len(forces_z_sensor1)), mode='constant')
         forces_z_sensor2 = np.pad(forces_z_sensor2, (0, max_length - len(forces_z_sensor2)), mode='constant')
 
-        tmpx = np.sum([forces_x_sensor1, forces_x_sensor2], axis=0)
-        tmpy = np.sum([forces_y_sensor1, forces_y_sensor2], axis=0)
-        tmpz = np.sum([forces_z_sensor1, forces_z_sensor2], axis=0)
+        # tmpx = np.sum([forces_x_sensor1, forces_x_sensor2], axis=0)
+        # tmpy = np.sum([forces_y_sensor1, forces_y_sensor2], axis=0)
+        # tmpz = np.sum([forces_z_sensor1, forces_z_sensor2], axis=0)
+        
+        t, x, y, z = self.transforme_sensor_7_8()
         
         mergeSensor = Sensor(30, 6, sensor1.frequency)
         
-        mergeSensor.get_forces_data().set_force_x(tmpx)
-        mergeSensor.get_forces_data().set_force_y(tmpy)  
-        mergeSensor.get_forces_data().set_force_z(tmpz)  
+        mergeSensor.get_forces_data().set_force_x(x)
+        mergeSensor.get_forces_data().set_force_y(y)  
+        mergeSensor.get_forces_data().set_force_z(z)  
         
         self.sensors.append(mergeSensor)
         self.sensors_dict[mergeSensor.sensor_id] = mergeSensor
@@ -321,20 +321,20 @@ class DataContainer:
     
     def transforme_sensor_7_8(self):
 
-        Fx7 = self.find_sensor_by_id(7).get_forces_data().get_forces_x()
-        Fy7 = self.find_sensor_by_id(7).get_forces_data().get_forces_y()
-        Fz7 = self.find_sensor_by_id(7).get_forces_data().get_forces_z()
+        Fx7 = np.array(self.find_sensor_by_id(7).get_forces_data().get_forces_x(), dtype=np.float64)
+        Fy7 = np.array(self.find_sensor_by_id(7).get_forces_data().get_forces_y(), dtype=np.float64)
+        Fz7 = np.array(self.find_sensor_by_id(7).get_forces_data().get_forces_z(), dtype=np.float64)
 
-        Fx8 = self.find_sensor_by_id(8).get_forces_data().get_forces_x()
-        Fy8 = self.find_sensor_by_id(8).get_forces_data().get_forces_y()
-        Fz8 = self.find_sensor_by_id(8).get_forces_data().get_forces_z()
+        Fx8 = np.array(self.find_sensor_by_id(8).get_forces_data().get_forces_x(), dtype=np.float64)
+        Fy8 = np.array(self.find_sensor_by_id(8).get_forces_data().get_forces_y(), dtype=np.float64)
+        Fz8 = np.array(self.find_sensor_by_id(8).get_forces_data().get_forces_z(), dtype=np.float64)
         
-        long = l
+        long, sid = self.get_sensor_min_data_len()
+        times = self.find_sensor_by_id(sid).get_times_increments()
         
         ang7 = 53.5*2*np.pi/360
         ang8 = 45.4*2*np.pi/360
-
-
+        
         Fx78 = Fx7[:long]*np.cos(ang7) - Fz7[:long]*np.sin(ang7) + \
                Fx8[:long]*np.cos(ang8) + Fz8[:long]*np.sin(ang8)
           
@@ -342,8 +342,8 @@ class DataContainer:
         
         Fz78 = Fz7[:long]*np.cos(ang7) + Fx7[:long]*np.sin(ang7) + \
                Fz8[:long]*np.cos(ang8) - Fx8[:long]*np.sin(ang8)
-        
-        return Fx78, Fy78, Fz78
+                
+        return times ,Fx78, Fy78, Fz78
     
     def compute_acceleration_speed(self, times, force_signal, body_weight, idx_start_offset = 0, idx_end = 0):
         acceleration_array = force_signal
@@ -399,7 +399,6 @@ class DataContainer:
             end_index = end_time
 
             signal_slice, sid = self.cal_resultant_force(sensor)
-            
             
             #print(f"{signal_slice.size}")
             # print(f"start t : {start_time}   sidx : {start_index}")

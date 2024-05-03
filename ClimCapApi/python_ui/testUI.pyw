@@ -298,16 +298,17 @@ class Wid(QMainWindow):
         self.osc_play_pause_widget.reset_idx.connect(self.osc_sender.reset_packet_idx)
         self.osc_sender.position_signal.connect(self.plotter.set_player_scroll_hline)
     
-    def merge_sensor_action(self):
+    def merge_sensor_action(self, remove_sensor_after=True):
         s1 = self.data_container.get_sensor(7)
         s2 = self.data_container.get_sensor(8)
         
         if s1 and s2:
             self.data_container.merge_sensor(s1, s2)
-            self.data_container.remove_sensor(s1)
-            self.data_container.remove_sensor(s2)
-            self.plotter.remove_sensor_entry(s1.sensor_id)
-            self.plotter.remove_sensor_entry(s2.sensor_id)
+            if remove_sensor_after:
+                self.data_container.remove_sensor(s1)
+                self.data_container.remove_sensor(s2)
+                self.plotter.remove_sensor_entry(s1.sensor_id)
+                self.plotter.remove_sensor_entry(s2.sensor_id)
         
         print("merge action")
             
@@ -468,10 +469,10 @@ class Wid(QMainWindow):
         self.plotter.clear_plot()
         #self.flip_action()
         print("post pro action")
-        self.merge_sensor_action()
-        
+
         #self.apply_filter_action()
         
+        self.merge_sensor_action()
         self.chrono_bip_detection_action()
         
         self.plot_controller.set_up_widget()

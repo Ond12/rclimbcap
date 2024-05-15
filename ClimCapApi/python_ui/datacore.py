@@ -173,13 +173,20 @@ class DataContainer:
             contact.contact_type = type
     
     def detect_chrono_bip(self):
-        slope_threshold = 2
+        slope_threshold = 1
         down_edges_time_list = []
         down_edges_idx_list = []
         
+        edge_type = 'down' #down
+        
         if len(self.chrono_data) > 2:
             for i in range(1, len(self.chrono_data)):
-                difference = self.chrono_data[i] - self.chrono_data[i - 1]
+                
+                if edge_type == 'rise': 
+                    difference = self.chrono_data[i] - self.chrono_data[i - 1]
+                elif edge_type == 'down':
+                    difference = self.chrono_data[i - 1] - self.chrono_data[i]
+                
                 if difference > slope_threshold:
                     time = i / self.chrono_freq
                     down_edges_time_list.append(time)
@@ -567,6 +574,11 @@ class DataContainer:
         sos = butter(order, high_cutoff, btype='lowpass', analog=False, output='sos')
 
         return sos
+    
+    def data_ratio(self, globalres, faxis):
+        ratio_arr = (globalres / np.abs(faxis)) * 100
+        meanratio = np.mean(globalres) / np.mean(faxis)
+        return ratio_arr, meanratio   
 
     def butter_lowpass(self, cutoff_freq, fs, order=5):
         nyquist_freq = 0.5 * fs

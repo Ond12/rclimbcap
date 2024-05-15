@@ -138,6 +138,11 @@ class Wid(QMainWindow):
         show_cross_hair_action.setStatusTip("Crosshair")
         show_cross_hair_action.triggered.connect(self.show_cross_hair_action)
         
+        icon_path = os.path.join(self.icon_folder, 'display.svg')
+        manual_t0_action = QAction(QIcon(icon_path), "&Manual T0", self)
+        manual_t0_action.setStatusTip("Manual T0")
+        manual_t0_action.triggered.connect(self.set_manual_t0)
+        
         self.mtoolbar = self.addToolBar("Tools")
         toolbar = self.mtoolbar
         toolbar.addAction(open_file_action)
@@ -161,6 +166,7 @@ class Wid(QMainWindow):
         #toolbar.addAction(merge_sensor_action)
         toolbar.addAction(show_cross_hair_action)
         toolbar.addAction(process_custom_frame_action)
+        toolbar.addAction(manual_t0_action)
         
         separator = QAction(self)
         separator.setSeparator(True)
@@ -177,7 +183,7 @@ class Wid(QMainWindow):
     def init_ui(self):
         
         import ctypes
-        myappid = 'GIPSA-lab.ClimbCap.ui.V0' 
+        myappid = 'GIPSA-lab.ClimbCap.ui.V1' 
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
         
         current_folder = os.path.dirname(os.path.realpath(__file__))
@@ -188,7 +194,7 @@ class Wid(QMainWindow):
         ic_path = os.path.join( icon_folder, 'prisefr.ico')
 
         self.setWindowIcon(QIcon(ic_path))
-        self.setWindowTitle('ClimbCap V0')
+        self.setWindowTitle('ClimbCap V1')
         self.setGeometry(0, 0, 1500, 1000)
         
         tab = QTabWidget()
@@ -246,6 +252,7 @@ class Wid(QMainWindow):
         self.qtimeline = QTimeLine(6, 60) 
 
         main_grid.addWidget(self.qtimeline, 4, 0)
+        #self.qtimeline.hide()
         #main_grid.addWidget(self.record_widget,4 , 0)
         #main_grid.addWidget(mediaController_widget, 4,0)
         self.qtimeline.positionChanged.connect(self.plotter.set_player_scroll_hline)
@@ -256,6 +263,7 @@ class Wid(QMainWindow):
 
         leftw = QWidget()
         layoutleftw = QVBoxLayout()
+        layoutleftw.setContentsMargins(0,0,0,0)
         layoutleftw.addWidget(self.contactTable_widget)
         layoutleftw.addWidget(self.info_widget)
         leftw.setLayout(layoutleftw)
@@ -357,19 +365,18 @@ class Wid(QMainWindow):
         current_datetime = QDateTime.currentDateTime()
         dst = current_datetime.toString("dd-MM-yyyyThh:mm")
         
-        reaction_time = 0
-        run_time = 0
-        
         if rsp == QDialog.DialogCode.Accepted:
             reaction_time = timeform.get_reaction_time()
             reaction_time = reaction_time.msecsSinceStartOfDay()
             run_time = timeform.get_run_time()
             run_time = run_time.msecsSinceStartOfDay()
             note = timeform.get_run_note()
+            climber_weight = self.plot_controller.get_weight_value()
         else:
             reaction_time = 0
             runt_time = 0
             note = 0
+            climber_weight = 0
         
         file_dialog = QFileDialog()
         file_dialog.setAcceptMode(QFileDialog.AcceptMode.AcceptSave)
@@ -401,7 +408,8 @@ class Wid(QMainWindow):
                         "SUJET": "NONE",
                         "RUNTIME(ms)": run_time,
                         "REACTIONTIME(ms)": reaction_time,
-                        "NOTE": note
+                        "NOTE": note,
+                        "WEIGHT" : climber_weight
                     }, index=[0] )
 
                     df.to_excel(writer, sheet_name=sheet_name, index=True)
@@ -465,6 +473,13 @@ class Wid(QMainWindow):
         self.data_container.apply_filter_hcutoff_to_sensors()
         print("filter action")
 
+    def set_manual_t0(self):
+        biptpos = self.plotter.get_player_hline_pos()[0]
+        self.data_container.apply_idx_offset_to_sensors(biptpos)
+                
+        self.plotter.plot_chrono_bip_marker([0])
+        self.plotter.set_player_scroll_hline(0)
+
     def post_pro_action(self):
         self.plotter.clear_plot()
         #self.flip_action()
@@ -472,8 +487,12 @@ class Wid(QMainWindow):
 
         #self.apply_filter_action()
         
-        self.merge_sensor_action()
-        self.chrono_bip_detection_action()
+        self.merge_sensor_action(True)
+        
+        if len(self.plotter.chrono_markers) == 0:
+            self.chrono_bip_detection_action()
+        else:
+            self.plotter.plot_chrono_bip_marker([0])
         
         self.plot_controller.set_up_widget()
         self.plotter.plot_data()
@@ -546,6 +565,7 @@ class Wid(QMainWindow):
         #self.override_low_values_action()
         #self.compute_normalize_force_action()
         #self.data_container.fill_debug_data()
+        
         force_result = self.data_container.sum_force_data()
         
         time_increments = force_result["time"]
@@ -558,7 +578,7 @@ class Wid(QMainWindow):
             return
         else:
             reply = QMessageBox.question(self, "Info", f"Mass is {value} kg ?",
-                                            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
+                                        QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
             if reply == QMessageBox.StandardButton.No:
                 return
   
@@ -573,7 +593,31 @@ class Wid(QMainWindow):
             global_resultant = self.data_container.cal_resultant_force_arrayin(
                 force_result["sum_x"], force_result["sum_y"], force_result["sum_z"] )
             
+            totforceS = force_result["sum_x"] + force_result["sum_y"] + force_result["sum_z"]
+            totforce = np.full_like(totforceS,100) 
+            fx = np.full_like(totforce,50) 
+            fy = np.full_like(totforce,40)  
+            fz = np.full_like(totforce,10) 
+            ratiox ,m = self.data_container.data_ratio(totforce,fx)
+            ratioy ,m = self.data_container.data_ratio(totforce,fy)
+            ratioz ,m = self.data_container.data_ratio(totforce,fz)
+            plt.figure(figsize=(8, 6))
+
+
+            plt.plot(ratiox, label='Ratio X')
+            plt.plot(ratioy, label='Ratio Y')
+            plt.plot(ratioz, label='Ratio Z')
+
+            plt.xlabel('Index')
+            plt.ylabel('Ratio')
+            plt.title('Ratio Plots')
+            plt.legend()
+            plt.grid(True)
+            plt.show()
+            
             power_data = self.data_container.compute_power(global_resultant, velocity)
+            #PUISSANCE VERT POUR LA PERF
+            #PUISSANCE GLOBAL POUR LA PREPA PHY
             
             avgpower = self.data_container.find_moy(power_data[last_bip_idx:idx_end])
             power_per_kilo = avgpower / body_weight_kg

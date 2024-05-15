@@ -130,6 +130,7 @@ class Plotter(pg.PlotWidget):
         
         self.climber_weight_hline = None
         self.chrono_plot_item = None
+        self.chrono_markers = []
         
         self.showGrid(x=False, y=True)
         self.legend = self.addLegend()
@@ -138,7 +139,15 @@ class Plotter(pg.PlotWidget):
         self.legend.verSpacing = -1
         #self.legend.hide()
         
+        custom_axis = pg.AxisItem(orientation = 'left')
+        custom_axis.setStyle(tickTextOffset=0, tickFont=QFont("Arial", 10))
+        self.setAxisItems(axisItems = {'left': custom_axis})
+
         self.setBackground('w')
+        # Set the style of the tick text
+
+
+  
         
         self.update_is_started = True
         self.update_timer = QTimer()
@@ -208,6 +217,8 @@ class Plotter(pg.PlotWidget):
         self.update_chrono_plot_data()
         
         self.update()
+        
+
 
     def update_sensor_plot_data(self, sensor_id:int):
         cur_sensor = self.data_container.get_sensor(sensor_id)
@@ -282,13 +293,22 @@ class Plotter(pg.PlotWidget):
 
     def handle_curve_click(self, curve):
         print(f"Curve clicked: {curve}")  # for testing
-          
+    
+    def remove_markers(self):
+        for marker in self.chrono_markers:
+            self.removeItem(marker)
+        
+        self.chrono_markers = []
+    
     def plot_chrono_bip_marker(self, times):
+        self.remove_markers()
         for time in times:
             marker_time_line = pg.InfiniteLine(pos=time, angle=90, movable=False, pen='g')
             marker_time_line.addMarker('o', position=0.9, size=8.0)
+            marker_time_line.name = "cmark" 
 
             self.addItem(marker_time_line)
+            self.chrono_markers.append(marker_time_line)
 
     def plot_sum_force(self):
         force_result = self.data_container.sum_force_data()
@@ -330,6 +350,11 @@ class Plotter(pg.PlotWidget):
         self.plot([time], [value],
               pen=(187, 26, 95), symbolBrush=(187, 26, 95),
               symbolPen='w', symbol='arrow_up', symbolSize=22, name="symbol='arrow_up'")
+    
+    def get_player_hline_pos(self):
+        if self.vertical_line:
+            return self.vertical_line.getPos()
+        return 0
     
     def set_player_scroll_hline(self, position):
         # time_interval = ( 1000/200 )

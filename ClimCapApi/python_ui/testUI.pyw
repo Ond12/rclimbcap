@@ -198,6 +198,7 @@ class Wid(QMainWindow):
         self.setGeometry(0, 0, 1500, 1000)
         
         tab = QTabWidget()
+        tab.setStyleSheet("QTabBar::tab { height: 15px; width: 110px; }")
         
         main_grid = QGridLayout()
         main_grid.setSpacing(0)
@@ -269,6 +270,7 @@ class Wid(QMainWindow):
         leftw.setLayout(layoutleftw)
         
         dock = QDockWidget('Contact infos')
+        dock.setTitleBarWidget(QWidget())
         dock.setFeatures(QDockWidget.DockWidgetFeature.NoDockWidgetFeatures)
         self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, dock)
         dock.setWidget(leftw)
@@ -276,6 +278,7 @@ class Wid(QMainWindow):
         self.routeView_widget = RouteViewWidget(self.plotter)
                
         dockR = QDockWidget('Plan')
+        dockR.setTitleBarWidget(QWidget())
         dockR.setFeatures(QDockWidget.DockWidgetFeature.NoDockWidgetFeatures)
         self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, dockR)
         dockR.setWidget(self.routeView_widget)
@@ -487,12 +490,12 @@ class Wid(QMainWindow):
 
         #self.apply_filter_action()
         
-        self.merge_sensor_action(True)
-        
         if len(self.plotter.chrono_markers) == 0:
             self.chrono_bip_detection_action()
         else:
             self.plotter.plot_chrono_bip_marker([0])
+            
+        self.merge_sensor_action(True)
         
         self.plot_controller.set_up_widget()
         self.plotter.plot_data()
@@ -615,11 +618,11 @@ class Wid(QMainWindow):
             plt.grid(True)
             plt.show()
             
-            power_data = self.data_container.compute_power(global_resultant, velocity)
+            powervert_data = self.data_container.compute_power(all_forces_z, velocity)
             #PUISSANCE VERT POUR LA PERF
             #PUISSANCE GLOBAL POUR LA PREPA PHY
             
-            avgpower = self.data_container.find_moy(power_data[last_bip_idx:idx_end])
+            avgpower = self.data_container.find_moy(powervert_data[last_bip_idx:idx_end])
             power_per_kilo = avgpower / body_weight_kg
             avgspeed = self.data_container.find_moy(velocity[last_bip_idx:idx_end])
             
@@ -628,7 +631,7 @@ class Wid(QMainWindow):
             self.info_widget.setText("Average_speed:", str(round(avgspeed,2)) + " m/s")
             
             idx_max_speed, max_speed = self.data_container.find_max_numpy(velocity)
-            idx_max_power, max_power = self.data_container.find_max_numpy(power_data)
+            idx_max_power, max_power = self.data_container.find_max_numpy(powervert_data)
 
             tmp = self.data_container.index_to_time(idx_max_power - last_bip_idx)
             tmv = self.data_container.index_to_time(idx_max_speed - last_bip_idx)
@@ -652,8 +655,9 @@ class Wid(QMainWindow):
             self.w.addItem(pmax_marker)
 
             plot_item_vel = self.w.plot(times, velocity, pen=pg.mkPen((235,52,225), width=2, style=style_dict[2]), name=f"speed")        
-            plot_item_power = self.w.plot(times, power_data,  pen=pg.mkPen((52,52,225), width=2, style=style_dict[1]), name=f"power")
+            plot_item_power = self.w.plot(times, powervert_data,  pen=pg.mkPen((52,52,225), width=2, style=style_dict[1]), name=f"power")
             plot_item_global_res = self.plotter.plot(times, global_resultant,  pen=pg.mkPen((52,225,52), width=2, style=style_dict[1]), name=f"global res")
+            plot_item_global_res.setVisible(False)
             lot_item_acc_data = self.plotter.plot(times, acc_data,  pen=pg.mkPen((52,225,52), width=2, style=style_dict[1]), name=f"acc")
             
             plot_item_vel.visibleChanged.connect(self.updatePlotRange)
@@ -669,6 +673,8 @@ class Wid(QMainWindow):
                 
                 self.plotter.plot_data()
                 self.plot_controller.set_up_widget()
+        
+        self.qtimeline.setDuration(20)
 
     def extract_sensor_id(self, sheet_name):
         match = re.search(r'\bCapteur (\d+)\b', sheet_name)

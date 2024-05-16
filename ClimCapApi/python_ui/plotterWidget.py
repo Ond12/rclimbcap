@@ -260,7 +260,7 @@ class Plotter(pg.PlotWidget):
                 plot_item_force_y = self.plot([0], [0], pen=pg.mkPen(color_y_v, width=2, alpha=200,  style=line_style), name=f"S{sensor.sensor_id}-FY",skipFiniteCheck=True)
                 self.plot_items.append(plot_item_force_y)
                 plot_item_force_y.setSkipFiniteCheck(True)
-                plot_item_force_y.setVisible(True)
+                plot_item_force_y.setVisible(False)
                 plot_item_force_y.setCurveClickable(True)
 
                 color_z_v = BLUE[sensor.sensor_id % 11]
@@ -285,6 +285,7 @@ class Plotter(pg.PlotWidget):
             time_increments_chrono_dummy = [(i * time_interval) - self.data_container.chrono_offset for i in range(num_samples)]
             plot_item_chrono_data = self.plot(time_increments_chrono_dummy, cr_data, pen=pg.mkPen(color_chrono, width=2, alpha=200), name=f"Cr")
             self.plot_items.append(plot_item_chrono_data)
+            plot_item_chrono_data.setVisible(False)
             
             self.chrono_plot_item = plot_item_chrono_data
 

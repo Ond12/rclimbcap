@@ -47,6 +47,9 @@ class Sensor:
         self.frequency = frequency
         self.analog_data = AnalogData(frequency, num_channels)
         self.force_data = ForcesDataC(frequency) 
+        
+        self.raw_force = ForcesDataC(frequency) 
+        
         self.time_offset = 0 
         
         self.isrotate = False
@@ -123,6 +126,9 @@ class Sensor:
 
     def get_forces_data(self):
         return self.force_data
+    
+    def get_raw_forces_data(self):
+        return self.raw_force
         
     def get_analog_data(self):
         return self.analog_data
@@ -141,6 +147,7 @@ class Sensor:
     
     def clear_data(self):
         self.force_data = ForcesDataC(self.frequency)  
+        self.filtered_data  =  ForcesDataC(self.frequency)  
     
     def set_is_compression_flip(self):
         self.isCompressionFlip = True
@@ -173,7 +180,7 @@ class DataContainer:
             contact.contact_type = type
     
     def detect_chrono_bip(self):
-        slope_threshold = 1
+        slope_threshold = 2
         down_edges_time_list = []
         down_edges_idx_list = []
         
@@ -186,6 +193,7 @@ class DataContainer:
                     difference = self.chrono_data[i] - self.chrono_data[i - 1]
                 elif edge_type == 'down':
                     difference = self.chrono_data[i - 1] - self.chrono_data[i]
+                    slope_threshold = 1
                 
                 if difference > slope_threshold:
                     time = i / self.chrono_freq
@@ -257,6 +265,7 @@ class DataContainer:
         t, x, y, z = self.transforme_sensor_7_8()
         
         mergeSensor = Sensor(30, 6, sensor1.frequency)
+        mergeSensor.set_time_offset(sensor1.time_offset)
         
         mergeSensor.get_forces_data().set_force_x(x)
         mergeSensor.get_forces_data().set_force_y(y)  
@@ -311,7 +320,7 @@ class DataContainer:
                 sum_z_data = np.add(sum_z_data, force_data.get_forces_z()[0:num_points])  
 
         result = {}
-        result["time"] = self.find_sensor_by_id(sid).get_times_increments()
+        result["time"]  = self.find_sensor_by_id(sid).get_times_increments()
         result["sum_x"] = sum_x_data
         result["sum_y"] = sum_y_data
         result["sum_z"] = sum_z_data
@@ -353,22 +362,19 @@ class DataContainer:
         return times ,Fx78, Fy78, Fz78
     
     def compute_acceleration_speed(self, times, force_signal, body_weight, idx_start_offset = 0, idx_end = 0):
-        acceleration_array = force_signal
-        mass = body_weight
-        delta_t = (1/200)
 
         Acc = np.zeros_like(force_signal)
         Acc = (force_signal - (body_weight*9.81)) / body_weight
-
+        freq = 200
+        
         #Calcul  Vitesse
         Vit = np.zeros_like(Acc)
-        Vit[0] = 0.
         
         if idx_end == 0:
             idx_end = len(Acc)
                 
         for i in range(idx_start_offset + 1, (idx_end - 1 )):
-            Vit[i] = (Vit[i-1]+(Acc[i-1]+Acc[i])/(2*200) )
+            Vit[i] = ( Vit[i-1] + (Acc[i-1] + Acc[i])  / (2*freq)  )
              
         return times, Acc, Vit
     

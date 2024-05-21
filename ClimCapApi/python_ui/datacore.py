@@ -292,15 +292,48 @@ class DataContainer:
             print(f"sensor : {sensor_id} not found in sensors_dict")
         return None  
 
+    def time_per_nb_contact(self,  stacked_contact_timing_array):
+        occurrences = {}
+        
+        for number in stacked_contact_timing_array:
+            if number in occurrences:
+                occurrences[number] += 1
+            else:
+                occurrences[number] = 1
+        
+        total_occurrences = sum(occurrences.values())
+        scaled_values = [value * (1/200) for value in occurrences.values()]
+
+        plt.bar(occurrences.keys(), scaled_values, color='blue')
+        
+        score_weight = [-10, 1, 2, 3, 4]
+        score = 0
+
+        for key, value in zip(occurrences.keys(), scaled_values):
+            percentage = (occurrences[key] / total_occurrences) * 100
+            score += percentage * score_weight[int(key)]
+            plt.text(key, value, f'{value:.2f} ({percentage:.2f}%)', ha='center', va='bottom')
+
+        plt.text(0.02, 0.95, f'score: {score:.2f}', transform=plt.gca().transAxes, fontsize=12, verticalalignment='top')
+        plt.xlabel('Simultaneous contacts number')
+        plt.ylabel('Time (s)')
+        plt.title('Simultaneous contacts number by time')
+        plt.show()
+
     def stacked_contact_timing(self, contact_list):
         minlen, sid = self.get_sensor_min_data_len()
         array = np.zeros(minlen)
         
+        st_idx = 0
+        et_idx = 0
         for contact in contact_list:  
+            st_idx = contact_list[0].start_time
             for i in range(contact.start_time, contact.end_time+1):
                 array[i] += 1
+            et_idx = contact.end_time
 
         times = self.find_sensor_by_id(sid).get_times_increments()
+        self.time_per_nb_contact(array[st_idx:et_idx])
         return times, array
 
     def cal_resultant_force(self, sensor):

@@ -18,14 +18,14 @@ class infoWidget(QWidget):
     def initUI(self):
         grid_layout = QGridLayout()
         
-        data = {
+        self.default_data = {
             "Average power:": "0",
             "Power/kilos:": "0",
             "Average speed:" : "0",
         }
 
         row = 0
-        for label_text, value_text in data.items():
+        for label_text, value_text in self.default_data.items():
             label = QLabel(label_text)
             value = QLabel(value_text)
             value.setObjectName(label_text.replace(" ", "_"))  
@@ -34,7 +34,13 @@ class infoWidget(QWidget):
             row += 1
 
         self.setLayout(grid_layout)
-        
+    
+    def reset_all_text(self):
+        for label_text, default_value in self.default_data.items():
+            object_name = label_text.replace(" ", "_")
+            self.setText(object_name, default_value)
+
+
     def setText(self, object_name, text):
         for child in self.children():
             if isinstance(child, QLabel) and child.objectName() == object_name:

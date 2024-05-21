@@ -453,6 +453,8 @@ class Wid(QMainWindow):
         
         self.data_container2.clear_all_sensor_data()
         self.plotter2.clear_plot()
+        self.w.clear()
+        self.info_widget.reset_all_text()
 
     def compute_normalize_force_action(self):
         self.plotter2.clear_plot()

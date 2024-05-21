@@ -8,7 +8,7 @@ from PyQt6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QFont, QFontDatabase, QGradient, QIcon,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
-from PyQt6.QtWidgets import (QAbstractButton, QApplication, QDialog, QDialogButtonBox,
+from PyQt6.QtWidgets import (QAbstractButton, QApplication, QDialog, QDialogButtonBox,QDoubleSpinBox,
     QSizePolicy, QWidget)
 
 class TimeForm(QDialog):
@@ -42,8 +42,20 @@ class TimeForm(QDialog):
         self.combo_box = QComboBox()
         for i in range(0, 11):
             self.combo_box.addItem(str(i))
+            
+        labelmass = QLabel("Mass(kg):")
+        self.weight_doubleSpinBox = QDoubleSpinBox()
+        self.weight_doubleSpinBox.setRange(0.0, 200.0)
+        self.weight_doubleSpinBox.setValue(0.0)
+        
+        labelnom = QLabel("Name:")
+        self.nametextbox = QLineEdit("unk")
 
         layout = QVBoxLayout()
+        layout.addWidget(labelnom)
+        layout.addWidget(self.nametextbox)
+        layout.addWidget(labelmass)
+        layout.addWidget(self.weight_doubleSpinBox)
         layout.addWidget(label1)
         layout.addWidget(self.run_time_edit)
         layout.addWidget(label2)

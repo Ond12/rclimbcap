@@ -363,18 +363,21 @@ class Wid(QMainWindow):
 
     def file_save_action(self):
         timeform = TimeForm()
+        climber_weight = self.plot_controller.get_weight_value()
+        timeform.weight_doubleSpinBox.setValue(climber_weight)
         rsp = timeform.exec()
         
         current_datetime = QDateTime.currentDateTime()
         dst = current_datetime.toString("dd-MM-yyyyThh:mm")
         
         if rsp == QDialog.DialogCode.Accepted:
+            name = timeform.nametextbox.text()
             reaction_time = timeform.get_reaction_time()
             reaction_time = reaction_time.msecsSinceStartOfDay()
             run_time = timeform.get_run_time()
             run_time = run_time.msecsSinceStartOfDay()
             note = timeform.get_run_note()
-            climber_weight = self.plot_controller.get_weight_value()
+            climber_weight = timeform.weight_doubleSpinBox.value()
         else:
             reaction_time = 0
             runt_time = 0
@@ -408,11 +411,11 @@ class Wid(QMainWindow):
                         "DATE": datetime.now().date(),
                         "FREQ": freq_value,
                         "SESSION": "NONE",
-                        "SUJET": "NONE",
+                        "SUJET": name,
                         "RUNTIME(ms)": run_time,
                         "REACTIONTIME(ms)": reaction_time,
                         "NOTE": note,
-                        "WEIGHT" : climber_weight
+                        "WEIGHT(kg)" : climber_weight
                     }, index=[0] )
 
                     df.to_excel(writer, sheet_name=sheet_name, index=True)
@@ -487,16 +490,16 @@ class Wid(QMainWindow):
         self.plotter.clear_plot()
         #self.flip_action()
         print("post pro action")
-
-        #self.apply_filter_action()
+        
+        self.merge_sensor_action(True)
+        
+        self.apply_filter_action()
         
         if len(self.plotter.chrono_markers) == 0:
             self.chrono_bip_detection_action()
         else:
             self.plotter.plot_chrono_bip_marker([0])
             
-        self.merge_sensor_action(True)
-        
         self.plot_controller.set_up_widget()
         self.plotter.plot_data()
         
@@ -517,6 +520,11 @@ class Wid(QMainWindow):
         
         self.qtimeline.add_all_contacts(all_contact_list)
         self.routeView_widget.draw_all_contact_time(all_contact_list)
+        
+        times, stack_timing = self.data_container.stacked_contact_timing(all_contact_list)
+
+        plot_item_vel = self.w.plot(times,stack_timing, pen=pg.mkPen((235,52,150), width=2, style=style_dict[5]), name=f"contacts")     
+        plot_item_vel.setVisible(False)
 
     def override_low_values_action(self):
         self.data_container.override_neg_z()
@@ -659,6 +667,7 @@ class Wid(QMainWindow):
             plot_item_global_res = self.plotter.plot(times, global_resultant,  pen=pg.mkPen((52,225,52), width=2, style=style_dict[1]), name=f"global res")
             plot_item_global_res.setVisible(False)
             lot_item_acc_data = self.plotter.plot(times, acc_data,  pen=pg.mkPen((52,225,52), width=2, style=style_dict[1]), name=f"acc")
+            lot_item_acc_data.setVisible(False)
             
             plot_item_vel.visibleChanged.connect(self.updatePlotRange)
             plot_item_power.visibleChanged.connect(self.updatePlotRange)

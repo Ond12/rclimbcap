@@ -141,14 +141,12 @@ class Plotter(pg.PlotWidget):
         
         custom_axis = pg.AxisItem(orientation = 'left')
         custom_axis.setStyle(tickTextOffset=0, tickFont=QFont("Arial", 10))
+        custom_axis.setGrid(155)
         self.setAxisItems(axisItems = {'left': custom_axis})
 
         self.setBackground('w')
         # Set the style of the tick text
 
-
-  
-        
         self.update_is_started = True
         self.update_timer = QTimer()
         self.update_timer.setInterval(self.refresh_rate)

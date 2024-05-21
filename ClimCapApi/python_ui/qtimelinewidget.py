@@ -173,18 +173,17 @@ class QTimeLine(QWidget):
             path.addRoundedRect(QRectF(t/scale, 50, sample.duration/scale, 200), 10, 10)
 
             qp.setClipPath(path)
-
+            
+            y_start_pos = 30
+            nblane = 4
+            lane_rec_height = 20
+            y_pos = ((i % nblane) + 1) * lane_rec_height + y_start_pos
+            
             # Draw sample
             path = QPainterPath()
             qp.setPen(sample.color)
-            if i % 2 !=0:   
-                path.addRoundedRect(QRectF(t/scale, 50, sample.duration/scale, 20), 5, 5)
-            elif i % 3 != 0:
-                path.addRoundedRect(QRectF(t/scale, 70, sample.duration/scale, 20), 5, 5)
-            elif i % 4 != 0:
-                path.addRoundedRect(QRectF(t/scale, 90, sample.duration/scale, 20), 5, 5)
-            else:   
-                path.addRoundedRect(QRectF(t/scale, 110, sample.duration/scale, 20), 5, 5)
+ 
+            path.addRoundedRect(QRectF(t/scale, y_pos, sample.duration/scale, lane_rec_height), 5, 5)
                 
             sample.startPos = t/scale
             sample.endPos = t/scale + sample.duration/scale
@@ -195,15 +194,16 @@ class QTimeLine(QWidget):
 
             qp.setPen(self.textColor)
             qp.setFont(self.font)
-            if i % 2 !=0:   
-                qp.drawText( QRectF(t/scale, 50, sample.duration/scale, 100), Qt.AlignmentFlag.AlignHCenter, f"s{sample.contact_object.sensor_id}")
-            elif i % 3 != 0:
-                qp.drawText( QRectF(t/scale, 70, sample.duration/scale, 100), Qt.AlignmentFlag.AlignHCenter, f"s{sample.contact_object.sensor_id}")
-            elif i % 4 != 0:
-                qp.drawText( QRectF(t/scale, 90, sample.duration/scale, 100), Qt.AlignmentFlag.AlignHCenter, f"s{sample.contact_object.sensor_id}")
-            else:   
-                qp.drawText( QRectF(t/scale, 110, sample.duration/scale, 100), Qt.AlignmentFlag.AlignHCenter, f"s{sample.contact_object.sensor_id}")
-             
+            
+            name = f"s{sample.contact_object.sensor_id}"
+            
+            if sample.contact_object.sensor_id == 30:
+                name = "foot"            
+            elif sample.contact_object.sensor_id == 40:
+                name = "plat"
+
+            qp.drawText( QRectF(t/scale, y_pos, sample.duration/scale, 100), Qt.AlignmentFlag.AlignHCenter, name)
+ 
             i+=1
 
             # # Draw preview pictures
@@ -324,7 +324,7 @@ class QTimeLine(QWidget):
     # Set Font
     def setTextFont(self, font):
         self.font = font
-        
+    
     def add_all_contacts(self, contact_list):
         cvs = None
         for contact in contact_list:

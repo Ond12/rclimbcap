@@ -48,7 +48,7 @@ class Sensor:
         self.analog_data = AnalogData(frequency, num_channels)
         self.force_data = ForcesDataC(frequency) 
         
-        self.raw_force = ForcesDataC(frequency) 
+        self.filtered_force_data = ForcesDataC(frequency) 
         
         self.time_offset = 0 
         
@@ -127,8 +127,8 @@ class Sensor:
     def get_forces_data(self):
         return self.force_data
     
-    def get_raw_forces_data(self):
-        return self.raw_force
+    def get_filtered_forces_data(self):
+        return self.filtered_force_data
         
     def get_analog_data(self):
         return self.analog_data
@@ -147,7 +147,7 @@ class Sensor:
     
     def clear_data(self):
         self.force_data = ForcesDataC(self.frequency)  
-        self.filtered_data  =  ForcesDataC(self.frequency)  
+        self.filtered_data  = ForcesDataC(self.frequency)  
     
     def set_is_compression_flip(self):
         self.isCompressionFlip = True
@@ -292,9 +292,20 @@ class DataContainer:
             print(f"sensor : {sensor_id} not found in sensors_dict")
         return None  
 
+    def stacked_contact_timing(self, contact_list):
+        minlen, sid = self.get_sensor_min_data_len()
+        array = np.zeros(minlen)
+        
+        for contact in contact_list:  
+            for i in range(contact.start_time, contact.end_time+1):
+                array[i] += 1
+
+        times = self.find_sensor_by_id(sid).get_times_increments()
+        return times, array
+
     def cal_resultant_force(self, sensor):
-        force_data = sensor.get_forces_data()
-        resultant_force = self.cal_resultant_force_arrayin(force_data.get_forces_x(), force_data.get_forces_y(), force_data.get_forces_z())
+        force_data_raw = sensor.get_forces_data()
+        resultant_force = self.cal_resultant_force_arrayin(force_data_raw.get_forces_x(), force_data_raw.get_forces_y(), force_data_raw.get_forces_z())
         return resultant_force, sensor.sensor_id
     
     def cal_resultant_force_arrayin(self, datax, datay, dataz):
@@ -551,17 +562,23 @@ class DataContainer:
         detect_threshold_down = 30
         crossing_threshold = 20
         
+        minimum_period = 50
+        
         all_contacts_list = []
         
         for sensor in self.sensors:
             sensor_id = sensor.sensor_id
-            resultant_force, sid= self.cal_resultant_force(sensor)
+            resultant_force, sid = self.cal_resultant_force(sensor)
             data = resultant_force
             time_offset =  sensor.time_offset
-            cur_contacts_list = self.detect_contacts(data, sensor_id, time_offset, detect_threshold_up, detect_threshold_down, True, crossing_threshold )
+            cur_contacts_list = self.detect_contacts(data, sensor_id, time_offset, detect_threshold_up, detect_threshold_down, True, crossing_threshold)
 
             for contact in cur_contacts_list:
-                if(contact.period > 50):
+                if sensor_id == 40:
+                    if(contact.period > 30):
+                        all_contacts_list.append(contact)
+                        
+                if(contact.period > minimum_period):
                     all_contacts_list.append(contact)
                             
         return sorted(all_contacts_list, key=lambda x: x.start_time)
@@ -611,9 +628,9 @@ class DataContainer:
             dataz = sensor.get_forces_data().get_forces_z()
             filtered_signal_z = sosfilt(sos_butter, dataz)
 
-            sensor.get_forces_data().set_force_x(filtered_signal_x)
-            sensor.get_forces_data().set_force_y(filtered_signal_y)
-            sensor.get_forces_data().set_force_z(filtered_signal_z)
+            sensor.get_filtered_forces_data().set_force_x(filtered_signal_x)
+            sensor.get_filtered_forces_data().set_force_y(filtered_signal_y)
+            sensor.get_filtered_forces_data().set_force_z(filtered_signal_z)
     
     def normalize_force(self,force_data, body_weight):
         normalized_force = [force / body_weight for force in force_data]

@@ -25,6 +25,7 @@ from ForceDataContainer import *
 from MediaController import *
 from TimeDialog import *
 from qtimelinewidget import *
+from videoPlayerWidget import *
 
 #region window
 #_________________________________________________________________________________________
@@ -205,6 +206,7 @@ class Wid(QMainWindow):
         main_grid.setContentsMargins(0, 0, 0, 0)
         
         main_widget = QWidget()
+        main_widget.setMaximumWidth(1500)
         main_widget.setLayout(main_grid)
         
         self.setCentralWidget(main_widget)
@@ -233,7 +235,7 @@ class Wid(QMainWindow):
         self.w.showGrid(x=False, y=True)
         self.w.setBackground('w')
         self.w.addLegend()
-        self.w.setMaximumHeight(200)
+        self.w.setMaximumHeight(190)
         self.vertical_line = pg.InfiniteLine(pos=0, angle=90, movable=False, pen='r')
         self.w.addItem(self.vertical_line, ignoreBounds=True) 
         inf2 = pg.InfiniteLine(pos= (0,3), movable=True, angle=0, pen=(0, 0, 200), bounds = [-20, 20], hoverPen=(0,200,0), label='V={value:0.2f}m/s', 
@@ -256,6 +258,10 @@ class Wid(QMainWindow):
         #self.qtimeline.hide()
         #main_grid.addWidget(self.record_widget,4 , 0)
         #main_grid.addWidget(mediaController_widget, 4,0)
+        
+        self.videoPlayer_widget = VideoPlayerWidget()
+        
+        self.videoPlayer_widget.position_signal.connect(self.plotter.set_player_scroll_hline)
         self.qtimeline.positionChanged.connect(self.plotter.set_player_scroll_hline)
         self.plotter.scroll_line_pos_changed.connect(self.vertical_line.setPos)
         
@@ -274,14 +280,24 @@ class Wid(QMainWindow):
         dock.setFeatures(QDockWidget.DockWidgetFeature.NoDockWidgetFeatures)
         self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, dock)
         dock.setWidget(leftw)
+        dock.hide()
+        
 
         self.routeView_widget = RouteViewWidget(self.plotter)
+        self.routeView_widget.setMaximumWidth(200)
+        
+        rightw = QWidget()
+        layoutrightw = QHBoxLayout()
+        layoutrightw.setContentsMargins(0,0,0,0)
+        layoutrightw.addWidget(self.routeView_widget)
+        layoutrightw.addWidget(self.videoPlayer_widget)
+        rightw.setLayout(layoutrightw)
                
         dockR = QDockWidget('Plan')
         dockR.setTitleBarWidget(QWidget())
         dockR.setFeatures(QDockWidget.DockWidgetFeature.NoDockWidgetFeatures)
         self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, dockR)
-        dockR.setWidget(self.routeView_widget)
+        dockR.setWidget(rightw)
 
         self.showMaximized()
         self.init_osc_sender()
@@ -455,6 +471,7 @@ class Wid(QMainWindow):
         self.plotter2.clear_plot()
         self.w.clear()
         self.info_widget.reset_all_text()
+        self.plotter.remove_markers()
 
     def compute_normalize_force_action(self):
         self.plotter2.clear_plot()
@@ -496,7 +513,7 @@ class Wid(QMainWindow):
         self.merge_sensor_action(True)
         
         self.apply_filter_action()
-        
+         
         if len(self.plotter.chrono_markers) == 0:
             self.chrono_bip_detection_action()
         else:

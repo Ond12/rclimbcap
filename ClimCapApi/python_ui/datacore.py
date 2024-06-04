@@ -5,7 +5,7 @@ import pandas as pd
 from scipy.integrate import quad
 import re
 from scipy import integrate
-from scipy.signal import butter, sosfilt, filtfilt, square, medfilt
+from scipy.signal import butter, sosfilt, filtfilt, square, medfilt, firwin, lfilter
 import pyqtgraph as pg
 from PyQt6.QtWidgets import *
 from PyQt6.QtGui import *
@@ -619,7 +619,16 @@ class DataContainer:
     def apply_idx_offset_to_sensors(self, time_idx):
         for sensor in self.sensors:
             sensor.set_time_offset(time_idx)
-         
+    
+    
+    # Déclaration : design_fir_filter(cutoff_frequency, order, sampling_rate)
+    # @param cutoff_frequency : fréquence de coupure du filtre en Hz
+    # @param order : nombre de taps du filtre FIR
+    # @param sampling_rate : fréquence d'échantillonnage des données
+    # @return filter_taps : coefficients du filtre FIR
+    def design_fir_filter(self, cutoff_frequency, order, sampling_rate):
+        return firwin(order, cutoff=cutoff_frequency, fs=sampling_rate, pass_zero='lowpass')
+            
     def butter_bandstop_filter(self, stop_band, sampling_rate):
         nyquist_freq = 0.5 * sampling_rate
         low_cutoff = stop_band[0] / nyquist_freq
@@ -647,27 +656,51 @@ class DataContainer:
         filtered_data = sosfilt(sos_butter, data)
         return filtered_data
 
+
     def apply_filter_hcutoff_to_sensors(self):
         stop_band_frequency = 10    
         sampling_rate = self.sensors[0].frequency
         stop_band = (0, stop_band_frequency)
+        
+        firr_order = 21
+        firr_cutoff = 15
+
+        butter = False
 
         sos_butter = self.butter_bandstop_filter(stop_band, sampling_rate)
-        for sensor in self.sensors:
-            datax = sensor.get_forces_data().get_forces_x()
-            filtered_signal_x = sosfilt(sos_butter, datax)
-            datay = sensor.get_forces_data().get_forces_y()
-            filtered_signal_y = sosfilt(sos_butter, datay)
-            dataz = sensor.get_forces_data().get_forces_z()
-            filtered_signal_z = sosfilt(sos_butter, dataz)
+        filter_taps = self.design_fir_filter(firr_cutoff, firr_order, sampling_rate)
+        
+        if butter:
+            for sensor in self.sensors:
+                datax = sensor.get_forces_data().get_forces_x()
+                filtered_signal_x = sosfilt(sos_butter, datax)
+                datay = sensor.get_forces_data().get_forces_y()
+                filtered_signal_y = sosfilt(sos_butter, datay)
+                dataz = sensor.get_forces_data().get_forces_z()
+                filtered_signal_z = sosfilt(sos_butter, dataz)
 
-            sensor.get_filtered_forces_data().set_force_x(filtered_signal_x)
-            sensor.get_filtered_forces_data().set_force_y(filtered_signal_y)
-            sensor.get_filtered_forces_data().set_force_z(filtered_signal_z)
-    
+                sensor.get_filtered_forces_data().set_force_x(filtered_signal_x)
+                sensor.get_filtered_forces_data().set_force_y(filtered_signal_y)
+                sensor.get_filtered_forces_data().set_force_z(filtered_signal_z)
+        else: #firr
+            for sensor in self.sensors:
+                datax = sensor.get_forces_data().get_forces_x()
+                
+                filtered_signal_x = lfilter(filter_taps, 1.0, datax)
+                datay = sensor.get_forces_data().get_forces_y()
+                filtered_signal_y = lfilter(filter_taps, 1.0, datay)
+                dataz = sensor.get_forces_data().get_forces_z()
+                filtered_signal_z = lfilter(filter_taps, 1.0, dataz)
+
+                sensor.get_forces_data().set_force_x(filtered_signal_x)
+                sensor.get_forces_data().set_force_y(filtered_signal_y)
+                sensor.get_forces_data().set_force_z(filtered_signal_z)
+            
     def normalize_force(self,force_data, body_weight):
         normalized_force = [force / body_weight for force in force_data]
         return normalized_force
+
+
 
     def apply_rotation_to_force(self):
         for sensor in self.sensors:

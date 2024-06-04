@@ -40,7 +40,6 @@ class infoWidget(QWidget):
             object_name = label_text.replace(" ", "_")
             self.setText(object_name, default_value)
 
-
     def setText(self, object_name, text):
         for child in self.children():
             if isinstance(child, QLabel) and child.objectName() == object_name:

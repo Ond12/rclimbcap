@@ -356,8 +356,7 @@ class Plotter(pg.PlotWidget):
         return 0
     
     def set_player_scroll_hline(self, position):
-        # time_interval = ( 1000/200 )
-        # position = (packetidx * time_interval) / 1000 #in seconds
+        position = position / 1000
         if not self.vertical_line:
                 self.vertical_line = pg.InfiniteLine(pos=position, angle=90, movable=False, pen='r')
                 self.addItem(self.vertical_line)

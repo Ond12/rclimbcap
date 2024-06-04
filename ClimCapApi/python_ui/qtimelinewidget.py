@@ -245,8 +245,8 @@ class QTimeLine(QWidget):
             
             self.checkSelection(x)
             self.pointerTimePos = self.pointerPos*self.getScale()
-            
-            self.positionChanged.emit(self.pointerTimePos)
+
+            self.positionChanged.emit(self.pointerTimePos*1000)
 
         self.update()
 
@@ -257,7 +257,7 @@ class QTimeLine(QWidget):
             self.pointerPos = x
             
             self.pointerTimePos = self.pointerPos * self.getScale()
-            self.positionChanged.emit(self.pointerPos)
+            self.positionChanged.emit(self.pointerPos*1000)
 
             self.checkSelection(x)
 

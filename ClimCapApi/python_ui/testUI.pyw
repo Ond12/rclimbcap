@@ -261,8 +261,9 @@ class Wid(QMainWindow):
         
         self.videoPlayer_widget = VideoPlayerWidget()
         
+        self.videoPlayer_widget.position_signal.connect(self.qtimeline.set_position)
         self.videoPlayer_widget.position_signal.connect(self.plotter.set_player_scroll_hline)
-        self.qtimeline.positionChanged.connect(self.plotter.set_player_scroll_hline)
+        #self.qtimeline.positionChanged.connect(self.plotter.set_player_scroll_hline)
         self.plotter.scroll_line_pos_changed.connect(self.vertical_line.setPos)
         
         self.contactTable_widget = ContactTableWidget()

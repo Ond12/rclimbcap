@@ -34,7 +34,9 @@ def find_last_green_frame_idx(pattern):
     else:
         return 0
 
-def post_pro_rawvideo(input_video_path):
+def post_pro_rawvideo(params, input_video_path):
+    
+    raw_feed = params['rawfeed']
 
     directory = os.path.dirname(input_video_path)
     input_file_name = os.path.basename(input_video_path)
@@ -54,7 +56,7 @@ def post_pro_rawvideo(input_video_path):
     fps = cap.get(cv2.CAP_PROP_FPS)
     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
-    width, height = 310, 640  # Desired width and height of the corrected image
+    width, height = 310, 640  
     fourcc = cv2.VideoWriter_fourcc(*'XVID')  
     out = cv2.VideoWriter(output_video_path, fourcc, fps, (width, height))
 
@@ -79,10 +81,10 @@ def post_pro_rawvideo(input_video_path):
     min_green_pixels = 200 
     min_red_pixels = 200   
 
-    def on_mouse_click(event, x, y, flags, param):
-        if event == cv2.EVENT_LBUTTONDOWN:
-            param['clicked'] = True
-            print((x,y))
+    # def on_mouse_click(event, x, y, flags, param):
+    #     if event == cv2.EVENT_LBUTTONDOWN:
+    #         param['clicked'] = True
+    #         print((x,y))
 
     # cv2.namedWindow('Frame')
     # mouse_param = {'clicked': False}
@@ -130,23 +132,24 @@ def post_pro_rawvideo(input_video_path):
             
         #cv2.rectangle(frame, (x, y), (x+w, y+h), (255, 0, 0), 2)  
         #cv2.rectangle(frame, (startX, startY), (endX, endY), (0, 255, 0), 2) 
-        #resized_frame = cv2.resize(frame, (540, 960))
         
         pts_src = np.array(pts_src, dtype='float32')
 
         width, height = 310, 640  # Desired width and height of the corrected image
         pts_dst = np.array([[0, 0], [width, 0], [width, height], [0, height]], dtype='float32')
 
-        # Calculate the perspective transform matrix
-        M = cv2.getPerspectiveTransform(pts_src, pts_dst)
+        if raw_feed:
+            frame = cv2.resize(frame, (width, height))
+        else:
+            # Calculate the perspective transform matrix
+            M = cv2.getPerspectiveTransform(pts_src, pts_dst)
+            # Apply the perspective transformation
+            frame = cv2.warpPerspective(frame, M, (width, height))
 
-        # Apply the perspective transformation
-        corrected_image = cv2.warpPerspective(frame, M, (width, height))
-
-        cv2.putText(corrected_image, text, position, font, font_scale, font_color, thickness)
+        cv2.putText(frame, text, position, font, font_scale, font_color, thickness)
             
         # cv2.imshow('Frame', corrected_image)
-        out.write(corrected_image)
+        out.write(frame)
         # cv2.imshow('ROI', roi)
         # cv2.imshow('Mask', maskred)
         
@@ -178,7 +181,5 @@ def post_pro_rawvideo(input_video_path):
 # plt.ylabel('Detection (1: Green, 2: Red, 0: None)')
 # plt.grid(True)
 # plt.show()
-
-
 
 #post_pro_rawvideo('C:/Users/thepaula/Downloads/run_jerome_video/run4/ESC_2024-05-22_15-32-01.mp4')

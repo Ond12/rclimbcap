@@ -167,7 +167,6 @@ class QTimeLine(QWidget):
         t = 0
         i = 0
         for sample in self.videoSamples:           
-            # Clear clip path
             t = sample.startPosTime
             path = QPainterPath()
             path.addRoundedRect(QRectF(t/scale, 50, sample.duration/scale, 200), 10, 10)
@@ -242,7 +241,7 @@ class QTimeLine(QWidget):
         if self.clicking:
             x = self.pos.x()
             self.pointerPos = x
-            
+            print(f"ppos = { self.pointerPos} ptimepos = { self.pointerTimePos}")
             self.checkSelection(x)
             self.pointerTimePos = self.pointerPos*self.getScale()
 
@@ -269,16 +268,20 @@ class QTimeLine(QWidget):
         if e.button() == Qt.MouseButton.LeftButton:
             self.clicking = False  
 
-    # Enter
     def enterEvent(self, e):
         self.is_in = True
 
-    # Leave
     def leaveEvent(self, e):
         self.is_in = False
         self.update()
+        
+    def set_position(self, timepositionms):
+        self.pointerTimePos = timepositionms / 1000
+        self.pointerPos =  self.pointerTimePos / self.getScale()
+        
+        print(f"ppos = { self.pointerPos} ptimepos = { self.pointerTimePos}")
+        self.update()
 
-    # check selection
     def checkSelection(self, x):
         # Check if user clicked in video sample
         for sample in self.videoSamples:

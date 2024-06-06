@@ -90,7 +90,7 @@ class VideoPlayerWidget(QWidget):
 
     def wheelEvent(self, event):
         delta = event.angleDelta().y() / 120 
-        step_size = 50 
+        step_size = 20 
 
         if delta > 0:
             new_value = self.slider.value() + step_size
@@ -109,7 +109,6 @@ class VideoPlayerWidget(QWidget):
         self.position_signal.emit(pos)
 
     def duration_changed(self, duration):
-        print(self.offsettime)
         self.slider.setRange(-self.offsettime, duration - self.offsettime)
 
     def set_position(self, position):
@@ -137,7 +136,7 @@ class VideoPlayerWidget(QWidget):
         file_dialog.setDirectory(movies_location)
         if file_dialog.exec() == QDialog.DialogCode.Accepted:
             url = file_dialog.selectedUrls()[0]
-            newurl,offsettime = post_pro_rawvideo(url.toLocalFile())
+            newurl,offsettime = post_pro_rawvideo({'rawfeed':False}, url.toLocalFile())
             self.offsettime = offsettime
             nurl = QUrl.fromLocalFile(newurl)
             self._playlist.append(nurl)
@@ -145,7 +144,6 @@ class VideoPlayerWidget(QWidget):
             self._player.setSource(nurl)
 
             self._player.play()
-            self._player.pause()
 
     def set_speed(self, value):
         speed = value / 10.0 
@@ -170,14 +168,15 @@ class VideoPlayerWidget(QWidget):
         print(error_string, file=sys.stderr)
         self.show_status_message(error_string)
 
-class MainWindow(QMainWindow):
-    def __init__(self):
-        super().__init__()
-        self.setWindowTitle("Video Player")
-        self.video_player_widget = VideoPlayerWidget()
-        self.setCentralWidget(self.video_player_widget)
 
 if __name__ == '__main__':
+    class MainWindow(QMainWindow):
+        def __init__(self):
+                super().__init__()
+                self.setWindowTitle("Video Player")
+                self.video_player_widget = VideoPlayerWidget()
+                self.setCentralWidget(self.video_player_widget)
+
     app = QApplication(sys.argv)
     main_win = MainWindow()
     available_geometry = main_win.screen().availableGeometry()

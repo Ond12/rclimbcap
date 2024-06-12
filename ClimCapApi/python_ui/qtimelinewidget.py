@@ -241,7 +241,6 @@ class QTimeLine(QWidget):
         if self.clicking:
             x = self.pos.x()
             self.pointerPos = x
-            print(f"ppos = { self.pointerPos} ptimepos = { self.pointerTimePos}")
             self.checkSelection(x)
             self.pointerTimePos = self.pointerPos*self.getScale()
 
@@ -278,8 +277,6 @@ class QTimeLine(QWidget):
     def set_position(self, timepositionms):
         self.pointerTimePos = timepositionms / 1000
         self.pointerPos =  self.pointerTimePos / self.getScale()
-        
-        print(f"ppos = { self.pointerPos} ptimepos = { self.pointerTimePos}")
         self.update()
 
     def checkSelection(self, x):

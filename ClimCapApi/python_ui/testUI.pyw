@@ -7,9 +7,10 @@ import json
 import numpy as np
 import pandas as pd
 import re
-import pyqtgraph as pg
+
 from PyQt6.QtWidgets import *
 from PyQt6.QtGui import *
+import pyqtgraph as pg
 
 from plotterWidget import *
 from contact import *
@@ -263,7 +264,9 @@ class Wid(QMainWindow):
         
         self.videoPlayer_widget.position_signal.connect(self.qtimeline.set_position)
         self.videoPlayer_widget.position_signal.connect(self.plotter.set_player_scroll_hline)
-        #self.qtimeline.positionChanged.connect(self.plotter.set_player_scroll_hline)
+        self.qtimeline.positionChanged.connect(self.plotter.set_player_scroll_hline)
+        
+        self.qtimeline.positionChanged.connect(self.videoPlayer_widget.set_position_slider)
         self.plotter.scroll_line_pos_changed.connect(self.vertical_line.setPos)
         
         self.contactTable_widget = ContactTableWidget()
@@ -508,7 +511,7 @@ class Wid(QMainWindow):
 
     def post_pro_action(self):
         self.plotter.clear_plot()
-        #self.flip_action()
+        self.flip_action()
         print("post pro action")
         
         self.merge_sensor_action(True)

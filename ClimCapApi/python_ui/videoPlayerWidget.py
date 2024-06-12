@@ -111,6 +111,11 @@ class VideoPlayerWidget(QWidget):
     def duration_changed(self, duration):
         self.slider.setRange(-self.offsettime, duration - self.offsettime)
 
+    def set_position_slider(self, position):
+        p = int(position)
+        self.slider.setValue(p)
+        self.set_position(p)
+
     def set_position(self, position):
         self._player.setPosition(position + self.offsettime)
 

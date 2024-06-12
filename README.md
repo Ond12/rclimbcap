@@ -9,15 +9,17 @@ Nidaqmx ddrivers 64bits carefull sometimes the installer dont install the 64bits
 python version 3.12
 python module
 
+pip install matplotlib
 pip install pandas
 pip install numpy
 pip instal scipy
-pip install pyqt6
+pip install pyqt6==6.6.0
 pip install pyqtgraph
 pip install xlsxreader
 pip install xlsxwriter
 pip install openpyxl
 pip install python-osc
+pip install opencv-python
 
 
 pip install -U pyinstaller-hooks-contrib

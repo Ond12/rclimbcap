@@ -12,7 +12,7 @@ python module
 pip install matplotlib
 pip install pandas
 pip install numpy
-pip instal scipy
+pip install scipy
 pip install pyqt6==6.6.0
 pip install pyqtgraph
 pip install xlsxreader

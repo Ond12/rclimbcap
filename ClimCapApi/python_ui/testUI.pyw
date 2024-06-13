@@ -7,6 +7,7 @@ import json
 import numpy as np
 import pandas as pd
 import re
+from contextlib import contextmanager
 
 from PyQt6.QtWidgets import *
 from PyQt6.QtGui import *
@@ -27,6 +28,14 @@ from MediaController import *
 from TimeDialog import *
 from qtimelinewidget import *
 from videoPlayerWidget import *
+
+@contextmanager
+def wait_cursor():
+    try:
+        QApplication.setOverrideCursor(QCursor(Qt.CursorShape.WaitCursor))
+        yield
+    finally:
+        QApplication.restoreOverrideCursor()
 
 #region window
 #_________________________________________________________________________________________
@@ -698,14 +707,16 @@ class Wid(QMainWindow):
     def open_file_action(self):
         self.clear_data_action()
         file_path, _ = QFileDialog.getOpenFileName(self, "Open Excel File", "", "Excel Files (*.xlsx);;All Files (*)")
-
-        if file_path:
-            sheets_data = self.read_excel_file(file_path)
-            if sheets_data:
-                
-                self.plotter.plot_data()
-                self.plot_controller.set_up_widget()
         
+        with wait_cursor():
+            if file_path:
+                sheets_data = self.read_excel_file(file_path)
+                if sheets_data:
+                    
+                    self.plotter.plot_data()
+                    self.plot_controller.set_up_widget()
+        pass
+            
         self.qtimeline.setDuration(20)
 
     def extract_sensor_id(self, sheet_name):

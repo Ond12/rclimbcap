@@ -1,11 +1,11 @@
 import sys
 from PyQt6.QtCore import QStandardPaths, Qt, QUrl,pyqtSignal
 from PyQt6.QtWidgets import (QApplication, QDialog, QFileDialog, QPushButton, QWidget,
-                             QMainWindow, QSlider, QStyle, QHBoxLayout, QVBoxLayout, QLabel)
+                             QMainWindow, QSlider, QStyle, QHBoxLayout, QVBoxLayout, QLabel, QMessageBox)
 from PyQt6.QtMultimedia import QAudioOutput, QMediaFormat, QMediaPlayer
 from PyQt6.QtMultimediaWidgets import QVideoWidget
-
-
+from PyQt6.QtGui import QCursor
+from contextlib import contextmanager
 from opencvworker import post_pro_rawvideo
 
 AVI = "video/x-msvideo"  # AVI
@@ -18,10 +18,18 @@ def get_supported_mime_types():
         result.append(mime_type.name())
     return result
 
+@contextmanager
+def wait_cursor():
+    try:
+        QApplication.setOverrideCursor(QCursor(Qt.CursorShape.WaitCursor))
+        yield
+    finally:
+        QApplication.restoreOverrideCursor()
+
 class VideoPlayerWidget(QWidget):
     
     position_signal = pyqtSignal(int)
-    
+            
     def __init__(self):
         super().__init__()
 
@@ -40,10 +48,15 @@ class VideoPlayerWidget(QWidget):
         self.playBtn.setEnabled(False)
         self.playBtn.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_MediaPlay))
         self.playBtn.clicked.connect(self.toggle_play_pause)
+        
+        self.offsetBtn = QPushButton("save start")
+        self.offsetBtn.setEnabled(True)
+        #self.offsetBtn.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_MediaPlay))
+        self.offsetBtn.clicked.connect(self.set_manual_offset)
 
         self.speedSlider = QSlider(Qt.Orientation.Horizontal)
         self.speedSlider.setRange(2, 10)  # Range from 0.2x to 1.0x (2 to 10, then divided by 10)
-        self.speedSlider.setValue(10)  # Default is 1.0x
+        self.speedSlider.setValue(10)  
         self.speedSlider.setSingleStep(1)
         self.speedSlider.valueChanged.connect(self.set_speed)
 
@@ -70,6 +83,7 @@ class VideoPlayerWidget(QWidget):
         vbox.addLayout(hbox)
         vbox.addWidget(self.speedSlider)
         vbox.addWidget(self.speedLabel)
+        vbox.addWidget(self.offsetBtn)
 
         self.setLayout(vbox)
         
@@ -87,6 +101,9 @@ class VideoPlayerWidget(QWidget):
             self._player.pause()
         else:
             self._player.play()
+
+    def set_manual_offset(self):
+        self.offsettime = self.slider.value()
 
     def wheelEvent(self, event):
         delta = event.angleDelta().y() / 120 
@@ -141,7 +158,14 @@ class VideoPlayerWidget(QWidget):
         file_dialog.setDirectory(movies_location)
         if file_dialog.exec() == QDialog.DialogCode.Accepted:
             url = file_dialog.selectedUrls()[0]
-            newurl,offsettime = post_pro_rawvideo({'rawfeed':False}, url.toLocalFile())
+            with wait_cursor():
+                newurl, offsettime = post_pro_rawvideo({'rawfeed':False}, url.toLocalFile())
+            pass
+
+            if offsettime == 0:
+                QMessageBox.warning(self, "Alert", "Impossible de detecter le depart veuillez le faire manuelement")
+
+            
             self.offsettime = offsettime
             nurl = QUrl.fromLocalFile(newurl)
             self._playlist.append(nurl)

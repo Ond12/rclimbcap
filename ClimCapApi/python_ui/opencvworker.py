@@ -166,7 +166,10 @@ def post_pro_rawvideo(params, input_video_path):
         frame_index += 1
 
     result = find_pattern(detected_frames)
-    offsettime = int((find_last_green_frame_idx(result) / 60 ) *1000)
+    if len(result) > 0:
+        offsettime = int((find_last_green_frame_idx(result) / 60 ) *1000)
+    else:
+        offsettime = 0.0
     
     out.release()
     cap.release()

@@ -333,7 +333,7 @@ class DataContainer:
             et_idx = contact.end_time
 
         times = self.find_sensor_by_id(sid).get_times_increments()
-        self.time_per_nb_contact(array[st_idx:et_idx])
+        # self.time_per_nb_contact(array[st_idx:et_idx])
         return times, array
 
     def cal_resultant_force(self, sensor):

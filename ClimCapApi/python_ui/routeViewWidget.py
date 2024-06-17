@@ -47,7 +47,7 @@ class HoldItem(QGraphicsSvgItem):
                 text.setParentItem(self)
                 text.setPlainText(str(round(ct,3)) + 's')
                 text.setDefaultTextColor(QColor("red"))
-                text.setPos(QPointF(50, offsety))
+                text.setPos(QPointF(15, offsety))
 
                 offsety = offsety + 13
                 
@@ -117,7 +117,7 @@ class RouteViewWidget(QWidget):
                 hold.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)
                 self.holditems[sensor_id] = hold
                 text = self.scene.addSimpleText(str(sensor_id))
-                text.setPos(original_pos+QPointF(10, 10))
+                text.setPos(original_pos+QPointF(10, 5))
                 
         renderer = QSvgRenderer(shoes_path)
         shoes = HoldItem(renderer, 30) 
@@ -133,8 +133,8 @@ class RouteViewWidget(QWidget):
         plate_path = os.path.join( self.icon_folder, 'forceplate.svg')
         renderer = QSvgRenderer(plate_path)
         forceplate = HoldItem(renderer, 40) 
-        forceplate.setPos(150, 1500)
-        forceplate.setScale(0.25)
+        forceplate.setPos(150, 1430)
+        forceplate.setScale(0.20)
         self.scene.addItem(forceplate)
         forceplate.set_sensor_id(40)
         forceplate.set_color(QColor("blue"))
@@ -144,11 +144,11 @@ class RouteViewWidget(QWidget):
 
         wall_height = 1500
         panel_height = 150
-        panel_width = 300 
-        npanel = 5
-        x_offset = 120
-        y_offset = 20
-        y_coord = wall_height - (npanel * panel_height) - y_offset
+        panel_width = 250 
+        npanel = 3
+        x_offset = 115
+        y_offset = 200
+        y_coord = wall_height - (npanel * panel_height)
 
         self.view = QGraphicsView(self.scene)
         self.view.setSceneRect(x_offset, y_coord, panel_width - x_offset, (npanel * panel_height) - y_offset)

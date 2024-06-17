@@ -12,6 +12,8 @@ from contextlib import contextmanager
 from PyQt6.QtWidgets import *
 from PyQt6.QtGui import *
 import pyqtgraph as pg
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.figure import Figure
 
 from plotterWidget import *
 from contact import *
@@ -36,6 +38,17 @@ def wait_cursor():
         yield
     finally:
         QApplication.restoreOverrideCursor()
+
+
+class MatplotlibCanvas(FigureCanvas):
+    def __init__(self, parent=None):
+        # Create a Figure object
+        self.fig = Figure()
+        self.ax = self.fig.add_subplot(111)
+        
+        # Initialize the canvas with the figure
+        super().__init__(self.fig)
+        self.setParent(parent)
 
 #region window
 #_________________________________________________________________________________________
@@ -245,7 +258,8 @@ class Wid(QMainWindow):
         self.w.showGrid(x=False, y=True)
         self.w.setBackground('w')
         self.w.addLegend()
-        self.w.setMaximumHeight(190)
+        self.w.setMaximumHeight(150)
+        self.wactiveplot = []
         self.vertical_line = pg.InfiniteLine(pos=0, angle=90, movable=False, pen='r')
         self.w.addItem(self.vertical_line, ignoreBounds=True) 
         inf2 = pg.InfiniteLine(pos= (0,3), movable=True, angle=0, pen=(0, 0, 200), bounds = [-20, 20], hoverPen=(0,200,0), label='V={value:0.2f}m/s', 
@@ -258,9 +272,11 @@ class Wid(QMainWindow):
         
         main_grid.addWidget(self.plot_controller, 1, 0)
         main_grid.addWidget(tab, 2, 0)
-        main_grid.addWidget(self.w,3,0)
+        main_grid.addWidget(self.w, 3, 0)
         tab.addTab(self.plotter, 'Force')
         tab.addTab(self.plotter2, 'Normalize Force')
+        tab2 = QWidget()
+        tab.addTab(tab2, "Contacts")
 
         self.qtimeline = QTimeLine(6, 60) 
 
@@ -270,9 +286,11 @@ class Wid(QMainWindow):
         #main_grid.addWidget(mediaController_widget, 4,0)
         
         self.videoPlayer_widget = VideoPlayerWidget()
+        self.videoPlayer_widget.setMaximumWidth(455)
+        self.videoPlayer_widget.setMinimumWidth(455)
         
-        self.videoPlayer_widget.position_signal.connect(self.qtimeline.set_position)
-        self.videoPlayer_widget.position_signal.connect(self.plotter.set_player_scroll_hline)
+        self.videoPlayer_widget.connect(self.qtimeline.set_position)
+        self.videoPlayer_widget.connect(self.plotter.set_player_scroll_hline)
         self.qtimeline.positionChanged.connect(self.plotter.set_player_scroll_hline)
         
         self.qtimeline.positionChanged.connect(self.videoPlayer_widget.set_position_slider)
@@ -297,10 +315,12 @@ class Wid(QMainWindow):
         
 
         self.routeView_widget = RouteViewWidget(self.plotter)
-        self.routeView_widget.setMaximumWidth(200)
+        self.routeView_widget.setMaximumWidth(150)
+        self.routeView_widget.setMinimumWidth(150)
         
         rightw = QWidget()
         layoutrightw = QHBoxLayout()
+        layoutrightw.setSpacing(0)
         layoutrightw.setContentsMargins(0,0,0,0)
         layoutrightw.addWidget(self.routeView_widget)
         layoutrightw.addWidget(self.videoPlayer_widget)
@@ -485,6 +505,14 @@ class Wid(QMainWindow):
         self.w.clear()
         self.info_widget.reset_all_text()
         self.plotter.remove_markers()
+        
+        self.vertical_line = pg.InfiniteLine(pos=0, angle=90, movable=False, pen='r')
+        self.plotter.scroll_line_pos_changed.connect(self.vertical_line.setPos)
+        self.w.addItem(self.vertical_line, ignoreBounds=True) 
+        inf2 = pg.InfiniteLine(pos= (0,3), movable=True, angle=0, pen=(0, 0, 200), bounds = [-20, 20], hoverPen=(0,200,0), label='V={value:0.2f}m/s', 
+                       labelOpts={'color': (200,0,0), 'movable': True, 'fill': (0, 0, 200, 100)})
+        self.w.addItem(inf2)
+        
 
     def compute_normalize_force_action(self):
         self.plotter2.clear_plot()
@@ -537,6 +565,11 @@ class Wid(QMainWindow):
         
         self.sum_force_action()
         self.find_contacts_action()
+        self.plotter.setLimits(xMin=-3, xMax=20, yMin=-2500, yMax=2500)
+        self.plotter.autoRange()
+        self.plotter.setRange(xRange=(-2,5))
+        
+        self.process_speed_action()
     
     def find_contacts_action(self): 
         all_contact_list = self.data_container.detect_contacts_on_sensors()
@@ -554,9 +587,10 @@ class Wid(QMainWindow):
         self.routeView_widget.draw_all_contact_time(all_contact_list)
         
         times, stack_timing = self.data_container.stacked_contact_timing(all_contact_list)
-
-        plot_item_vel = self.w.plot(times,stack_timing, pen=pg.mkPen((235,52,150), width=2, style=style_dict[5]), name=f"contacts")     
-        plot_item_vel.setVisible(False)
+        
+        plot_item_ct = self.w.plot(times,stack_timing, pen=pg.mkPen((235,52,150), width=2, style=style_dict[5]), name=f"contacts")     
+        self.wactiveplot.append(plot_item_ct)
+        plot_item_ct.setVisible(False)
 
     def override_low_values_action(self):
         self.data_container.override_neg_z()
@@ -605,7 +639,10 @@ class Wid(QMainWindow):
         self.plotter.plot_contacts()
 
     def debug_action(self):
-        #self.override_low_values_action()
+        print("debug action")
+
+    def process_speed_action(self):
+                #self.override_low_values_action()
         #self.compute_normalize_force_action()
         #self.data_container.fill_debug_data()
         
@@ -644,19 +681,19 @@ class Wid(QMainWindow):
             ratiox ,m = self.data_container.data_ratio(totforce,fx)
             ratioy ,m = self.data_container.data_ratio(totforce,fy)
             ratioz ,m = self.data_container.data_ratio(totforce,fz)
-            plt.figure(figsize=(8, 6))
+            # plt.figure(figsize=(8, 6))
 
 
-            plt.plot(ratiox, label='Ratio X')
-            plt.plot(ratioy, label='Ratio Y')
-            plt.plot(ratioz, label='Ratio Z')
+            # plt.plot(ratiox, label='Ratio X')
+            # plt.plot(ratioy, label='Ratio Y')
+            # plt.plot(ratioz, label='Ratio Z')
 
-            plt.xlabel('Index')
-            plt.ylabel('Ratio')
-            plt.title('Ratio Plots')
-            plt.legend()
-            plt.grid(True)
-            plt.show()
+            # plt.xlabel('Index')
+            # plt.ylabel('Ratio')
+            # plt.title('Ratio Plots')
+            # plt.legend()
+            # plt.grid(True)
+            # plt.show()
             
             powervert_data = self.data_container.compute_power(all_forces_z, velocity)
             #PUISSANCE VERT POUR LA PERF
@@ -695,8 +732,12 @@ class Wid(QMainWindow):
             self.w.addItem(pmax_marker)
 
             plot_item_vel = self.w.plot(times, velocity, pen=pg.mkPen((235,52,225), width=2, style=style_dict[2]), name=f"speed")        
+            self.wactiveplot.append(plot_item_vel)
             plot_item_power = self.w.plot(times, powervert_data,  pen=pg.mkPen((52,52,225), width=2, style=style_dict[1]), name=f"power")
+            self.wactiveplot.append(plot_item_power)
+            
             plot_item_global_res = self.plotter.plot(times, global_resultant,  pen=pg.mkPen((52,225,52), width=2, style=style_dict[1]), name=f"global res")
+           
             plot_item_global_res.setVisible(False)
             lot_item_acc_data = self.plotter.plot(times, acc_data,  pen=pg.mkPen((52,225,52), width=2, style=style_dict[1]), name=f"acc")
             lot_item_acc_data.setVisible(False)

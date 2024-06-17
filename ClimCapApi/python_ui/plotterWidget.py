@@ -440,8 +440,10 @@ class PlotterController(QWidget):
         
         self.normalize_checkbox = QCheckBox('Normaliser')
         
+        
         self.button_layout.addWidget(label)
         self.button_layout.addWidget(self.weight_doubleSpinBox)
+        self.button_layout.addStretch()
         #self.button_layout.addWidget(self.normalize_checkbox)
         
         self.weight_doubleSpinBox.valueChanged.connect(self.plotter.set_climber_weight_hline)
@@ -485,8 +487,12 @@ class PlotterController(QWidget):
         else:
             name = f"P{sensor_id}"
         button = QPushButton(name, self)
-        pastel_color = "background-color: #FAA0A0"  
-        button.setStyleSheet(pastel_color)
+        font = QFont()
+        font.setBold(True)
+        button.setFont(font)
+
+        # Set the button text color to white using stylesheet
+        button.setStyleSheet("color: white;background-color: #FAA0A0")
         button.clicked.connect(lambda checked, sensor_id=sensor_id: self.plotter.toggle_sensor_visibility(sensor_id))
         self.plotter.notifyvisibilitychange.connect(self.set_button_color)
         self.toggle_buttons[sensor_id] = button

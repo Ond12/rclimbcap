@@ -8,7 +8,7 @@ from PyQt6.QtGui import QCursor
 from contextlib import contextmanager
 from opencvworker import post_pro_rawvideo
 
-AVI = "video/x-msvideo"  # AVI
+AVI = "video/x-msvideo" 
 MP4 = 'video/mp4'
 
 def get_supported_mime_types():
@@ -25,7 +25,7 @@ def wait_cursor():
         yield
     finally:
         QApplication.restoreOverrideCursor()
-
+        
 class VideoPlayerWidget(QWidget):
     
     position_signal = pyqtSignal(int)
@@ -33,7 +33,9 @@ class VideoPlayerWidget(QWidget):
     def __init__(self):
         super().__init__()
 
-        self.setMinimumWidth(345)
+        self.slot_functions = []
+        
+        
 
         self.offsettime = 0
         self._playlist = [] 
@@ -53,15 +55,17 @@ class VideoPlayerWidget(QWidget):
         self.offsetBtn.setEnabled(True)
         #self.offsetBtn.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_MediaPlay))
         self.offsetBtn.clicked.connect(self.set_manual_offset)
+        self.offsetBtn.hide()
 
         self.speedSlider = QSlider(Qt.Orientation.Horizontal)
         self.speedSlider.setRange(2, 10)  # Range from 0.2x to 1.0x (2 to 10, then divided by 10)
         self.speedSlider.setValue(10)  
         self.speedSlider.setSingleStep(1)
+        self.speedSlider.show
+        self.speedSlider.setStyleSheet("QSlider::handle:horizontal {background-color: red;}")
         self.speedSlider.valueChanged.connect(self.set_speed)
 
-        self.speedLabel = QLabel("Speed: 1.0x")
-        self.speedLabel.hide()
+        self.speedLabel = QLabel("1.0x")
         self.update_speed_label(1.0)
         
         self.slider = QSlider(Qt.Orientation.Horizontal)
@@ -77,13 +81,22 @@ class VideoPlayerWidget(QWidget):
         hbox.addWidget(self.playBtn)
         hbox.addWidget(self.slider)
 
+        
+        hbox2 = QHBoxLayout()
+        hbox2.setContentsMargins(0,0,0,0)
+        hbox2.addWidget(self.speedLabel)
+        hbox2.addWidget(self.speedSlider)
+        hbox2.addWidget(self.offsetBtn)
+        
+
         vbox = QVBoxLayout()
         vbox.setContentsMargins(0,0,0,0)
+        vbox.setSpacing(0)
         vbox.addWidget(self._video_widget)
         vbox.addLayout(hbox)
-        vbox.addWidget(self.speedSlider)
-        vbox.addWidget(self.speedLabel)
-        vbox.addWidget(self.offsetBtn)
+        vbox.addLayout(hbox2)
+
+
 
         self.setLayout(vbox)
         
@@ -95,15 +108,34 @@ class VideoPlayerWidget(QWidget):
 
         self._mime_types = []
         self.update_buttons(self._player.playbackState())
+        self._player.mediaStatusChanged.connect(self.handleMediaStatusChanged)
+
+    def connect(self, slot_function):
+        self.slot_functions.append(slot_function)
+        self.position_signal.connect(slot_function)
+    
+    def disconnect(self):
+        for slot_function in self.slot_functions:
+            self.position_signal.disconnect(slot_function)
+    
+    def reconnect(self):
+        for slot_function in self.slot_functions:
+            self.position_signal.connect(slot_function)
 
     def toggle_play_pause(self):
         if self._player.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
             self._player.pause()
         else:
             self._player.play()
+            
+    def handleMediaStatusChanged(self, status):
+        if status == QMediaPlayer.MediaStatus.EndOfMedia:
+            self._player.setPosition(0)
+            self._player.play()
 
     def set_manual_offset(self):
         self.offsettime = self.slider.value()
+        self.reconnect()
 
     def wheelEvent(self, event):
         delta = event.angleDelta().y() / 120 
@@ -164,7 +196,8 @@ class VideoPlayerWidget(QWidget):
 
             if offsettime == 0:
                 QMessageBox.warning(self, "Alert", "Impossible de detecter le depart veuillez le faire manuelement")
-
+                self.disconnect()
+                self.offsetBtn.show()
             
             self.offsettime = offsettime
             nurl = QUrl.fromLocalFile(newurl)
@@ -180,7 +213,7 @@ class VideoPlayerWidget(QWidget):
         self.update_speed_label(speed)
 
     def update_speed_label(self, speed):
-        self.speedLabel.setText(f"Speed: {speed:.1f}x")
+        self.speedLabel.setText(f"{speed:.1f}x")
 
     def _ensure_stopped(self):
         if self._player.playbackState() != QMediaPlayer.PlaybackState.StoppedState:

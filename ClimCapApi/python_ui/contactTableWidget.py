@@ -6,7 +6,7 @@ from PyQt6.QtWidgets import (
     QLineEdit, QWidget, QPushButton, QSpinBox, QLabel,QGridLayout,
     QMessageBox, QToolBar, QMessageBox,QVBoxLayout,QMenu,QHBoxLayout,QFileDialog
 )
-
+from enum import Enum
 from PyQt6.QtCore import Qt,QSize
 from PyQt6.QtGui import QIcon, QAction
 
@@ -109,8 +109,8 @@ class ContactTableWidget(QWidget):
         self.table.setItem(row, 2, QTableWidgetItem(str(round(contact.period_sec, 3))))
         self.table.setItem(row, 3, QTableWidgetItem(str(round(contact.max_value, 1))))
         self.table.setItem(row, 4, QTableWidgetItem(str(round(contact.sensor_id, 1))))
-        self.table.setItem(row, 5, QTableWidgetItem(contact.contact_type))
-        
+        self.table.setItem(row, 5, QTableWidgetItem(contact.contact_type.value))
+    
     
     def handleCellClicked(self, row, column):
         custom_object = self.custom_objects[row]

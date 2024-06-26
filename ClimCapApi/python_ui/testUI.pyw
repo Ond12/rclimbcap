@@ -167,6 +167,11 @@ class Wid(QMainWindow):
         manual_t0_action.setStatusTip("Manual T0")
         manual_t0_action.triggered.connect(self.set_manual_t0)
         
+        icon_path = os.path.join(self.icon_folder, 'electricity.svg')
+        speed_action = QAction(QIcon(icon_path), "&speed", self)
+        speed_action.setStatusTip("speed")
+        speed_action.triggered.connect(self.process_speed_action)
+        
         self.mtoolbar = self.addToolBar("Tools")
         toolbar = self.mtoolbar
         toolbar.addAction(open_file_action)
@@ -178,6 +183,7 @@ class Wid(QMainWindow):
         toolbar.addAction(separator)
         
         toolbar.addAction(apply_filter_action)
+        toolbar.addAction(speed_action)
         #toolbar.addAction(find_contacts_action)
         #toolbar.addAction(chrono_detect_action)
         #toolbar.addAction(calculate_resultant_action)
@@ -189,8 +195,8 @@ class Wid(QMainWindow):
         #toolbar.addAction(apply_rotation_action)
         #toolbar.addAction(merge_sensor_action)
         toolbar.addAction(show_cross_hair_action)
-        toolbar.addAction(process_custom_frame_action)
-        toolbar.addAction(manual_t0_action)
+        #toolbar.addAction(process_custom_frame_action)
+        #toolbar.addAction(manual_t0_action)
         
         separator = QAction(self)
         separator.setSeparator(True)
@@ -306,14 +312,13 @@ class Wid(QMainWindow):
         layoutleftw.addWidget(self.info_widget)
         leftw.setLayout(layoutleftw)
         
-        dock = QDockWidget('Contact infos')
-        dock.setTitleBarWidget(QWidget())
-        dock.setFeatures(QDockWidget.DockWidgetFeature.NoDockWidgetFeatures)
-        self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, dock)
-        dock.setWidget(leftw)
-        dock.hide()
+        self.dock = QDockWidget('Contact infos')
+        self.dock.setTitleBarWidget(QWidget())
+        self.dock.setFeatures(QDockWidget.DockWidgetFeature.NoDockWidgetFeatures)
+        self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.dock)
+        self.dock.setWidget(leftw)
+        self.dock.hide()
         
-
         self.routeView_widget = RouteViewWidget(self.plotter)
         self.routeView_widget.setMaximumWidth(150)
         self.routeView_widget.setMinimumWidth(150)
@@ -389,9 +394,9 @@ class Wid(QMainWindow):
     
     def settings_action(self):
         #domo
-        #sensor_ids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
-        sensor_ids = [1] #7, 8, 9, 10, 11]
-        add_platformes = False
+        sensor_ids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+        #sensor_ids = [1] #7, 8, 9, 10, 11]
+        add_platformes = True
         
         sensor_frequency = 200
               
@@ -569,7 +574,8 @@ class Wid(QMainWindow):
         self.plotter.autoRange()
         self.plotter.setRange(xRange=(-2,5))
         
-        self.process_speed_action()
+
+        # self.process_speed_action()
     
     def find_contacts_action(self): 
         all_contact_list = self.data_container.detect_contacts_on_sensors()
@@ -577,6 +583,9 @@ class Wid(QMainWindow):
         
         self.data_container.find_max_contacts(all_contact_list)
         self.contactTable_widget.add_all_contacts(all_contact_list)
+        
+        start_time_idx = self.data_container.find_first_contact_start_time(all_contact_list)
+        self.data_container.set_first_contact_time(start_time_idx)
         
         end_time_idx = self.data_container.find_last_contact_end_time(all_contact_list)
         self.data_container.set_end_time(end_time_idx)
@@ -591,6 +600,21 @@ class Wid(QMainWindow):
         plot_item_ct = self.w.plot(times,stack_timing, pen=pg.mkPen((235,52,150), width=2, style=style_dict[5]), name=f"contacts")     
         self.wactiveplot.append(plot_item_ct)
         plot_item_ct.setVisible(False)
+        
+        fd, hd, ud, times = self.data_container.compute_hand_foot_ratio(all_contact_list)
+        
+        self.plotter2.plot(times, fd, pen=pg.mkPen((51,153,255), width=2, alpha=200, style=style_dict[0]), name=f"feets")
+        self.plotter2.plot(times, hd, pen=pg.mkPen((255,102,0), width=2, alpha=200, style=style_dict[0]), name=f"hands")
+        self.plotter2.plot(times, ud, pen=pg.mkPen((153,255,153), width=2, alpha=200, style=style_dict[0]), name=f"undef")
+        
+        # plt.figure(figsize=(8, 6))
+        # plt.plot(fd, label='foot')
+        # plt.plot(hd, label='hand')
+        # plt.plot(ud, label='undef')
+
+        # plt.legend()
+        # plt.grid(True)
+        # plt.show()
 
     def override_low_values_action(self):
         self.data_container.override_neg_z()
@@ -639,10 +663,12 @@ class Wid(QMainWindow):
         self.plotter.plot_contacts()
 
     def debug_action(self):
+        self.dock.setVisible(not self.dock.isVisible())
+
         print("debug action")
 
     def process_speed_action(self):
-                #self.override_low_values_action()
+        #self.override_low_values_action()
         #self.compute_normalize_force_action()
         #self.data_container.fill_debug_data()
         
@@ -663,12 +689,22 @@ class Wid(QMainWindow):
                 return
   
             times_cr, times_idx = self.data_container.detect_chrono_bip()
+            
+            idx_start = self.data_container.get_first_contact_time()
+            if idx_start == 0:
+                if len(times_idx) > 1:
+                    idx_start = times_idx[-1]
+                else:
+                    idx_start = 0
+                    
             if len(times_idx) > 1:
-                last_bip_idx = times_idx[-1]
+                idx_t0chrono = times_idx[-1]
+            else:
+                idx_t0chrono = 0
             
             idx_end = self.data_container.get_end_time()
             
-            times, acc_data, velocity = self.data_container.compute_acceleration_speed(time_increments, all_forces_z, body_weight_kg, last_bip_idx, idx_end)
+            times, acc_data, velocity = self.data_container.compute_acceleration_speed(time_increments, all_forces_z, body_weight_kg, idx_start, idx_end)
 
             global_resultant = self.data_container.cal_resultant_force_arrayin(
                 force_result["sum_x"], force_result["sum_y"], force_result["sum_z"] )
@@ -682,8 +718,6 @@ class Wid(QMainWindow):
             ratioy ,m = self.data_container.data_ratio(totforce,fy)
             ratioz ,m = self.data_container.data_ratio(totforce,fz)
             # plt.figure(figsize=(8, 6))
-
-
             # plt.plot(ratiox, label='Ratio X')
             # plt.plot(ratioy, label='Ratio Y')
             # plt.plot(ratioz, label='Ratio Z')
@@ -699,9 +733,9 @@ class Wid(QMainWindow):
             #PUISSANCE VERT POUR LA PERF
             #PUISSANCE GLOBAL POUR LA PREPA PHY
             
-            avgpower = self.data_container.find_moy(powervert_data[last_bip_idx:idx_end])
+            avgpower = self.data_container.find_moy(powervert_data[idx_start:idx_end])
             power_per_kilo = avgpower / body_weight_kg
-            avgspeed = self.data_container.find_moy(velocity[last_bip_idx:idx_end])
+            avgspeed = self.data_container.find_moy(velocity[idx_start:idx_end])
             
             self.info_widget.setText("Average_power:", str(round(avgpower)) + " W")
             self.info_widget.setText("Power/kilos:", str(round(power_per_kilo,2)) + " W/Kg")
@@ -710,8 +744,8 @@ class Wid(QMainWindow):
             idx_max_speed, max_speed = self.data_container.find_max_numpy(velocity)
             idx_max_power, max_power = self.data_container.find_max_numpy(powervert_data)
 
-            tmp = self.data_container.index_to_time(idx_max_power - last_bip_idx)
-            tmv = self.data_container.index_to_time(idx_max_speed - last_bip_idx)
+            tmp = self.data_container.index_to_time(idx_max_power - idx_t0chrono)
+            tmv = self.data_container.index_to_time(idx_max_speed - idx_t0chrono)
             
             self.qtimeline.set_pmax_vmax_time(tmp, tmv)
             

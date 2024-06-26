@@ -4,6 +4,7 @@ import os
 import numpy as np
 import pandas as pd
 import re
+from enum import Enum
 from scipy.signal import butter, sosfilt
 import pyqtgraph as pg
 from PyQt6.QtWidgets import *
@@ -28,6 +29,11 @@ colors_dict = {
     9: (0, 0, 128),       # Navy
     10:(0, 255, 255) 
 }
+
+class CONTACTTYPE(Enum):
+    FOOT = 'FOOT'
+    HAND = 'HAND'
+    UNDEF = 'UNDEF'
 
 class ContactInfo(QObject):
     class ContactDisplay:
@@ -64,7 +70,7 @@ class ContactInfo(QObject):
         self.end_time = end_time
         self.period = end_time - start_time
         
-        self.contact_type  = "unk"
+        self.contact_type  = CONTACTTYPE.UNDEF
         
         self.start_time_sec = stsec
         self.end_time_sec = etsec

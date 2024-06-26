@@ -9,6 +9,7 @@ from scipy.signal import butter, sosfilt, filtfilt, square, medfilt, firwin, lfi
 import pyqtgraph as pg
 from PyQt6.QtWidgets import *
 from PyQt6.QtGui import *
+from enum import Enum
 
 from plotterWidget import *
 from contact import *
@@ -160,7 +161,8 @@ class DataContainer:
         self.contacts = []
         self.chrono_freq = 200
         self.chrono_offset = 0
-        self.end_time_idx = 0
+        self.start_time_idx = 0
+        self.first_contact_time = 0
 
     def detect_contact_type(self, all_contact_list):
         for contact in all_contact_list:
@@ -171,11 +173,11 @@ class DataContainer:
             slicedata = np.array(forcedata)[contact.start_time:contact.end_time]
             
             mean = np.mean(slicedata)
-            type = "unk"
+            type = CONTACTTYPE.UNDEF
             if mean > 0:
-                type = "hand"
+                type = CONTACTTYPE.HAND
             else:
-                type = "foot"
+                type = CONTACTTYPE.FOOT
                                 
             contact.contact_type = type
     
@@ -359,9 +361,9 @@ class DataContainer:
         for sensor in self.sensors:
             if sensor.sensor_id != 41:
                 force_data = sensor.get_forces_data()
-                sum_x_data = np.add(sum_x_data, force_data.get_forces_x()[0:num_points]) 
-                sum_y_data = np.add(sum_y_data, force_data.get_forces_y()[0:num_points])  
-                sum_z_data = np.add(sum_z_data, force_data.get_forces_z()[0:num_points])  
+                sum_x_data = np.add(sum_x_data, np.abs(force_data.get_forces_x()[0:num_points])) 
+                sum_y_data = np.add(sum_y_data, np.abs(force_data.get_forces_y()[0:num_points]))  
+                sum_z_data = np.add(sum_z_data, np.abs(force_data.get_forces_z()[0:num_points]))  
 
         result = {}
         result["time"]  = self.find_sensor_by_id(sid).get_times_increments()
@@ -371,6 +373,31 @@ class DataContainer:
 
         return result
     
+    def compute_hand_foot_ratio(self, labeled_contact_list):
+        
+        minlen, sid = self.get_sensor_min_data_len()
+        foot_data = np.zeros(minlen)      
+        hand_data = np.zeros(minlen) 
+        undef_data = np.zeros(minlen) 
+        
+        for contact in labeled_contact_list:
+            cursensor = self.find_sensor_by_id(contact.sensor_id)
+            res_data, sud = self.cal_resultant_force(cursensor)
+            st = contact.start_time 
+            et = contact.end_time
+            if contact.sensor_id == 4:
+                undef_data[st:et] += res_data[st:et]
+                continue
+            elif contact.contact_type == CONTACTTYPE.FOOT:
+                foot_data[st:et] += res_data[st:et]
+            elif contact.contact_type == CONTACTTYPE.HAND:
+                hand_data[st:et] += res_data[st:et]
+            elif contact.contact_type == CONTACTTYPE.UNDEF:
+                undef_data[st:et] += res_data[st:et]
+        
+        times = self.find_sensor_by_id(sid).get_times_increments()
+        return foot_data, hand_data, undef_data, times
+        
     def find_max_numpy(self, data):
         max_index = np.argmax(data)
         max_value = data[max_index]
@@ -416,6 +443,8 @@ class DataContainer:
         
         if idx_end == 0:
             idx_end = len(Acc)
+            
+        print(f"idx st {idx_start_offset}- {idx_end}")    
                 
         for i in range(idx_start_offset + 1, (idx_end - 1 )):
             Vit[i] = ( Vit[i-1] + (Acc[i-1] + Acc[i])  / (2*freq)  )
@@ -583,6 +612,19 @@ class DataContainer:
             return t
         
         return 0
+
+    def find_first_contact_start_time(self, all_contacts_list):
+        if len(all_contacts_list) >= 1:
+            t = all_contacts_list[0].start_time
+            return t
+        
+        return 0
+    
+    def set_first_contact_time(self, time_idx):
+        self.first_contact_time = time_idx
+    
+    def get_first_contact_time(self):
+        return self.first_contact_time
         
     def set_end_time(self, time_idx):
         self.end_time_idx = time_idx
@@ -608,7 +650,7 @@ class DataContainer:
 
             for contact in cur_contacts_list:
                 if sensor_id == 40:
-                    if(contact.period > 30):
+                    if(contact.period > 20):
                         all_contacts_list.append(contact)
                         
                 if(contact.period > minimum_period):

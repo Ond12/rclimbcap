@@ -733,6 +733,16 @@ class DataContainer:
                 filtered_signal_y = lfilter(filter_taps, 1.0, datay)
                 dataz = sensor.get_forces_data().get_forces_z()
                 filtered_signal_z = lfilter(filter_taps, 1.0, dataz)
+                
+                delay = len(filter_taps) // 2
+                filtered_signal_x = np.roll(filtered_signal_x, -delay)
+                filtered_signal_y = np.roll(filtered_signal_y, -delay)
+                filtered_signal_z = np.roll(filtered_signal_z, -delay)
+
+                # Set last delay samples to 0
+                filtered_signal_x[-delay:] = 0
+                filtered_signal_y[-delay:] = 0
+                filtered_signal_z[-delay:] = 0
 
                 sensor.get_forces_data().set_force_x(filtered_signal_x)
                 sensor.get_forces_data().set_force_y(filtered_signal_y)
@@ -741,8 +751,6 @@ class DataContainer:
     def normalize_force(self,force_data, body_weight):
         normalized_force = [force / body_weight for force in force_data]
         return normalized_force
-
-
 
     def apply_rotation_to_force(self):
         for sensor in self.sensors:

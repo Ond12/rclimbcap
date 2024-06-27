@@ -268,6 +268,8 @@ class Wid(QMainWindow):
         self.wactiveplot = []
         self.vertical_line = pg.InfiniteLine(pos=0, angle=90, movable=False, pen='r')
         self.w.addItem(self.vertical_line, ignoreBounds=True) 
+        self.vertical_line2 = pg.InfiniteLine(pos=0, angle=90, movable=False, pen='r')
+        self.plotter2.addItem(self.vertical_line2, ignoreBounds=True) 
         inf2 = pg.InfiniteLine(pos= (0,3), movable=True, angle=0, pen=(0, 0, 200), bounds = [-20, 20], hoverPen=(0,200,0), label='V={value:0.2f}m/s', 
                        labelOpts={'color': (200,0,0), 'movable': True, 'fill': (0, 0, 200, 100)})
         self.w.addItem(inf2)
@@ -510,7 +512,9 @@ class Wid(QMainWindow):
         self.w.clear()
         self.info_widget.reset_all_text()
         self.plotter.remove_markers()
-        
+        self.vertical_line2 = pg.InfiniteLine(pos=0, angle=90, movable=False, pen='r')
+        self.plotter2.addItem(self.vertical_line2, ignoreBounds=True) 
+        self.plotter.scroll_line_pos_changed.connect(self.vertical_line2.setPos)
         self.vertical_line = pg.InfiniteLine(pos=0, angle=90, movable=False, pen='r')
         self.plotter.scroll_line_pos_changed.connect(self.vertical_line.setPos)
         self.w.addItem(self.vertical_line, ignoreBounds=True) 

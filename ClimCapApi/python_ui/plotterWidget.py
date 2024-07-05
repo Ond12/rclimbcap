@@ -369,7 +369,8 @@ class Plotter(pg.PlotWidget):
         newton_value = kg_value * 9.81
         if not self.climber_weight_hline:
             pen = QPen(QColor(255,0,0,230))
-            self.climber_weight_hline = pg.InfiniteLine(pos=newton_value, angle=0, movable=False, pen=pen)
+            self.climber_weight_hline = pg.InfiniteLine(pos= (0,newton_value), movable=False, angle=0, pen=(255,0,0,230), bounds = [0, 2000], hoverPen=(0,200,0),
+                       labelOpts={'color': (200,0,0), 'movable': True, 'fill': (0, 0, 200, 100)})
             self.addItem(self.climber_weight_hline)
         self.climber_weight_hline.setValue(newton_value)
         

@@ -39,7 +39,6 @@ def wait_cursor():
     finally:
         QApplication.restoreOverrideCursor()
 
-
 class MatplotlibCanvas(FigureCanvas):
     def __init__(self, parent=None):
         # Create a Figure object
@@ -522,7 +521,8 @@ class Wid(QMainWindow):
                        labelOpts={'color': (200,0,0), 'movable': True, 'fill': (0, 0, 200, 100)})
         self.w.addItem(inf2)
         
-
+        self.videoPlayer_widget.unset_video_output()
+        
     def compute_normalize_force_action(self):
         self.plotter2.clear_plot()
         sensors = self.data_container.sensors
@@ -544,8 +544,12 @@ class Wid(QMainWindow):
         self.plotter2.plot_data()
            
     def apply_filter_action(self):
-        self.data_container.chrono_data = medfilt(self.data_container.chrono_data, kernel_size=3)
-        self.data_container.apply_filter_hcutoff_to_sensors()
+        delaycorr = self.data_container.apply_filter_hcutoff_to_sensors()
+        # self.data_container.chrono_data = np.roll(self.data_container.chrono_data, delaycorr)
+        # self.data_container.chrono_data[-delaycorr:] = 0
+
+        #self.data_container.chrono_data = medfilt(self.data_container.chrono_data, kernel_size=3)
+        
         print("filter action")
 
     def set_manual_t0(self):
@@ -610,6 +614,7 @@ class Wid(QMainWindow):
         self.plotter2.plot(times, fd, pen=pg.mkPen((51,153,255), width=2, alpha=200, style=style_dict[0]), name=f"feets")
         self.plotter2.plot(times, hd, pen=pg.mkPen((255,102,0), width=2, alpha=200, style=style_dict[0]), name=f"hands")
         self.plotter2.plot(times, ud, pen=pg.mkPen((153,255,153), width=2, alpha=200, style=style_dict[0]), name=f"undef")
+        
         
         # plt.figure(figsize=(8, 6))
         # plt.plot(fd, label='foot')
@@ -683,6 +688,7 @@ class Wid(QMainWindow):
         body_weight_kg = self.plot_controller.get_weight_value()
         
         value = body_weight_kg
+        body_weight_newton = body_weight_kg * 9.81
         if value == 0.0:
             QMessageBox.warning(self, "Alert", "Enter a mass")
             return
@@ -694,7 +700,10 @@ class Wid(QMainWindow):
   
             times_cr, times_idx = self.data_container.detect_chrono_bip()
             
+
+            
             idx_start = self.data_container.get_first_contact_time()
+            idx_start = 0
             if idx_start == 0:
                 if len(times_idx) > 1:
                     idx_start = times_idx[-1]
@@ -713,14 +722,48 @@ class Wid(QMainWindow):
             global_resultant = self.data_container.cal_resultant_force_arrayin(
                 force_result["sum_x"], force_result["sum_y"], force_result["sum_z"] )
             
-            totforceS = force_result["sum_x"] + force_result["sum_y"] + force_result["sum_z"]
-            totforce = np.full_like(totforceS,100) 
-            fx = np.full_like(totforce,50) 
-            fy = np.full_like(totforce,40)  
-            fz = np.full_like(totforce,10) 
-            ratiox ,m = self.data_container.data_ratio(totforce,fx)
-            ratioy ,m = self.data_container.data_ratio(totforce,fy)
-            ratioz ,m = self.data_container.data_ratio(totforce,fz)
+            # totforceS = force_result["sum_x"] + force_result["sum_y"] + force_result["sum_z"]
+            # totforce = np.full_like(totforceS,100) 
+            # fx = np.full_like(totforce,50) 
+            # fy = np.full_like(totforce,40)  
+            # fz = np.full_like(totforce,10) 
+            # ratiox ,m = self.data_container.data_ratio(totforce,fx)
+            # ratioy ,m = self.data_container.data_ratio(totforce,fy)
+            # ratioz ,m = self.data_container.data_ratio(totforce,fz)
+            
+            # body_weight_start_idx = self.data_container.find_first_exceedance_over_body_weight(all_forces_z, body_weight_newton, idx_t0chrono-25)
+            # bwp = self.data_container.index_to_time(body_weight_start_idx - idx_t0chrono)
+            
+            # m1i,m2i = self.data_container.compute_delta_v_start(idx_t0chrono, body_weight_newton, 30, all_forces_z)
+            # m1t = self.data_container.index_to_time(m1i)
+            # m2t = self.data_container.index_to_time(m2i)
+            
+            
+            # m1 = pg.TargetItem(
+            #     pos=(m1t, body_weight_newton),
+            #     label=str(round(body_weight_newton,2)),
+            #     movable=False,
+            #     labelOpts={'color': (200,0,0)}
+            # )
+            # self.plotter.addItem(m1)
+            
+            # m2 = pg.TargetItem(
+            #     pos=(m2t, body_weight_newton),
+            #     label=str(round(body_weight_newton,2)),
+            #     movable=False,
+            #     labelOpts={'color': (200,0,0)}
+            # )
+            # self.plotter.addItem(m2)
+           
+            # body_weight_start_marker = pg.TargetItem(
+            #     pos=(bwp, body_weight_newton),
+            #     label=str(round(body_weight_newton,2)),
+            #     movable=False,
+            #     labelOpts={'color': (200,0,0)}
+            # )
+            # self.plotter.addItem(body_weight_start_marker)
+            
+            
             # plt.figure(figsize=(8, 6))
             # plt.plot(ratiox, label='Ratio X')
             # plt.plot(ratioy, label='Ratio Y')

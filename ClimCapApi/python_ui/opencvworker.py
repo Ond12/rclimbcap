@@ -58,7 +58,8 @@ def post_pro_rawvideo(params, input_video_path):
 
     width, height = 310, 640  
     fourcc = cv2.VideoWriter_fourcc(*'XVID')  
-    out = cv2.VideoWriter(output_video_path, fourcc, fps, (width, height))
+    out = cv2.VideoWriter("__temp__.avi", fourcc, fps, (width, height))
+    out2 = cv2.VideoWriter(output_video_path, fourcc, fps, (width, height))
 
     x, y, w, h = 230, 1340, 100, 100  
 
@@ -104,7 +105,7 @@ def post_pro_rawvideo(params, input_video_path):
         roi = frame[y:y+h, x:x+w]
         #frame = frame[startY:endY, startX:endX]
 
-        text = f'Frame: {frame_index} / {total_frames}, t: {round(frame_index/60, 2)}'
+        #text = f'Frame: {frame_index} / {total_frames}, t: {round(frame_index/60, 2)}'
 
         # for point in pts_src:
         #     cv2.circle(frame, tuple(point), 5, (0, 255, 0), -1) 
@@ -146,7 +147,7 @@ def post_pro_rawvideo(params, input_video_path):
             # Apply the perspective transformation
             frame = cv2.warpPerspective(frame, M, (width, height))
 
-        cv2.putText(frame, text, position, font, font_scale, font_color, thickness)
+        #cv2.putText(frame, text, position, font, font_scale, font_color, thickness)
             
         # cv2.imshow('Frame', corrected_image)
         out.write(frame)
@@ -166,15 +167,33 @@ def post_pro_rawvideo(params, input_video_path):
         frame_index += 1
 
     result = find_pattern(detected_frames)
+    offset_frame_number = 0
     if len(result) > 0:
-        offsettime = int((find_last_green_frame_idx(result) / 60 ) *1000)
+        offset_frame_number = find_last_green_frame_idx(result) + 1
+        offsettime = int( ( offset_frame_number / 60 ) * 1000 )
     else:
         offsettime = 0.0
     
-    out.release()
     cap.release()
-    cv2.destroyAllWindows()
+    out.release()
+    cap2 = cv2.VideoCapture("__temp__.avi")
+    frame_index = 0
+    while True:
+        ret, frame = cap2.read()
+        if not ret:
+            break
+        
+        text = f'Frame: {frame_index - offset_frame_number} / {total_frames}, t: {round((frame_index - offset_frame_number)/60, 3)}'
+        cv2.putText(frame, text, position, font, font_scale, font_color, thickness)
+        out2.write(frame)
 
+        frame_index+=1
+    
+    out2.release()
+    cap2.release()
+    cv2.destroyAllWindows()
+    os.remove("__temp__.avi")
+    
     return output_video_path, offsettime
 
 # plt.figure(figsize=(12, 6))

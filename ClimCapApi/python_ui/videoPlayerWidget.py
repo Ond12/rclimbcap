@@ -154,8 +154,13 @@ class VideoPlayerWidget(QWidget):
 
     def position_changed(self, position):
         pos = position - self.offsettime
+        #print(f"pos:{position}, offset:{self.offsettime} , posc{pos}")
         self.slider.setValue(pos)
         self.position_signal.emit(pos)
+        
+    def unset_video_output(self):
+        self._player.setSource(QUrl())
+        print("Video output unset")
 
     def duration_changed(self, duration):
         self.slider.setRange(-self.offsettime, duration - self.offsettime)

@@ -5,7 +5,7 @@ import pandas as pd
 from scipy.integrate import quad
 import re
 from scipy import integrate
-from scipy.signal import butter, sosfilt, filtfilt, square, medfilt, firwin, lfilter
+from scipy.signal import butter, sosfilt, filtfilt, square, medfilt, firwin, lfilter, iirnotch, tf2sos
 import pyqtgraph as pg
 from PyQt6.QtWidgets import *
 from PyQt6.QtGui import *
@@ -662,7 +662,18 @@ class DataContainer:
         for sensor in self.sensors:
             sensor.set_time_offset(time_idx)
     
-    
+    # Déclaration : design_notch_filter(target_frequency, quality_factor, sampling_rate)
+    # @param target_frequency : fréquence de coupure du filtre en Hz
+    # @param quality_factor : fenêtre à filtrer
+    # @param sampling_rate : fréquence d'échantillonnage des données
+    # @return sos : coefficients du filtre
+    def design_notch_filter(self, target_frequency, quality_factor, sampling_rate):
+        nyquist = 0.5 * sampling_rate
+        normal_cutoff = target_frequency / nyquist
+        b, a = iirnotch(normal_cutoff, quality_factor)
+        sos = tf2sos(b, a)
+        return sos
+        
     # Déclaration : design_fir_filter(cutoff_frequency, order, sampling_rate)
     # @param cutoff_frequency : fréquence de coupure du filtre en Hz
     # @param order : nombre de taps du filtre FIR
@@ -698,7 +709,6 @@ class DataContainer:
         filtered_data = sosfilt(sos_butter, data)
         return filtered_data
 
-
     def apply_filter_hcutoff_to_sensors(self):
         stop_band_frequency = 10    
         sampling_rate = self.sensors[0].frequency
@@ -708,9 +718,15 @@ class DataContainer:
         firr_cutoff = 15
 
         butter = False
+        
+        target_frequency = 17
+        quality_factor = 3
 
         sos_butter = self.butter_bandstop_filter(stop_band, sampling_rate)
         filter_taps = self.design_fir_filter(firr_cutoff, firr_order, sampling_rate)
+        delay = len(filter_taps) // 2
+        
+        notch_filter_sos = self.design_notch_filter(target_frequency, quality_factor, sampling_rate)
         
         if butter:
             for sensor in self.sensors:
@@ -727,26 +743,30 @@ class DataContainer:
         else: #firr
             for sensor in self.sensors:
                 datax = sensor.get_forces_data().get_forces_x()
-                
-                filtered_signal_x = lfilter(filter_taps, 1.0, datax)
+                filtered_signal_x_fir = lfilter(filter_taps, 1.0, datax)
                 datay = sensor.get_forces_data().get_forces_y()
-                filtered_signal_y = lfilter(filter_taps, 1.0, datay)
+                filtered_signal_y_fir = lfilter(filter_taps, 1.0, datay)
                 dataz = sensor.get_forces_data().get_forces_z()
-                filtered_signal_z = lfilter(filter_taps, 1.0, dataz)
+                filtered_signal_z_fir = lfilter(filter_taps, 1.0, dataz)
                 
-                delay = len(filter_taps) // 2
-                filtered_signal_x = np.roll(filtered_signal_x, -delay)
-                filtered_signal_y = np.roll(filtered_signal_y, -delay)
-                filtered_signal_z = np.roll(filtered_signal_z, -delay)
+                # filtered_signal_x = np.roll(filtered_signal_x, -delay)
+                # filtered_signal_y = np.roll(filtered_signal_y, -delay)
+                # filtered_signal_z = np.roll(filtered_signal_z, -delay)
 
-                # Set last delay samples to 0
-                filtered_signal_x[-delay:] = 0
-                filtered_signal_y[-delay:] = 0
-                filtered_signal_z[-delay:] = 0
+                # filtered_signal_x[-delay:] = 0
+                # filtered_signal_y[-delay:] = 0
+                # filtered_signal_z[-delay:] = 0
+                
+                # Filtrage avec le Notch en plus du FIR
+                # filtered_signal_x = sosfilt(notch_filter_sos, filtered_signal_x_fir)
+                # filtered_signal_y = sosfilt(notch_filter_sos, filtered_signal_y_fir)
+                # filtered_signal_z = sosfilt(notch_filter_sos, filtered_signal_z_fir)
 
-                sensor.get_forces_data().set_force_x(filtered_signal_x)
-                sensor.get_forces_data().set_force_y(filtered_signal_y)
-                sensor.get_forces_data().set_force_z(filtered_signal_z)
+                sensor.get_forces_data().set_force_x(filtered_signal_x_fir)
+                sensor.get_forces_data().set_force_y(filtered_signal_y_fir)
+                sensor.get_forces_data().set_force_z(filtered_signal_z_fir)
+        
+        return delay
             
     def normalize_force(self,force_data, body_weight):
         normalized_force = [force / body_weight for force in force_data]
@@ -774,6 +794,27 @@ class DataContainer:
         area, _ = quad(signal_function, time[star_time_idx], time[end_time_idx])
         return area
     
+    def find_first_exceedance_over_body_weight(self, signal, threshold, offsetidx):
+        if offsetidx < 0 or offsetidx >= len(signal):
+            raise ValueError("offsetidx is out of bounds")
+
+        for i in range(offsetidx, len(signal)):
+            if signal[i] > threshold:
+                return i
+        return -1
+    
+    def compute_delta_v_start(self, TO_start, body_weight, trueblue_force, signal):
+        body_weight_preparation = body_weight - trueblue_force
+        
+        for i in range(TO_start, 0):
+            if signal[i] < body_weight_preparation:
+               first_below_weight = i
+            if first_below_weight > 0 and signal[i] > body_weight_preparation:
+                second_above_weight = i
+
+        print(f"{first_below_weight} - {second_above_weight}")
+        return first_below_weight, second_above_weight
+        
     def override_neg_z(self):
         for sensor in self.sensors:
             self.override_low_values(sensor.get_forces_data().get_forces_z(), -50, 0, 0)
@@ -898,3 +939,5 @@ class DataContainer:
             sensor.clear_data()
         self.sensors = []
         self.chrono_data = [0] * 1 
+
+

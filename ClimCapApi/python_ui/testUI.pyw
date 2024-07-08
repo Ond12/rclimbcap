@@ -412,7 +412,7 @@ class Wid(QMainWindow):
             self.data_container.add_sensor(current_sensor)    
             
         self.plotter.plot_data()
-        self.plotter.set_refresh_rate(1500)
+        self.plotter.set_refresh_rate(1600)
         self.plot_controller.clean_widget()
         self.plot_controller.set_up_widget()    
 

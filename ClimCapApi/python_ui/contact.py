@@ -16,19 +16,7 @@ color_y = (0, 255, 0)  # Green
 color_z = (0, 0, 255)  # Blue
 color_chrono = (255, 255, 0) # Yellow
 
-colors_dict = {
-    0: (0, 255, 0),   
-    1: (255, 0, 0),       # Red
-    2: (0, 255, 0),       # Green
-    3: (0, 0, 255),       # Blue
-    4: (255, 255, 0),     # Yellow
-    5: (255, 0, 255),     # Magenta
-    6: (0, 255, 255),     # Cyan
-    7: (128, 0, 0),       # Maroon
-    8: (0, 128, 0),       # Green (dark)
-    9: (0, 0, 128),       # Navy
-    10:(0, 255, 255) 
-}
+from colors import *
 
 class CONTACTTYPE(Enum):
     FOOT = 'FOOT'

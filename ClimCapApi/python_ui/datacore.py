@@ -160,7 +160,7 @@ class DataContainer:
         self.chrono_data = [0] * 1
         self.contacts = []
         self.chrono_freq = 200
-        self.chrono_offset = 0
+        
         self.start_time_idx = 0
         self.first_contact_time = 0
 
@@ -181,12 +181,19 @@ class DataContainer:
                                 
             contact.contact_type = type
     
+    def set_start_time_idx(self, start_time_idx):
+        self.start_time_idx = start_time_idx
+    
+    def get_start_time_and_idx(self):
+        start_time = self.start_time_idx / self.chrono_freq
+        return start_time, self.start_time_idx 
+    
     def detect_chrono_bip(self):
         slope_threshold = 2
         down_edges_time_list = []
         down_edges_idx_list = []
         
-        edge_type = 'down' #down
+        edge_type = 'rise' #down
         
         if len(self.chrono_data) > 2:
             for i in range(1, len(self.chrono_data)):
@@ -385,10 +392,10 @@ class DataContainer:
             res_data, sud = self.cal_resultant_force(cursensor)
             st = contact.start_time 
             et = contact.end_time
-            if contact.sensor_id == 4:
-                undef_data[st:et] += res_data[st:et]
-                continue
-            elif contact.contact_type == CONTACTTYPE.FOOT:
+            # if contact.sensor_id == 4:
+            #     undef_data[st:et] += res_data[st:et]
+            #     continue
+            if contact.contact_type == CONTACTTYPE.FOOT:
                 foot_data[st:et] += res_data[st:et]
             elif contact.contact_type == CONTACTTYPE.HAND:
                 hand_data[st:et] += res_data[st:et]
@@ -596,7 +603,6 @@ class DataContainer:
             start_time_s = self.index_to_time(start_time) - time_offset
             end_time_s =  self.index_to_time(end_time) - time_offset
             cur_contact = ContactInfo(sensor_id, start_time, end_time, start_time_s, end_time_s)
-            cur_contact = ContactInfo(sensor_id, start_time, end_time, self.index_to_time(start_time), self.index_to_time(end_time))
 
             contacts.append(cur_contact)
 
@@ -646,8 +652,27 @@ class DataContainer:
             resultant_force, sid = self.cal_resultant_force(sensor)
             data = resultant_force
             time_offset =  sensor.time_offset
-            cur_contacts_list = self.detect_contacts(data, sensor_id, time_offset, detect_threshold_up, detect_threshold_down, True, crossing_threshold)
+            cur_contacts_list = []
+            
+            if sensor_id == 4:
+                data = sensor.get_forces_data()
+                contacts = self.detect_contacts_s4(data)
+                if contacts:
+                    (first_contact_start, first_contact_end), (second_contact_start, second_contact_end) = contacts
+                    start_time_s = self.index_to_time(first_contact_start) - time_offset
+                    end_time_s =  self.index_to_time(first_contact_end) - time_offset
+                    start_time_s2 = self.index_to_time(second_contact_start) - time_offset
+                    end_time_s2 =  self.index_to_time(second_contact_end) - time_offset
+                    
+                    curfirst_contact = ContactInfo(sensor_id, first_contact_start, second_contact_start, start_time_s, start_time_s2)
+                    cur_contacts_list.append(curfirst_contact)
 
+                    cursec_contact = ContactInfo(sensor_id, second_contact_start, second_contact_end, start_time_s2, end_time_s2)
+                    cur_contacts_list.append(cursec_contact)
+            else:
+                cur_contacts_list = self.detect_contacts(data, sensor_id, time_offset, detect_threshold_up, detect_threshold_down, True, crossing_threshold)
+
+            
             for contact in cur_contacts_list:
                 if sensor_id == 40:
                     if(contact.period > 20):
@@ -657,6 +682,77 @@ class DataContainer:
                     all_contacts_list.append(contact)
                             
         return sorted(all_contacts_list, key=lambda x: x.start_time)
+    # Z impulses
+
+    # Déclaration : detect_z_impulses(data, z_threshold=25)
+    # @param data : DataFrame contenant les données du capteur
+    # @param z_threshold : seuil pour détecter les impulsions sur l'axe z (par défaut 25)
+    # @return (z_impulse_start, z_impulse_end) : tuple contenant le début et la fin de la première impulsion détectée sur l'axe z, ou None si aucune impulsion n'est détectée
+    def detect_z_impulses(self, data, z_threshold=25):
+        z_signal = data.get_forces_z()
+        z_impulse_start = None
+        z_impulse_end = None
+
+        for i in range(1, len(z_signal)):
+            # Détecter le début de l'impulsion (passage au-dessus du seuil)
+            if z_signal[i-1] < z_threshold and z_signal[i] >= z_threshold and z_impulse_start is None:
+                z_impulse_start = i
+
+            # Détecter la fin de l'impulsion (passage en-dessous du seuil)
+            if z_signal[i-1] >= z_threshold and z_signal[i] < z_threshold:
+                z_impulse_end = i
+
+        # Retourner seulement le premier et dernier point détecté
+        return (z_impulse_start, z_impulse_end) if z_impulse_start is not None and z_impulse_end is not None else None
+
+
+    # X impulses
+
+    # Déclaration : detect_x_impulses(data, x_threshold=-100)
+    # @param data : DataFrame contenant les données du capteur
+    # @param x_threshold : seuil pour détecter les impulsions sur l'axe x (par défaut -100)
+    # @return x_impulses : liste de tuples contenant les positions de début et de fin des impulsions détectées sur l'axe x
+    def detect_x_impulses(self, data, x_threshold=-100):
+        x_signal = data.get_forces_x()
+        x_impulses = []
+        start = None
+
+        for i in range(1, len(x_signal)):
+            # Détecter le début de l'impulsion (passage sous 0)
+            if x_signal[i-1] >= 0 and x_signal[i] < 0 and start is None:
+                start = i
+            
+            # Détecter la fin de l'impulsion (passage au-dessus de 0)
+            if x_signal[i-1] < 0 and x_signal[i] >= 0 and start is not None:
+                if min(x_signal[start:i+1]) < x_threshold:
+                    x_impulses.append((start, i))
+                start = None
+
+        return x_impulses
+
+
+    # Detection des contacts
+
+    # Déclaration : detect_contacts(data, z_threshold=25, x_threshold=-100)
+    # @param data : DataFrame contenant les données du capteur
+    # @param z_threshold : seuil pour détecter les impulsions sur l'axe z (par défaut 25)
+    # @param x_threshold : seuil pour détecter les impulsions sur l'axe x (par défaut -100)
+    # @return (first_contact, second_contact) : tuple contenant deux autres tuples avec les positions de début et de fin des deux contacts détectés, ou (None, None) si aucun contact n'est détecté
+    def detect_contacts_s4(self,data, z_threshold=25, x_threshold=-100):
+        z_impulse = self.detect_z_impulses(data, z_threshold)
+        x_impulses = self.detect_x_impulses(data, x_threshold)
+
+        if not z_impulse or not x_impulses:
+            return None, None
+
+        first_contact_start = z_impulse[0]
+        first_contact_end = x_impulses[0][1]
+
+        second_contact_start = x_impulses[0][0]
+        second_contact_end = z_impulse[1]
+
+        return (first_contact_start, first_contact_end), (second_contact_start, second_contact_end)
+
 
     def apply_idx_offset_to_sensors(self, time_idx):
         for sensor in self.sensors:
@@ -749,13 +845,13 @@ class DataContainer:
                 dataz = sensor.get_forces_data().get_forces_z()
                 filtered_signal_z_fir = lfilter(filter_taps, 1.0, dataz)
                 
-                # filtered_signal_x = np.roll(filtered_signal_x, -delay)
-                # filtered_signal_y = np.roll(filtered_signal_y, -delay)
-                # filtered_signal_z = np.roll(filtered_signal_z, -delay)
+                filtered_signal_x_fir = np.roll(filtered_signal_x_fir, -delay)
+                filtered_signal_y_fir = np.roll(filtered_signal_y_fir, -delay)
+                filtered_signal_z_fir = np.roll(filtered_signal_z_fir, -delay)
 
-                # filtered_signal_x[-delay:] = 0
-                # filtered_signal_y[-delay:] = 0
-                # filtered_signal_z[-delay:] = 0
+                filtered_signal_x_fir[-delay:] = 0
+                filtered_signal_y_fir[-delay:] = 0
+                filtered_signal_z_fir[-delay:] = 0
                 
                 # Filtrage avec le Notch en plus du FIR
                 # filtered_signal_x = sosfilt(notch_filter_sos, filtered_signal_x_fir)

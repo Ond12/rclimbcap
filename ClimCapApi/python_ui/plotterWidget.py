@@ -139,10 +139,10 @@ class Plotter(pg.PlotWidget):
         self.legend.verSpacing = -1
         #self.legend.hide()
         
-        custom_axis = pg.AxisItem(orientation = 'left')
-        custom_axis.setStyle(tickTextOffset=0, tickFont=QFont("Arial", 10))
-        custom_axis.setGrid(155)
-        self.setAxisItems(axisItems = {'left': custom_axis})
+        # custom_axis = pg.AxisItem(orientation = 'left')
+        # custom_axis.setStyle(tickTextOffset=0, tickFont=QFont("Arial", 10))
+        # custom_axis.setGrid(155)
+        # self.setAxisItems(axisItems = {'left': custom_axis})
 
         self.setBackground('w')
         # Set the style of the tick text
@@ -194,7 +194,8 @@ class Plotter(pg.PlotWidget):
         cr_data = self.data_container.chrono_data
         num_samples = len(cr_data)
         time_interval = 1/ self.data_container.chrono_freq
-        time_increments_chrono_dummy = [(i * time_interval) - self.data_container.chrono_offset for i in range(num_samples)]
+        chrono_offset, idx = self.data_container.get_start_time_and_idx()
+        time_increments_chrono_dummy = [(i * time_interval) - chrono_offset for i in range(num_samples)]
 
         if(self.chrono_plot_item):
             self.chrono_plot_item.setData(time_increments_chrono_dummy, cr_data)
@@ -280,7 +281,8 @@ class Plotter(pg.PlotWidget):
         if len(cr_data) > 0:
             num_samples = len(cr_data)
             time_interval = 1/ self.data_container.chrono_freq
-            time_increments_chrono_dummy = [(i * time_interval) - self.data_container.chrono_offset for i in range(num_samples)]
+            chrono_offset, idx = self.data_container.get_start_time_and_idx()
+            time_increments_chrono_dummy = [(i * time_interval) - chrono_offset for i in range(num_samples)]
             plot_item_chrono_data = self.plot(time_increments_chrono_dummy, cr_data, pen=pg.mkPen(color_chrono, width=2, alpha=200), name=f"Cr")
             self.plot_items.append(plot_item_chrono_data)
             plot_item_chrono_data.setVisible(False)

@@ -578,11 +578,10 @@ class Wid(QMainWindow):
         
         self.sum_force_action()
         self.find_contacts_action()
-        self.plotter.setLimits(xMin=-3, xMax=20, yMin=-2500, yMax=2500)
-        self.plotter.autoRange()
-        self.plotter.setRange(xRange=(-2,5))
+        # self.plotter.setLimits(xMin=-3, xMax=20, yMin=-2500, yMax=2500)
+        # self.plotter.autoRange()
+        # self.plotter.setRange(xRange=(-2,5))
         
-
         # self.process_speed_action()
     
     def find_contacts_action(self): 
@@ -634,7 +633,7 @@ class Wid(QMainWindow):
         for sensor in sensors:
             resultant_force, sid = self.data_container.cal_resultant_force(sensor)
             cutoff_freq = 10
-            fs = 200
+            fs = 200 #care
             resultant_force = self.data_container.apply_filter_low_pass(resultant_force, cutoff_freq, fs)
             resultant_force = self.data_container.override_low_values(resultant_force, -50, 0, 0)
             self.plotter.plot_resultant_force(resultant_force, sid)
@@ -651,6 +650,7 @@ class Wid(QMainWindow):
                 times[i] = times[i] - last_bip_time
             
             self.data_container.apply_idx_offset_to_sensors(last_bip_time)
+            self.data_container.set_start_time_idx(last_bip_idx)
                 
         self.plotter.plot_chrono_bip_marker(times)
         print("chrono detect action")
@@ -731,21 +731,20 @@ class Wid(QMainWindow):
             # ratioy ,m = self.data_container.data_ratio(totforce,fy)
             # ratioz ,m = self.data_container.data_ratio(totforce,fz)
             
-            # body_weight_start_idx = self.data_container.find_first_exceedance_over_body_weight(all_forces_z, body_weight_newton, idx_t0chrono-25)
-            # bwp = self.data_container.index_to_time(body_weight_start_idx - idx_t0chrono)
+            body_weight_start_idx = self.data_container.find_first_exceedance_over_body_weight(all_forces_z, body_weight_newton, idx_t0chrono-25)
+            bwp = self.data_container.index_to_time(body_weight_start_idx - idx_t0chrono)
             
-            # m1i,m2i = self.data_container.compute_delta_v_start(idx_t0chrono, body_weight_newton, 30, all_forces_z)
-            # m1t = self.data_container.index_to_time(m1i)
-            # m2t = self.data_container.index_to_time(m2i)
+            m1i,m2i = self.data_container.compute_delta_v_start(idx_t0chrono, body_weight_newton, 30, all_forces_z)
+            m1t = self.data_container.index_to_time(m1i)
+            m2t = self.data_container.index_to_time(m2i)
             
-            
-            # m1 = pg.TargetItem(
-            #     pos=(m1t, body_weight_newton),
-            #     label=str(round(body_weight_newton,2)),
-            #     movable=False,
-            #     labelOpts={'color': (200,0,0)}
-            # )
-            # self.plotter.addItem(m1)
+            m1 = pg.TargetItem(
+                pos=(m1t, body_weight_newton),
+                label=str(round(body_weight_newton,2)),
+                movable=False,
+                labelOpts={'color': (200,0,0)}
+            )
+            self.plotter.addItem(m1)
             
             # m2 = pg.TargetItem(
             #     pos=(m2t, body_weight_newton),

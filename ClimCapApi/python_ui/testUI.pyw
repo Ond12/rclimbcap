@@ -171,6 +171,11 @@ class Wid(QMainWindow):
         speed_action.setStatusTip("speed")
         speed_action.triggered.connect(self.process_speed_action)
         
+        icon_path = os.path.join(self.icon_folder, 'film.svg')
+        show_hide_videow_action = QAction(QIcon(icon_path), "&video", self)
+        show_hide_videow_action.setStatusTip("video")
+        show_hide_videow_action.triggered.connect(self.show_hide_videow_action)
+        
         self.mtoolbar = self.addToolBar("Tools")
         toolbar = self.mtoolbar
         toolbar.addAction(open_file_action)
@@ -201,6 +206,7 @@ class Wid(QMainWindow):
         separator.setSeparator(True)
         toolbar.addAction(separator)
         
+        toolbar.addAction(show_hide_videow_action)
         toolbar.addAction(debug_data_action)
         #toolbar.addAction(oscstreaming_action)
 
@@ -640,6 +646,9 @@ class Wid(QMainWindow):
   
         print("calculate resultant_force for sensor")
 
+    def show_hide_videow_action(self):
+        self.videoPlayer_widget.setVisible(not self.videoPlayer_widget.isVisible())
+        
     def chrono_bip_detection_action(self):
         times, times_idx = self.data_container.detect_chrono_bip()
 

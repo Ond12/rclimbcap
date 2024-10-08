@@ -14,8 +14,8 @@ _build/
 *.native
 
 
-ClimCap/build
-ClimCap/forms/images
+ClimbCap/build
+ClimbCap/forms/images
 *.def
 ClimbCap/data/log.txt
 ClimbCap/python_ui_build
